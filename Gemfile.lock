@@ -17,7 +17,6 @@ GEM
     gherkin (2.6.5)
       json (>= 1.4.6)
     git (1.2.5)
-    httpclient (2.2.3)
     jeweler (1.6.4)
       bundler (~> 1.0)
       git (>= 1.2.5)
@@ -56,7 +55,6 @@ DEPENDENCIES
   bundler (~> 1.0.0)
   cucumber
   daemon (~> 1)
-  httpclient (>= 2.2.1)
   jeweler (~> 1.6.4)
   mongrel (>= 1.1.5)
   rcov

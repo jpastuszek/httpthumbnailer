@@ -1,7 +1,6 @@
 source "http://rubygems.org"
 
 gem "sinatra", ">= 1.2.6"
-gem "httpclient", ">= 2.2.1"
 gem "mongrel", ">= 1.1.5"
 gem "daemon", "~> 1"
 gem "rmagick", "~> 2"

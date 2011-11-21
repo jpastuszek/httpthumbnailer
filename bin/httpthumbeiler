@@ -3,30 +3,9 @@
 require 'sinatra'
 require 'RMagick'
 
-class Thumbnailer
-	def initialize
-		@images = {}
-	end
-
-	def load(id, io)
-		puts "Loading image #{id}"
-		@images[id] = Magick::Image.from_blob(io.read).first
-		@images[id].strip!
-
-		return @images[id] unless block_given?
-		begin
-			yield @images[id]
-			puts "Done with image #{id}"
-		rescue => e
-			puts "Got error #{e}"
-			raise
-		ensure
-			puts "Destroying image #{id}"
-			@images[id].destroy!
-			@images.delete(id)
-		end
-	end
-end
+$LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
+require 'thumbnailer'
+require 'thumbnail_specs'
 
 set :port, 3123
 set :bind, 'localhost'
@@ -37,38 +16,27 @@ set :boundary, "thumnail image data"
 
 thumbnailer = Thumbnailer.new
 
-def each_thumbnail_spec
-	params.delete('captures')
-	params.each_pair do |name, args|
-		mode, w, h, *options = *args.split(',')
-		w = w.to_i
-		h = h.to_i
-		yield name, mode, w, h, options
-	end
+thumbnailer.method('crop') do |image, spec|
+	image.resize_to_fill(spec.width, spec.height)
 end
 
 get '/' do
 	puts 'hello'
 end
 
-put %r{/([^/]*)/([^/]*)/([^/]*)} do |id, pw, ph|
+put %r{/thumbnail/([^/]*)/([^/]*)/([^/]*)/(.*)} do |id, pw, ph, specs|
 	image = thumbnailer.load(id, request.body)
+	thumbnail_specs = ThumbnailSpecs.from_uri(specs)
+
 	status 200
 	headers "Content-Type" => "multipart/mixed; boundary=\"#{settings.boundary}\""
 	stream do |out|
-		each_thumbnail_spec do |name, mode, w, h, options|
-			puts "Thumbnailing: #{name}"
-
-			thumbnail = case mode
-				when 'crop'
-					image.resize_to_fill(w, h)
-				else
-					fail "unsupported mode: #{mode}"
-			end
+		thumbnail_specs.each do |ts|
+			puts "Thumbnailing: #{ts}"
 
 			out << "--#{settings.boundary}\n"
 			out << "Content-type: image/jpeg\n\n"
-			out << thumbnail.to_blob do |inf|
+			out << thumbnailer.thumbnail(id, ts).to_blob do |inf|
 				inf.format = 'JPEG'
 			end
 		end
