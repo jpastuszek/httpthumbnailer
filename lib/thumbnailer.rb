@@ -1,15 +1,24 @@
 class ThumbnailSpec
-	def initialize(method, width, height, options = {})
+	def initialize(method, width, height, format, options = {})
 		@method = method
 		@width = width
 		@height = height
+		@format = format.upcase
 		@options = options
 	end
 
-	attr_reader :method, :width, :height, :options
+	def mime
+		mime = case format
+			when 'JPG' then 'jpeg'
+			else format.downcase
+		end
+		"image/#{mime}"
+	end
+
+	attr_reader :method, :width, :height, :format, :options
 
 	def to_s
-		"#{method} #{width}x#{height} #{options.inspect}"
+		"#{method} #{width}x#{height} #{mime} (#{format}) #{options.inspect}"
 	end
 end
 

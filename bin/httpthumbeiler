@@ -50,11 +50,16 @@ put %r{/thumbnail/([^/]*)/([^/]*)/([^/]*)/(.*)} do |id, pw, ph, specs|
 			out << "--#{settings.boundary}\n"
 
 			begin
-				thumbnail = thumbnailer.thumbnail(id, ts).to_blob do |inf|
-					inf.format = 'JPEG'
+				thumbnail = thumbnailer.thumbnail(id, ts)
+				thumbnail_data = thumbnail.to_blob do |inf|
+					inf.format = ts.format
 				end
-				out << "Content-type: image/jpeg\n\n"
-				out << thumbnail
+
+				out << "Content-type: #{ts.mime}\n\n"
+				out << thumbnail_data
+
+				thumbnail_data = nil
+				thumbnail.destroy!
 			rescue => e
 				out << "Content-type: text/plain\n\n"
 				out << "Error: #{e.class.name}: #{e}\n"

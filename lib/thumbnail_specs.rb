@@ -4,7 +4,7 @@ class ThumbnailSpecs < Array
 	def self.from_uri(specs)
 		ts = ThumbnailSpecs.new
 		specs.split('/').each do |spec|
-			method, width, height, *options = *spec.split(',')
+			method, width, height, format, *options = *spec.split(',')
 			width = width.to_i
 			height = height.to_i
 
@@ -14,7 +14,7 @@ class ThumbnailSpecs < Array
 				opts[key] = value
 			end
 
-			ts << ThumbnailSpec.new(method, width, height, opts)
+			ts << ThumbnailSpec.new(method, width, height, format, opts)
 		end
 		ts
 	end
