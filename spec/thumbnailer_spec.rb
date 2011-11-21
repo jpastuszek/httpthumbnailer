@@ -22,3 +22,4 @@ describe Thumbnailer do
 		t.process_image(nil, ThumbnailSpec.new('test', 128, 32, :magic => 64)).should == 128 + 32 + 64
 	end
 end
+
