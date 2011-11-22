@@ -16,4 +16,5 @@ group :development do
   gem "rcov", ">= 0"
   gem "daemon", "~> 1"
   gem "httpclient", "~> 2.2"
+  gem "rdoc", "~> 3.9"
 end
