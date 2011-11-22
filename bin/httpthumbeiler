@@ -15,10 +15,13 @@ set :server, ['mongrel']
 set :lock, true
 set :boundary, "thumnail image data"
 
-thumbnailer = Thumbnailer.new
-
-thumbnailer.method('crop') do |image, spec|
-	image.resize_to_fill(spec.width, spec.height)
+before do
+	unless @thumbnailer 
+		@thumbnailer = Thumbnailer.new(:logger => logger)
+		@thumbnailer.method('crop') do |image, spec|
+			image.resize_to_fill(spec.width, spec.height)
+		end
+	end
 end
 
 helpers do
@@ -29,12 +32,12 @@ helpers do
 end
 
 get '/' do
-	puts 'hello'
+	logger.info 'hello'
 end
 
 put %r{/thumbnail/([^/]*)/([^/]*)/([^/]*)/(.*)} do |id, pw, ph, specs|
 	image = begin
-		thumbnailer.load(id, request.body)
+		@thumbnailer.load(id, request.body)
 	rescue => e
 		plain_exception(e)
 		halt 415
@@ -46,11 +49,11 @@ put %r{/thumbnail/([^/]*)/([^/]*)/([^/]*)/(.*)} do |id, pw, ph, specs|
 	headers "Content-Type" => "multipart/mixed; boundary=\"#{settings.boundary}\""
 	stream do |out|
 		thumbnail_specs.each do |ts|
-			puts "Thumbnailing: #{ts}"
+			logger.info "Thumbnailing: #{ts}"
 			out << "--#{settings.boundary}\n"
 
 			begin
-				thumbnail = thumbnailer.thumbnail(id, ts)
+				thumbnail = @thumbnailer.thumbnail(id, ts)
 				thumbnail_data = thumbnail.to_blob do |inf|
 					inf.format = ts.format
 				end

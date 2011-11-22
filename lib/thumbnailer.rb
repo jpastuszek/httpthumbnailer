@@ -1,3 +1,5 @@
+require 'logger'
+
 class ThumbnailSpec
 	def initialize(method, width, height, format, options = {})
 		@method = method
@@ -35,25 +37,25 @@ class Thumbnailer
 		end
 	end
 
-	def initialize
+	def initialize(options = {})
 		@images = {}
 		@methods = {}
+		@options = options
+		@options = options
+		@logger = (options[:logger] or Logger.new('/dev/null'))
 	end
 
 	def load(id, io)
-		puts "Loading image #{id}"
+		@logger.info "Loading image #{id}"
 		@images[id] = Magick::Image.from_blob(io.read).first
 		@images[id].strip!
 
 		return @images[id] unless block_given?
 		begin
 			yield @images[id]
-			puts "Done with image #{id}"
-		rescue => e
-			puts "Got error #{e}"
-			raise
+			@logger.info "Done with image #{id}"
 		ensure
-			puts "Destroying image #{id}"
+			@logger.info "Destroying image #{id}"
 			@images[id].destroy!
 			@images.delete(id)
 		end
