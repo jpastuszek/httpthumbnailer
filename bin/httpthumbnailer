@@ -8,8 +8,8 @@ $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
 require 'thumbnailer'
 require 'thumbnail_specs'
 
-set :port, 3123
-set :bind, 'localhost'
+#set :port, 3123
+#set :bind, 'localhost'
 set :environment, 'production'
 set :server, ['mongrel']
 set :lock, true
@@ -35,9 +35,9 @@ get '/' do
 	logger.info 'hello'
 end
 
-put %r{/thumbnail/([^/]*)/([^/]*)/([^/]*)/(.*)} do |id, pw, ph, specs|
+put %r{/thumbnail/(.*)} do |specs|
 	image = begin
-		@thumbnailer.load(id, request.body)
+		@thumbnailer.load('current', request.body)
 	rescue => e
 		plain_exception(e)
 		halt 415
@@ -50,22 +50,24 @@ put %r{/thumbnail/([^/]*)/([^/]*)/([^/]*)/(.*)} do |id, pw, ph, specs|
 	stream do |out|
 		thumbnail_specs.each do |ts|
 			logger.info "Thumbnailing: #{ts}"
-			out << "--#{settings.boundary}\n"
+			out << "--#{settings.boundary}\r\n"
 
 			begin
-				thumbnail = @thumbnailer.thumbnail(id, ts)
+				thumbnail = @thumbnailer.thumbnail('current', ts)
 				thumbnail_data = thumbnail.to_blob do |inf|
 					inf.format = ts.format
 				end
 
-				out << "Content-type: #{ts.mime}\n\n"
+				out << "Content-Type: #{ts.mime}\r\n\r\n"
 				out << thumbnail_data
 
 				thumbnail_data = nil
 				thumbnail.destroy!
 			rescue => e
-				out << "Content-type: text/plain\n\n"
-				out << "Error: #{e.class.name}: #{e}\n"
+				out << "Content-Type: text/plain\r\n\r\n"
+				out << "Error: #{e.class.name}: #{e}\r\n"
+			ensure
+				out << "\r\n"
 			end
 		end
 		out << "--#{settings.boundary}--"
