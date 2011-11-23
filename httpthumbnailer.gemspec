@@ -31,6 +31,7 @@ Gem::Specification.new do |s|
     "features/step_definitions/httpthumbnailer_steps.rb",
     "features/support/env.rb",
     "features/support/test.jpg",
+    "httpthumbnailer.gemspec",
     "lib/httpthumbnailer/multipart_response.rb",
     "lib/httpthumbnailer/thumbnail_specs.rb",
     "lib/httpthumbnailer/thumbnailer.rb",
