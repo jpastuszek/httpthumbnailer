@@ -1,5 +1,5 @@
 require File.expand_path(File.dirname(__FILE__) + '/spec_helper')
-require 'thumbnailer'
+require 'httpthumbnailer/thumbnailer'
 
 describe ThumbnailSpec do
 	it "should store thumbanil attributes method, widht, height and options" do

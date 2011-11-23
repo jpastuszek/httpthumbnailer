@@ -1,5 +1,5 @@
 require File.expand_path(File.dirname(__FILE__) + '/spec_helper')
-require 'thumbnail_specs'
+require 'httpthumbnailer/thumbnail_specs'
 
 describe ThumbnailSpecs do
 	it "can be crated from URI" do

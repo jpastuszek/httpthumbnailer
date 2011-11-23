@@ -13,7 +13,7 @@ require 'rspec/expectations'
 require 'daemon'
 require 'timeout'
 require 'httpclient'
-require 'multipart_response'
+require 'httpthumbnailer/multipart_response'
 require "open3"
 require "thread"
 

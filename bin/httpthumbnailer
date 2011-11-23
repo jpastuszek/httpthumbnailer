@@ -5,8 +5,8 @@ require 'haml'
 require 'RMagick'
 
 $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
-require 'thumbnailer'
-require 'thumbnail_specs'
+require 'httpthumbnailer/thumbnailer'
+require 'httpthumbnailer/thumbnail_specs'
 
 #set :port, 3123
 #set :bind, 'localhost'

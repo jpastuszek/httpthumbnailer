@@ -1,4 +1,4 @@
-require 'thumbnailer'
+require 'httpthumbnailer/thumbnailer'
 
 class ThumbnailSpecs < Array
 	def self.from_uri(specs)

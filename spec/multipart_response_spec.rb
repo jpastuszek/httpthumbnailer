@@ -1,5 +1,5 @@
 require File.expand_path(File.dirname(__FILE__) + '/spec_helper')
-require 'multipart_response'
+require 'httpthumbnailer/multipart_response'
 
 describe MultipartResponse do
 	describe "parsing" do
