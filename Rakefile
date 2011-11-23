@@ -17,8 +17,8 @@ Jeweler::Tasks.new do |gem|
   gem.name = "httpthumbnailer"
   gem.homepage = "http://github.com/jpastuszek/httpthumbnailer"
   gem.license = "MIT"
-  gem.summary = %Q{HTTP based image thumbnailer}
-  gem.description = %Q{Thumbnails images using HTTP protocol for data tranfer}
+  gem.summary = %Q{HTTP thumbnailing server}
+  gem.description = %Q{Provides HTTP API for thumbnailing images}
   gem.email = "jpastuszek@gmail.com"
   gem.authors = ["Jakub Pastuszek"]
   # dependencies defined in Gemfile
