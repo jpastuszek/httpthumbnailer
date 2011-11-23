@@ -2,7 +2,6 @@ source "http://rubygems.org"
 
 gem "sinatra", ">= 1.2.6"
 gem "mongrel", ">= 1.1.5"
-gem "daemon", "~> 1"
 gem "rmagick", "~> 2"
 gem "haml", "~> 3"
 
