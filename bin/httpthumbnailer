@@ -16,6 +16,7 @@ sinatra.set :environment, 'production'
 sinatra.set :server, ['mongrel']
 sinatra.set :lock, true
 sinatra.set :boundary, "thumnail image data"
+sinatra.set :logging, true
 
 sinatra.before do
 	unless @thumbnailer 
