@@ -34,18 +34,18 @@ def script(file)
 end
 
 def server_get(uri)
-	HTTPClient.new.get_content("http://localhost:3333#{uri}")
+	HTTPClient.new.get_content("http://localhost:3100#{uri}")
 end
 
 def server_request(method, uri, query = nil, body = nil)
-	HTTPClient.new.request(method, "http://localhost:3333#{uri}", query, body)
+	HTTPClient.new.request(method, "http://localhost:3100#{uri}", query, body)
 end
 
 def server_start
 	File.exist?("/tmp/httpthumbnailer.pid") and server_stop
 	fork do
 		Daemon.daemonize("/tmp/httpthumbnailer.pid", support_dir + 'server.log')
-		exec("bundle exec #{script('httpthumbnailer')} -p 3333")
+		exec("bundle exec #{script('httpthumbnailer')} -p 3100")
 	end
 
 	Timeout.timeout(10) do

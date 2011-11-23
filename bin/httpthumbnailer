@@ -1,6 +1,6 @@
 #!/usr/bin/ruby
 
-require 'sinatra'
+require 'sinatra/base'
 require 'haml'
 require 'RMagick'
 
@@ -8,14 +8,16 @@ $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
 require 'httpthumbnailer/thumbnailer'
 require 'httpthumbnailer/thumbnail_specs'
 
-#set :port, 3123
-#set :bind, 'localhost'
-set :environment, 'production'
-set :server, ['mongrel']
-set :lock, true
-set :boundary, "thumnail image data"
+sinatra = Sinatra.new
 
-before do
+sinatra.set :port, 3100
+sinatra.set :bind, 'localhost'
+sinatra.set :environment, 'production'
+sinatra.set :server, ['mongrel']
+sinatra.set :lock, true
+sinatra.set :boundary, "thumnail image data"
+
+sinatra.before do
 	unless @thumbnailer 
 		@thumbnailer = Thumbnailer.new(:logger => logger)
 		@thumbnailer.method('crop') do |image, spec|
@@ -24,18 +26,18 @@ before do
 	end
 end
 
-helpers do
+sinatra.helpers do
 	def plain_exception(exception)
 		headers "Content-Type" => "text/plain"
 		body "Error: #{exception.class.name}: #{exception}\n"
 	end
 end
 
-get '/' do
+sinatra.get '/' do
 	logger.info 'hello'
 end
 
-put %r{/thumbnail/(.*)} do |specs|
+sinatra.put %r{/thumbnail/(.*)} do |specs|
 	image = begin
 		@thumbnailer.load('current', request.body)
 	rescue => e
@@ -74,7 +76,14 @@ put %r{/thumbnail/(.*)} do |specs|
 	end
 end
 
-error do
+sinatra.error do
 	plain_exception(env['sinatra.error'])
+end
+
+begin
+	sinatra.run!
+rescue Errno::EACCES, Errno::EADDRNOTAVAIL, SocketError => e
+	puts "Error: failed to bind HTTP server socket (#{options[:bind]}): #{e}"
+	exit 5
 end
 
