@@ -24,6 +24,17 @@ sinatra.before do
 		@thumbnailer.method('crop') do |image, spec|
 			image.resize_to_fill(spec.width, spec.height)
 		end
+
+		@thumbnailer.method('fit') do |image, spec|
+			image.resize_to_fit(spec.width, spec.height)
+		end
+
+		@thumbnailer.method('pad') do |image, spec|
+			bg = Magick::Image.new(spec.width, spec.height) {
+				self.background_color = 'red'
+			}
+			bg.composite(image.resize_to_fit(spec.width, spec.height), Magick::CenterGravity, Magick::OverCompositeOp)
+		end
 	end
 end
 
