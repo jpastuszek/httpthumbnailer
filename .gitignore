@@ -53,4 +53,5 @@ pkg
 
 features/support/test-pad-background-color.png
 features/support/test-pad.png
+features/support/test-transparent-default.png
 

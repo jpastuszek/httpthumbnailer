@@ -62,17 +62,20 @@ sinatra.put %r{/thumbnail/(.*)} do |specs|
 	status 200
 	headers "Content-Type" => "multipart/mixed; boundary=\"#{settings.boundary}\""
 	stream do |out|
-		thumbnail_specs.each do |ts|
-			logger.info "Thumbnailing: #{ts}"
+		thumbnail_specs.each do |spec|
+			logger.info "Thumbnailing: #{spec}"
 			out << "--#{settings.boundary}\r\n"
 
 			begin
-				thumbnail = @thumbnailer.thumbnail('current', ts)
+				thumbnail = @thumbnailer.thumbnail('current', spec)
 				thumbnail_data = thumbnail.to_blob do |inf|
-					inf.format = ts.format
+					inf.format = spec.format
+					inf.texture = Magick::Image.new(8, 8) {
+						self.background_color = (spec.options['background-color'] or 'white').sub(/^0x/, '#')
+					}
 				end
 
-				out << "Content-Type: #{ts.mime}\r\n\r\n"
+				out << "Content-Type: #{spec.mime}\r\n\r\n"
 				out << thumbnail_data
 
 				thumbnail_data = nil
