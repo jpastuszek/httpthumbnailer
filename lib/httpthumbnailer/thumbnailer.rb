@@ -68,10 +68,13 @@ class Thumbnailer
 	def thumbnail(id, spec)
 		image = @images[id] or raise ImageNotFound.new(id)
 		thumb = process_image(image, spec)
+		replace_transparency(thumb, spec)
+	end
 
-		Magick::Image.new(thumb.columns, thumb.rows) {
+	def replace_transparency(image, spec)
+		Magick::Image.new(image.columns, image.rows) {
 			self.background_color = (spec.options['background-color'] or 'white').sub(/^0x/, '#')
-		}.composite(thumb, Magick::CenterGravity, Magick::OverCompositeOp)
+		}.composite!(image, Magick::CenterGravity, Magick::OverCompositeOp)
 	end
 
 	def process_image(image, spec)

@@ -30,10 +30,9 @@ sinatra.before do
 		end
 
 		@thumbnailer.method('pad') do |image, spec|
-			bg = Magick::Image.new(spec.width, spec.height) {
-				self.background_color = (spec.options['background-color'] or 'white').sub(/^0x/, '#')
-			}
-			bg.composite(image.resize_to_fit(spec.width, spec.height), Magick::CenterGravity, Magick::OverCompositeOp)
+			Magick::Image.new(spec.width, spec.height) {
+				self.background_color = Magick::Pixel.new(Magick::MaxRGB, Magick::MaxRGB, Magick::MaxRGB, Magick::MaxRGB) # transparent
+			}.composite!(image.resize_to_fit(spec.width, spec.height), Magick::CenterGravity, Magick::OverCompositeOp)
 		end
 	end
 end
@@ -70,9 +69,6 @@ sinatra.put %r{/thumbnail/(.*)} do |specs|
 				thumbnail = @thumbnailer.thumbnail('current', spec)
 				thumbnail_data = thumbnail.to_blob do |inf|
 					inf.format = spec.format
-					inf.texture = Magick::Image.new(8, 8) {
-						self.background_color = (spec.options['background-color'] or 'white').sub(/^0x/, '#')
-					}
 				end
 
 				out << "Content-Type: #{spec.mime}\r\n\r\n"
