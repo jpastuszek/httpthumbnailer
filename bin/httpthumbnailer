@@ -31,7 +31,7 @@ sinatra.before do
 
 		@thumbnailer.method('pad') do |image, spec|
 			bg = Magick::Image.new(spec.width, spec.height) {
-				self.background_color = 'red'
+				self.background_color = (spec.options['background-color'] or 'white').sub(/^0x/, '#')
 			}
 			bg.composite(image.resize_to_fit(spec.width, spec.height), Magick::CenterGravity, Magick::OverCompositeOp)
 		end

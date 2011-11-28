@@ -26,16 +26,25 @@ Then /(.*) part mime type will be (.*)/ do |part, mime|
 	@response_multipart.part[part_no(part)].header['Content-Type'].should == mime
 end
 
-Then /(.*) part will contain (.*) image of size (.*)/ do |part, image_type, image_size|
+Then /(.*) part will contain (.*) image of size (.*)x(.*)/ do |part, format, width, height|
+	mime = @response_multipart.part[part_no(part)].header['Content-Type']
 	data = @response_multipart.part[part_no(part)].body
+	fail("expecte image got #{mime}: #{data}") unless mime =~ /^image\//
 
-	Open3.popen3('identify -') do |stdin, stdout, stderr| 
-		stdin.write data
-		stdin.close
-		path, type, size, *rest = *stdout.read.split(' ')
-		type.should == image_type
-		size.should == image_size
-	end
+	@image.destroy! if @image
+	@image = Magick::Image.from_blob(data).first
+
+	@image.format.should == format
+	@image.columns.should == width.to_i
+	@image.rows.should == height.to_i
 end
 
+And /(.*) part body will be saved as (.*) for human inspection/ do |part, file|
+	data = @response_multipart.part[part_no(part)].body
+	(support_dir + file).open('w'){|f| f.write(data)}
+end
+
+And /that image pixel at (.*)x(.*) will be of color (.*)/ do |x, y, color|
+	@image.pixel_color(x.to_i, y.to_i).to_color.sub(/^#/, '0x').should == color
+end
 

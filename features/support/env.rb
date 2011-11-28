@@ -16,6 +16,7 @@ require 'httpclient'
 require 'httpthumbnailer/multipart_response'
 require "open3"
 require "thread"
+require 'RMagick'
 
 def gem_dir
 		Pathname.new(__FILE__).dirname + '..' + '..'

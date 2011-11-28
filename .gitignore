@@ -27,7 +27,7 @@ pkg
 #
 # For MacOS:
 #
-#.DS_Store
+.DS_Store
 
 # For TextMate
 #*.tmproj
@@ -50,4 +50,7 @@ pkg
 # server runtime files
 *.pid
 *.log
+
+features/support/test-pad-background-color.png
+features/support/test-pad.png
 
