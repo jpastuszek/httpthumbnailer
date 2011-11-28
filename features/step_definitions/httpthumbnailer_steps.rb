@@ -1,20 +1,18 @@
-Before do
-	server_start
-	@request_body = nil
-	@response = nil
-	@response_multipart = nil
-end
-
-After do
-	server_stop
+Given /httpthumbnailer server is running at (.*)/ do |url|
+	start_server(
+		"bundle exec #{script('httpthumbnailer')}",
+		'/tmp/httpthumbnailer.pid',
+		support_dir + 'server.log',
+		url
+	)
 end
 
 Given /(.*) file content as request body/ do |file|
 	@request_body = File.open(support_dir + file){|f| f.read }
 end
 
-When /I do (.*) request (.*)/ do |method, uri|
-	@response = server_request(method, uri, nil, @request_body)
+When /I do (.*) request (.*)/ do |method, url|
+	@response = HTTPClient.new.request(method, url, nil, @request_body)
 end
 
 Then /I will get multipart response/ do
