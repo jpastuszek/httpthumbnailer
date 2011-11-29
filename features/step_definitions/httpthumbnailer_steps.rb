@@ -1,3 +1,7 @@
+Given /httpthumbnailer log is empty/ do
+		(support_dir + 'server.log').truncate(0)
+end
+
 Given /httpthumbnailer server is running at (.*)/ do |url|
 	start_server(
 		"bundle exec #{script('httpthumbnailer')}",
@@ -20,7 +24,14 @@ Then /I will get multipart response/ do
 	@response_multipart = MultipartResponse.new(@response.header['Content-Type'].last, @response.body)
 end
 
-Then /response body will be CRLF endend lines/ do |body|	
+Then /response body will be CRLF endend lines like/ do |body|	
+	@response.body.should match(body)
+	@response.body.each do |line|
+		line[-2,2].should == "\r\n"
+	end
+end
+
+Then /response body will be CRLF endend lines$/ do |body|	
 	@response.body.should == body.gsub("\n", "\r\n") + "\r\n"
 end
 

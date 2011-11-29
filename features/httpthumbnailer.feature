@@ -4,6 +4,7 @@ Feature: Generating set of thumbnails with single PUT request
 	/thumbnail[/<thumbnail type>,<width>,<height>,<format>[,<option key>:<option value>]+]+
 
 	Background:
+		Given httpthumbnailer log is empty
 		Given httpthumbnailer server is running at http://localhost:3100/
 
 	Scenario: Single thumbnail
@@ -66,7 +67,6 @@ Feature: Generating set of thumbnails with single PUT request
 		And that image pixel at 2x2 will be of color green
 		And there will be no leaked images
 
-	@test
 	Scenario: Reporitng of missing resource
 		When I do GET request http://localhost:3100/blah
 		Then response status will be 404
@@ -74,5 +74,16 @@ Feature: Generating set of thumbnails with single PUT request
 		And response body will be CRLF endend lines
 		"""
 		Resource '/blah' not found
+		"""
+
+	@test
+	Scenario: Reporitng of unsupported media type
+		Given test.txt file content as request body
+		When I do PUT request http://localhost:3100/thumbnail/crop,128,128,PNG
+		Then response status will be 415
+		And response content type will be text/plain
+		And response body will be CRLF endend lines like
+		"""
+		Error: Thumbnailer::UnsupportedMediaTypeError: Magick::ImageMagickError:
 		"""
 

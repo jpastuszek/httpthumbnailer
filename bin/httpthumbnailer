@@ -92,16 +92,17 @@ sinatra.put %r{/thumbnail/(.*)} do |specs|
 	end
 end
 
-		#plain_exception(e)
-		#halt 415
-
-sinatra.error do
-	e = env['sinatra.error']
-	plain_exception(e)
+sinatra.error Thumbnailer::UnsupportedMediaTypeError do
+	plain_exception(env['sinatra.error'])
+	halt 415
 end
 
 sinatra.error 404 do
 	plain_response("Resource '#{request.path_info}' not found")
+end
+
+sinatra.error do
+	plain_exception(env['sinatra.error'])
 end
 
 begin

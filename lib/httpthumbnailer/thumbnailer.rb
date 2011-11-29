@@ -44,6 +44,12 @@ class Thumbnailer
 		end
 	end
 
+	class UnsupportedMediaTypeError < ArgumentError
+		def initialize(e)
+			super("#{e.class.name}: #{e}")
+		end
+	end
+
 	class ImageHandler
 		class ImageDestroyedError < RuntimeError
 			def initialize
@@ -77,7 +83,11 @@ class Thumbnailer
 			@options = options
 			@logger = (options[:logger] or Logger.new('/dev/null'))
 
-			@image = Magick::Image.from_blob(io.read).first.strip!
+			begin
+				@image = Magick::Image.from_blob(io.read).first.strip!
+			rescue Magick::ImageMagickError => e
+				raise UnsupportedMediaTypeError, e
+			end
 			@methods = methods
 		end
 
