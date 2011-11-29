@@ -76,7 +76,6 @@ Feature: Generating set of thumbnails with single PUT request
 		Resource '/blah' not found
 		"""
 
-	@test
 	Scenario: Reporitng of unsupported media type
 		Given test.txt file content as request body
 		When I do PUT request http://localhost:3100/thumbnail/crop,128,128,PNG
@@ -85,5 +84,25 @@ Feature: Generating set of thumbnails with single PUT request
 		And response body will be CRLF endend lines like
 		"""
 		Error: Thumbnailer::UnsupportedMediaTypeError: Magick::ImageMagickError:
+		"""
+
+	Scenario: Reporitng of bad thumbanil spec format - missing param
+		Given test.txt file content as request body
+		When I do PUT request http://localhost:3100/thumbnail/crop,128,PNG
+		Then response status will be 500
+		And response content type will be text/plain
+		And response body will be CRLF endend lines
+		"""
+		Error: ThumbnailSpecs::BadThubnailSpecFormat: missing argument in: crop,128,PNG
+		"""
+
+	Scenario: Reporitng of bad thumbanil spec format - bad options format
+		Given test.txt file content as request body
+		When I do PUT request http://localhost:3100/thumbnail/crop,128,128,PNG,fas-fda
+		Then response status will be 500
+		And response content type will be text/plain
+		And response body will be CRLF endend lines
+		"""
+		Error: ThumbnailSpecs::BadThubnailSpecFormat: missing option key or value in: fas-fda
 		"""
 
