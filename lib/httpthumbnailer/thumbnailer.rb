@@ -1,5 +1,18 @@
 require 'logger'
 
+class Magick::Image
+	def render_on_background!(background_color)
+		Thumbnailer::ImageHandler.new do
+			self
+		end.use do |image|
+			Magick::Image.new(image.columns, image.rows) {
+				self.background_color = background_color
+			}.composite!(image, Magick::CenterGravity, Magick::OverCompositeOp)
+		end
+	end
+end
+
+
 class ThumbnailSpec
 	def initialize(method, width, height, format, options = {})
 		@method = method
@@ -64,8 +77,11 @@ class Thumbnailer
 		end
 
 		def thumbnail(spec)
-			thumb = process_image(@image, spec)
-			replace_transparency(thumb, spec)
+			ImageHandler.new do
+				process_image(@image, spec).render_on_background!((spec.options['background-color'] or 'white').sub(/^0x/, '#'))
+			end.use do |img|
+				yield img
+			end
 		end
 
 		def destroy!
@@ -74,12 +90,6 @@ class Thumbnailer
 		end
 
 		private
-
-		def replace_transparency(image, spec)
-			Magick::Image.new(image.columns, image.rows) {
-				self.background_color = (spec.options['background-color'] or 'white').sub(/^0x/, '#')
-			}.composite!(image, Magick::CenterGravity, Magick::OverCompositeOp)
-		end
 
 		def process_image(image, spec)
 			impl = @methods[spec.method] or raise UnsupportedMethodError.new(spec.method)
@@ -94,15 +104,15 @@ class Thumbnailer
 
 		@logger.info "Initializing thumbniler"
 
-		@loaded_images = 0
+		@images = 0
 		Magick.trace_proc = lambda do |which, description, id, method|
 			case which
 			when :c
-				@loaded_images += 1
+				@images += 1
 			when :d
-				@loaded_images -= 1
+				@images -= 1
 			end
-			@logger.info "Image event: #{which}, #{description}, #{id}, #{method}: loaded images: #{loaded_images}"
+			@logger.info "Image event: #{which}, #{description}, #{id}, #{method}: loaded images: #{images}"
 		end
 	end
 
@@ -112,8 +122,8 @@ class Thumbnailer
 		end
 	end
 
-	def loaded_images
-		@loaded_images
+	def images
+		@images
 	end
 
 	def method(method, &impl)

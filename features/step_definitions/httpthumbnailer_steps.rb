@@ -47,7 +47,7 @@ And /that image pixel at (.*)x(.*) will be of color (.*)/ do |x, y, color|
 end
 
 
-And /there will not be leaked images/ do
-	HTTPClient.new.get_content("http://localhost:3100/stats/images/loaded").to_i.should == 0
+And /there will be no leaked images/ do
+	HTTPClient.new.get_content("http://localhost:3100/stats/images").to_i.should == 0
 end
 

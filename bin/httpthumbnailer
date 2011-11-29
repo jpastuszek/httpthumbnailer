@@ -30,9 +30,13 @@ sinatra.before do
 		end
 
 		$thumbnailer.method('pad') do |image, spec|
-			Magick::Image.new(spec.width, spec.height) {
-				self.background_color = Magick::Pixel.new(Magick::MaxRGB, Magick::MaxRGB, Magick::MaxRGB, Magick::MaxRGB) # transparent
-			}.composite!(image.resize_to_fit(spec.width, spec.height), Magick::CenterGravity, Magick::OverCompositeOp)
+			Thumbnailer::ImageHandler.new do
+				image.resize_to_fit(spec.width, spec.height)
+			end.use do |thumb|
+				Magick::Image.new(spec.width, spec.height) {
+					self.background_color = Magick::Pixel.new(Magick::MaxRGB, Magick::MaxRGB, Magick::MaxRGB, Magick::MaxRGB) # transparent
+				}.composite!(thumb, Magick::CenterGravity, Magick::OverCompositeOp)
+			end
 		end
 	end
 end
@@ -48,8 +52,8 @@ sinatra.get '/' do
 	logger.info 'hello'
 end
 
-sinatra.get '/stats/images/loaded' do
-	$thumbnailer.loaded_images.to_s
+sinatra.get '/stats/images' do
+	$thumbnailer.images.to_s
 end
 
 sinatra.put %r{/thumbnail/(.*)} do |specs|
@@ -65,16 +69,14 @@ sinatra.put %r{/thumbnail/(.*)} do |specs|
 				out << "--#{settings.boundary}\r\n"
 
 				begin
-					thumbnail = original_image.thumbnail(spec)
-					thumbnail_data = thumbnail.to_blob do |inf|
-						inf.format = spec.format
+					original_image.thumbnail(spec) do |thumbnail|
+						thumbnail_data = thumbnail.to_blob do |inf|
+							inf.format = spec.format
+						end
+
+						out << "Content-Type: #{spec.mime}\r\n\r\n"
+						out << thumbnail_data
 					end
-
-					out << "Content-Type: #{spec.mime}\r\n\r\n"
-					out << thumbnail_data
-
-					thumbnail_data = nil
-					thumbnail.destroy!
 				rescue => e
 					logger.error "Thumbnailing error: #{e.class.name}: #{e}: \n#{e.backtrace.join("\n")}"
 					out << "Content-Type: text/plain\r\n\r\n"
