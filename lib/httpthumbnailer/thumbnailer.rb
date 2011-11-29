@@ -64,6 +64,12 @@ class Thumbnailer
 				@image = nil
 			end
 		end
+
+		def destroy!
+			return unless @image
+			@image.destroy!
+			@image = nil
+		end
 	end
 
 	class OriginalImage
@@ -117,8 +123,16 @@ class Thumbnailer
 	end
 
 	def load(io)
-		ImageHandler.new do
+		h = ImageHandler.new do
 			OriginalImage.new(io, @methods, @options)
+		end
+
+		begin
+			yield h
+		rescue
+			# make sure that we destroy original image if there was an error before it could be used
+			h.destroy!
+			raise
 		end
 	end
 
