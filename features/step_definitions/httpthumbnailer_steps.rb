@@ -20,6 +20,18 @@ Then /I will get multipart response/ do
 	@response_multipart = MultipartResponse.new(@response.header['Content-Type'].last, @response.body)
 end
 
+Then /response body will be CRLF endend lines/ do |body|	
+	@response.body.should == body.gsub!("\n", "\r\n") + "\r\n"
+end
+
+Then /response status will be (.*)/ do |status|
+	@response.status.should == status.to_i
+end
+
+Then /response content type will be (.*)/ do |content_type|
+	@response.header['Content-Type'].first.should == content_type
+end
+
 Then /(.*) part mime type will be (.*)/ do |part, mime|
 	@response_multipart.part[part_no(part)].header['Content-Type'].should == mime
 end
