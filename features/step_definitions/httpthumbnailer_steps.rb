@@ -21,7 +21,7 @@ Then /I will get multipart response/ do
 end
 
 Then /response body will be CRLF endend lines/ do |body|	
-	@response.body.should == body.gsub!("\n", "\r\n") + "\r\n"
+	@response.body.should == body.gsub("\n", "\r\n") + "\r\n"
 end
 
 Then /response status will be (.*)/ do |status|

@@ -66,3 +66,13 @@ Feature: Generating set of thumbnails with single PUT request
 		And that image pixel at 2x2 will be of color green
 		And there will be no leaked images
 
+	@test
+	Scenario: Reporitng of missing resource
+		When I do GET request http://localhost:3100/blah
+		Then response status will be 404
+		And response content type will be text/plain
+		And response body will be CRLF endend lines
+		"""
+		Resource '/blah' not found
+		"""
+
