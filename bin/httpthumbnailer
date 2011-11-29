@@ -19,17 +19,17 @@ sinatra.set :boundary, "thumnail image data"
 sinatra.set :logging, true
 
 sinatra.before do
-	unless @thumbnailer 
-		@thumbnailer = Thumbnailer.new(:logger => logger)
-		@thumbnailer.method('crop') do |image, spec|
+	if $thumbnailer.nil? 
+		$thumbnailer = Thumbnailer.new(:logger => logger)
+		$thumbnailer.method('crop') do |image, spec|
 			image.resize_to_fill(spec.width, spec.height)
 		end
 
-		@thumbnailer.method('fit') do |image, spec|
+		$thumbnailer.method('fit') do |image, spec|
 			image.resize_to_fit(spec.width, spec.height)
 		end
 
-		@thumbnailer.method('pad') do |image, spec|
+		$thumbnailer.method('pad') do |image, spec|
 			Magick::Image.new(spec.width, spec.height) {
 				self.background_color = Magick::Pixel.new(Magick::MaxRGB, Magick::MaxRGB, Magick::MaxRGB, Magick::MaxRGB) # transparent
 			}.composite!(image.resize_to_fit(spec.width, spec.height), Magick::CenterGravity, Magick::OverCompositeOp)
@@ -48,9 +48,13 @@ sinatra.get '/' do
 	logger.info 'hello'
 end
 
+sinatra.get '/stats/images/loaded' do
+	$thumbnailer.loaded_images.to_s
+end
+
 sinatra.put %r{/thumbnail/(.*)} do |specs|
 	thumbnail_specs = ThumbnailSpecs.from_uri(specs)
-	original_image_handler = @thumbnailer.load(request.body)
+	original_image_handler = $thumbnailer.load(request.body)
 
 	status 200
 	headers "Content-Type" => "multipart/mixed; boundary=\"#{settings.boundary}\""

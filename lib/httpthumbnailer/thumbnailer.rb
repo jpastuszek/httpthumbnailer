@@ -91,12 +91,29 @@ class Thumbnailer
 		@methods = {}
 		@options = options
 		@logger = (options[:logger] or Logger.new('/dev/null'))
+
+		@logger.info "Initializing thumbniler"
+
+		@loaded_images = 0
+		Magick.trace_proc = lambda do |which, description, id, method|
+			case which
+			when :c
+				@loaded_images += 1
+			when :d
+				@loaded_images -= 1
+			end
+			@logger.info "Image event: #{which}, #{description}, #{id}, #{method}: loaded images: #{loaded_images}"
+		end
 	end
 
 	def load(io)
 		ImageHandler.new do
 			OriginalImage.new(io, @methods, @options)
 		end
+	end
+
+	def loaded_images
+		@loaded_images
 	end
 
 	def method(method, &impl)

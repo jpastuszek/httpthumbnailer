@@ -6,14 +6,15 @@ Feature: Generating set of thumbnails with single PUT request
 	Background:
 		Given httpthumbnailer server is running at http://localhost:3100/
 
-	@test
 	Scenario: Single thumbnail
 		Given test.jpg file content as request body
 		When I do PUT request http://localhost:3100/thumbnail/crop,16,16,PNG
 		Then I will get multipart response
 		Then first part will contain PNG image of size 16x16
 		And first part mime type will be image/png
+		And there will not be leaked images
 
+	@test
 	Scenario: Multiple thumbnails
 		Given test.jpg file content as request body
 		When I do PUT request http://localhost:3100/thumbnail/crop,16,16,PNG/crop,4,8,JPG/crop,16,32,JPEG
@@ -24,6 +25,7 @@ Feature: Generating set of thumbnails with single PUT request
 		And second part mime type will be image/jpeg
 		Then third part will contain JPEG image of size 16x32
 		And third part mime type will be image/jpeg
+		And there will not be leaked images
 
 	Scenario: Transparent image to JPEG handling - default background color white
 		Given test-transparent.png file content as request body
@@ -32,12 +34,14 @@ Feature: Generating set of thumbnails with single PUT request
 		And first part body will be saved as test-transparent-default.png for human inspection
 		And first part will contain JPEG image of size 128x128
 		And that image pixel at 32x32 will be of color white
+		And there will not be leaked images
 
 	Scenario: Fit thumbnailing method
 		Given test.jpg file content as request body
 		When I do PUT request http://localhost:3100/thumbnail/fit,128,128,PNG
 		Then I will get multipart response
 		And first part will contain PNG image of size 91x128
+		And there will not be leaked images
 
 	Scenario: Pad thumbnailing method - default background color white
 		Given test.jpg file content as request body
@@ -46,6 +50,7 @@ Feature: Generating set of thumbnails with single PUT request
 		And first part body will be saved as test-pad.png for human inspection
 		And first part will contain PNG image of size 128x128
 		And that image pixel at 2x2 will be of color white
+		And there will not be leaked images
 
 	Scenario: Pad thumbnailing method with specified background color
 		Given test.jpg file content as request body
@@ -54,4 +59,5 @@ Feature: Generating set of thumbnails with single PUT request
 		And first part body will be saved as test-pad-background-color.png for human inspection
 		And first part will contain PNG image of size 128x128
 		And that image pixel at 2x2 will be of color green
+		And there will not be leaked images
 
