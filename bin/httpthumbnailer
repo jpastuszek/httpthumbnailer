@@ -64,7 +64,7 @@ sinatra.get '/stats/images' do
 	$thumbnailer.images.to_s
 end
 
-sinatra.put %r{/thumbnail/(.*)} do |specs|
+sinatra.put %r{^/thumbnail/(.*)} do |specs|
 	thumbnail_specs = ThumbnailSpecs.from_uri(specs)
 	$thumbnailer.load(request.body) do |original_image_handler|
 		status 200

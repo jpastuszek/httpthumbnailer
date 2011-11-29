@@ -77,13 +77,22 @@ Feature: Generating set of thumbnails with single PUT request
 		And third part content type will be text/plain
 		And there will be no leaked images
 
-	Scenario: Reporitng of missing resource
+	Scenario: Reporitng of missing resource for GET
 		When I do GET request http://localhost:3100/blah
 		Then response status will be 404
 		And response content type will be text/plain
 		And response body will be CRLF endend lines
 		"""
 		Resource '/blah' not found
+		"""
+
+	Scenario: Reporitng of missing resource for PUT
+		When I do PUT request http://localhost:3100/blah/thumbnail/crop,0,0,PNG/fit,0,0,JPG/pad,0,0,JPEG
+		Then response status will be 404
+		And response content type will be text/plain
+		And response body will be CRLF endend lines
+		"""
+		Resource '/blah/thumbnail/crop,0,0,PNG/fit,0,0,JPG/pad,0,0,JPEG' not found
 		"""
 
 	Scenario: Reporitng of unsupported media type
