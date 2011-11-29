@@ -109,7 +109,13 @@ class Thumbnailer
 
 		def process_image(image, spec)
 			impl = @methods[spec.method] or raise UnsupportedMethodError.new(spec.method)
-			impl.call(image, spec)
+			copy = image.copy
+			begin
+				impl.call(copy, spec)
+			rescue
+				copy.destroy!
+				raise
+			end
 		end
 	end
 

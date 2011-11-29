@@ -17,27 +17,30 @@ sinatra.set :server, ['mongrel']
 sinatra.set :lock, true
 sinatra.set :boundary, "thumnail image data"
 sinatra.set :logging, true
+sinatra.set :debug, true
 
 sinatra.before do
+	logger.level = Logger::DEBUG if settings.debug == true
 	if $thumbnailer.nil? 
 		$thumbnailer = Thumbnailer.new(:logger => logger)
 
 		$thumbnailer.method('crop') do |image, spec|
-			image.resize_to_fill(spec.width, spec.height)
+			image.resize_to_fill!(spec.width, spec.height)
 		end
 
 		$thumbnailer.method('fit') do |image, spec|
-			image.resize_to_fit(spec.width, spec.height)
+			image.resize_to_fit!(spec.width, spec.height)
 		end
 
 		$thumbnailer.method('pad') do |image, spec|
-			Thumbnailer::ImageHandler.new do
-				image.resize_to_fit(spec.width, spec.height)
-			end.use do |thumb|
-				Magick::Image.new(spec.width, spec.height) {
-					self.background_color = Magick::Pixel.new(Magick::MaxRGB, Magick::MaxRGB, Magick::MaxRGB, Magick::MaxRGB) # transparent
-				}.composite!(thumb, Magick::CenterGravity, Magick::OverCompositeOp)
-			end
+			image.resize_to_fit!(spec.width, spec.height)
+
+			out = Magick::Image.new(spec.width, spec.height) {
+				self.background_color = Magick::Pixel.new(Magick::MaxRGB, Magick::MaxRGB, Magick::MaxRGB, Magick::MaxRGB) # transparent
+			}.composite!(image, Magick::CenterGravity, Magick::OverCompositeOp)
+
+			image.destroy!
+			out
 		end
 	end
 end

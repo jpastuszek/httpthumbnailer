@@ -67,6 +67,16 @@ Feature: Generating set of thumbnails with single PUT request
 		And that image pixel at 2x2 will be of color green
 		And there will be no leaked images
 
+	Scenario: Image leaking on error
+		Given test.jpg file content as request body
+		When I do PUT request http://localhost:3100/thumbnail/crop,0,0,PNG/fit,0,0,JPG/pad,0,0,JPEG
+		Then response status will be 200
+		And I will get multipart response
+		And first part content type will be text/plain
+		And second part content type will be text/plain
+		And third part content type will be text/plain
+		And there will be no leaked images
+
 	Scenario: Reporitng of missing resource
 		When I do GET request http://localhost:3100/blah
 		Then response status will be 404
@@ -106,7 +116,6 @@ Feature: Generating set of thumbnails with single PUT request
 		Error: ThumbnailSpecs::BadThubnailSpecFormat: missing option key or value in: fas-fda
 		"""
 
-	@test
 	Scenario: Reporitng of image thumbnailing errors
 		Given test.jpg file content as request body
 		When I do PUT request http://localhost:3100/thumbnail/crop,16,16,PNG/crop,0,0,JPG/crop,16,32,JPEG
@@ -122,5 +131,4 @@ Feature: Generating set of thumbnails with single PUT request
 		Then third part will contain JPEG image of size 16x32
 		And third part mime type will be image/jpeg
 		And there will be no leaked images
-
 
