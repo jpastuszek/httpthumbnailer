@@ -47,6 +47,14 @@ Then /(.*) part mime type will be (.*)/ do |part, mime|
 	@response_multipart.part[part_no(part)].header['Content-Type'].should == mime
 end
 
+Then /(.*) part content type will be (.*)/ do |part, content_type|
+	@response_multipart.part[part_no(part)].header['Content-Type'].should == content_type
+end
+
+Then /(.*) part body will be CRLF endend lines$/ do |part, body|	
+	@response_multipart.part[part_no(part)].body.should == body.gsub("\n", "\r\n") + "\r\n"
+end
+
 Then /(.*) part will contain (.*) image of size (.*)x(.*)/ do |part, format, width, height|
 	mime = @response_multipart.part[part_no(part)].header['Content-Type']
 	data = @response_multipart.part[part_no(part)].body
