@@ -49,8 +49,8 @@ sinatra.get '/' do
 end
 
 sinatra.put %r{/thumbnail/(.*)} do |specs|
-	image = begin
-		@thumbnailer.load('current', request.body)
+	original_image = begin
+		@thumbnailer.load(request.body)
 	rescue => e
 		plain_exception(e)
 		halt 415
@@ -66,7 +66,7 @@ sinatra.put %r{/thumbnail/(.*)} do |specs|
 			out << "--#{settings.boundary}\r\n"
 
 			begin
-				thumbnail = @thumbnailer.thumbnail('current', spec)
+				thumbnail = @thumbnailer.thumbnail(original_image, spec)
 				thumbnail_data = thumbnail.to_blob do |inf|
 					inf.format = spec.format
 				end

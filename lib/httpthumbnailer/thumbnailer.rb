@@ -45,28 +45,16 @@ class Thumbnailer
 		@logger = (options[:logger] or Logger.new('/dev/null'))
 	end
 
-	def load(id, io)
-		@logger.info "Loading image #{id}"
-		@images[id] = Magick::Image.from_blob(io.read).first
-		@images[id].strip!
-
-		return @images[id] unless block_given?
-		begin
-			yield @images[id]
-			@logger.info "Done with image #{id}"
-		ensure
-			@logger.info "Destroying image #{id}"
-			@images[id].destroy!
-			@images.delete(id)
-		end
+	def load(io)
+		@logger.info "Loading image"
+		@image = Magick::Image.from_blob(io.read).first.strip!
 	end
 
 	def method(method, &impl)
 		@methods[method] = impl
 	end
 
-	def thumbnail(id, spec)
-		image = @images[id] or raise ImageNotFound.new(id)
+	def thumbnail(image, spec)
 		thumb = process_image(image, spec)
 		replace_transparency(thumb, spec)
 	end
@@ -80,6 +68,18 @@ class Thumbnailer
 	def process_image(image, spec)
 		impl = @methods[spec.method] or raise UnsupportedMethodError.new(spec.method)
 		impl.call(image, spec)
+	end
+
+	private
+
+	def image(method)
+		begin
+			img = method.call
+			yield img
+		ensure
+			img.destroy!
+			img = nil
+		end
 	end
 end
 
