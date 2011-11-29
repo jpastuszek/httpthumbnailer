@@ -31,55 +31,76 @@ class Thumbnailer
 		end
 	end
 
-	class ImageNotFound < ArgumentError
-		def initialize(id)
-			super("No image of ID '#{id}' found")
+	class ImageHandler
+		class ImageDestroyedError < RuntimeError
+			def initialize
+				super("image was already used")
+			end
+		end
+
+		def initialize
+			@image = yield
+		end
+
+		def use
+			raise ImageDestroyedError unless @image
+			begin
+				yield @image
+			ensure
+				@image.destroy!
+				@image = nil
+			end
+		end
+	end
+
+	class OriginalImage
+		def initialize(io, methods, options = {})
+			@options = options
+			@logger = (options[:logger] or Logger.new('/dev/null'))
+
+			@logger.info "Loading original image"
+			@image = Magick::Image.from_blob(io.read).first.strip!
+			@methods = methods
+		end
+
+		def thumbnail(spec)
+			thumb = process_image(@image, spec)
+			replace_transparency(thumb, spec)
+		end
+
+		def destroy!
+			@logger.info "Destroing original image"
+			@image.destroy!
+		end
+
+		private
+
+		def replace_transparency(image, spec)
+			Magick::Image.new(image.columns, image.rows) {
+				self.background_color = (spec.options['background-color'] or 'white').sub(/^0x/, '#')
+			}.composite!(image, Magick::CenterGravity, Magick::OverCompositeOp)
+		end
+
+		def process_image(image, spec)
+			impl = @methods[spec.method] or raise UnsupportedMethodError.new(spec.method)
+			impl.call(image, spec)
 		end
 	end
 
 	def initialize(options = {})
-		@images = {}
 		@methods = {}
-		@options = options
 		@options = options
 		@logger = (options[:logger] or Logger.new('/dev/null'))
 	end
 
 	def load(io)
-		@logger.info "Loading image"
-		@image = Magick::Image.from_blob(io.read).first.strip!
+		ImageHandler.new do
+			OriginalImage.new(io, @methods, @options)
+		end
 	end
 
 	def method(method, &impl)
 		@methods[method] = impl
-	end
-
-	def thumbnail(image, spec)
-		thumb = process_image(image, spec)
-		replace_transparency(thumb, spec)
-	end
-
-	def replace_transparency(image, spec)
-		Magick::Image.new(image.columns, image.rows) {
-			self.background_color = (spec.options['background-color'] or 'white').sub(/^0x/, '#')
-		}.composite!(image, Magick::CenterGravity, Magick::OverCompositeOp)
-	end
-
-	def process_image(image, spec)
-		impl = @methods[spec.method] or raise UnsupportedMethodError.new(spec.method)
-		impl.call(image, spec)
-	end
-
-	private
-
-	def image(method)
-		begin
-			img = method.call
-			yield img
-		ensure
-			img.destroy!
-			img = nil
-		end
 	end
 end
 

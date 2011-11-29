@@ -49,46 +49,47 @@ sinatra.get '/' do
 end
 
 sinatra.put %r{/thumbnail/(.*)} do |specs|
-	original_image = begin
-		@thumbnailer.load(request.body)
-	rescue => e
-		plain_exception(e)
-		halt 415
-	end
-
 	thumbnail_specs = ThumbnailSpecs.from_uri(specs)
+	original_image_handler = @thumbnailer.load(request.body)
 
 	status 200
 	headers "Content-Type" => "multipart/mixed; boundary=\"#{settings.boundary}\""
-	stream do |out|
-		thumbnail_specs.each do |spec|
-			logger.info "Thumbnailing: #{spec}"
-			out << "--#{settings.boundary}\r\n"
+	stream do |out| # this is non blocking
+		original_image_handler.use do |original_image|
+			thumbnail_specs.each do |spec|
+				logger.info "Thumbnailing: #{spec}"
+				out << "--#{settings.boundary}\r\n"
 
-			begin
-				thumbnail = @thumbnailer.thumbnail(original_image, spec)
-				thumbnail_data = thumbnail.to_blob do |inf|
-					inf.format = spec.format
+				begin
+					thumbnail = original_image.thumbnail(spec)
+					thumbnail_data = thumbnail.to_blob do |inf|
+						inf.format = spec.format
+					end
+
+					out << "Content-Type: #{spec.mime}\r\n\r\n"
+					out << thumbnail_data
+
+					thumbnail_data = nil
+					thumbnail.destroy!
+				rescue => e
+					logger.error "Thumbnailing error: #{e.class.name}: #{e}: \n#{e.backtrace.join("\n")}"
+					out << "Content-Type: text/plain\r\n\r\n"
+					out << "Error: #{e.class.name}: #{e}\r\n"
+				ensure
+					out << "\r\n"
 				end
-
-				out << "Content-Type: #{spec.mime}\r\n\r\n"
-				out << thumbnail_data
-
-				thumbnail_data = nil
-				thumbnail.destroy!
-			rescue => e
-				out << "Content-Type: text/plain\r\n\r\n"
-				out << "Error: #{e.class.name}: #{e}\r\n"
-			ensure
-				out << "\r\n"
 			end
+			out << "--#{settings.boundary}--"
 		end
-		out << "--#{settings.boundary}--"
 	end
 end
 
+		#plain_exception(e)
+		#halt 415
+
 sinatra.error do
-	plain_exception(env['sinatra.error'])
+	e = env['sinatra.error']
+	plain_exception(e)
 end
 
 begin

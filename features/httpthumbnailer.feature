@@ -6,23 +6,24 @@ Feature: Generating set of thumbnails with single PUT request
 	Background:
 		Given httpthumbnailer server is running at http://localhost:3100/
 
+	@test
 	Scenario: Single thumbnail
 		Given test.jpg file content as request body
 		When I do PUT request http://localhost:3100/thumbnail/crop,16,16,PNG
 		Then I will get multipart response
-		Then first part mime type will be image/png
-		And first part will contain PNG image of size 16x16
+		Then first part will contain PNG image of size 16x16
+		And first part mime type will be image/png
 
 	Scenario: Multiple thumbnails
 		Given test.jpg file content as request body
 		When I do PUT request http://localhost:3100/thumbnail/crop,16,16,PNG/crop,4,8,JPG/crop,16,32,JPEG
 		Then I will get multipart response
-		Then first part mime type will be image/png
-		And first part will contain PNG image of size 16x16
-		Then second part mime type will be image/jpeg
-		And second part will contain JPEG image of size 4x8
-		Then third part mime type will be image/jpeg
-		And third part will contain JPEG image of size 16x32
+		Then first part will contain PNG image of size 16x16
+		And first part mime type will be image/png
+		Then second part will contain JPEG image of size 4x8
+		And second part mime type will be image/jpeg
+		Then third part will contain JPEG image of size 16x32
+		And third part mime type will be image/jpeg
 
 	Scenario: Transparent image to JPEG handling - default background color white
 		Given test-transparent.png file content as request body
