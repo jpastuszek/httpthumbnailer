@@ -21,6 +21,7 @@ sinatra.set :logging, true
 sinatra.before do
 	if $thumbnailer.nil? 
 		$thumbnailer = Thumbnailer.new(:logger => logger)
+
 		$thumbnailer.method('crop') do |image, spec|
 			image.resize_to_fill(spec.width, spec.height)
 		end
@@ -62,6 +63,7 @@ sinatra.put %r{/thumbnail/(.*)} do |specs|
 
 	status 200
 	headers "Content-Type" => "multipart/mixed; boundary=\"#{settings.boundary}\""
+
 	stream do |out| # this is non blocking
 		original_image_handler.use do |original_image|
 			thumbnail_specs.each do |spec|
@@ -69,14 +71,10 @@ sinatra.put %r{/thumbnail/(.*)} do |specs|
 				out << "--#{settings.boundary}\r\n"
 
 				begin
-					original_image.thumbnail(spec) do |thumbnail|
-						thumbnail_data = thumbnail.to_blob do |inf|
-							inf.format = spec.format
-						end
+					thumbnail_data = original_image.thumbnail(spec)
 
-						out << "Content-Type: #{spec.mime}\r\n\r\n"
-						out << thumbnail_data
-					end
+					out << "Content-Type: #{spec.mime}\r\n\r\n"
+					out << thumbnail_data
 				rescue => e
 					logger.error "Thumbnailing error: #{e.class.name}: #{e}: \n#{e.backtrace.join("\n")}"
 					out << "Content-Type: text/plain\r\n\r\n"

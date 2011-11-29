@@ -71,7 +71,6 @@ class Thumbnailer
 			@options = options
 			@logger = (options[:logger] or Logger.new('/dev/null'))
 
-			@logger.info "Loading original image"
 			@image = Magick::Image.from_blob(io.read).first.strip!
 			@methods = methods
 		end
@@ -79,13 +78,14 @@ class Thumbnailer
 		def thumbnail(spec)
 			ImageHandler.new do
 				process_image(@image, spec).render_on_background!((spec.options['background-color'] or 'white').sub(/^0x/, '#'))
-			end.use do |img|
-				yield img
+			end.use do |thumb|
+				thumb.to_blob do |inf|
+					inf.format = spec.format
+				end
 			end
 		end
 
 		def destroy!
-			@logger.info "Destroing original image"
 			@image.destroy!
 		end
 
@@ -112,7 +112,7 @@ class Thumbnailer
 			when :d
 				@images -= 1
 			end
-			@logger.info "Image event: #{which}, #{description}, #{id}, #{method}: loaded images: #{images}"
+			@logger.debug "Image event: #{which}, #{description}, #{id}, #{method}: loaded images: #{images}"
 		end
 	end
 
