@@ -18,11 +18,14 @@ sinatra.set :lock, true
 sinatra.set :boundary, "thumnail image data"
 sinatra.set :logging, true
 sinatra.set :debug, true
+sinatra.set :limit_memory, 128*10**6 # B (keep in mem)
+sinatra.set :limit_map, 256*10**6 # B (if not fit in mem, map to disk)
+sinatra.set :limit_disk, 0 # B (if not fit in map use standard IO)
 
 sinatra.before do
 	logger.level = Logger::DEBUG if settings.debug == true
 	if $thumbnailer.nil? 
-		$thumbnailer = Thumbnailer.new(:logger => logger)
+		$thumbnailer = Thumbnailer.new(:logger => logger, :limit_memory => settings.limit_memory, :limit_map => settings.limit_map, :limit_disk => settings.limit_disk)
 
 		$thumbnailer.method('crop') do |image, spec|
 			image.resize_to_fill!(spec.width, spec.height)
@@ -98,6 +101,11 @@ end
 sinatra.error Thumbnailer::UnsupportedMediaTypeError do
 	plain_exception(env['sinatra.error'])
 	halt 415
+end
+
+sinatra.error Thumbnailer::ImageTooLargeError do
+	plain_exception(env['sinatra.error'])
+	halt 413
 end
 
 sinatra.error 404 do

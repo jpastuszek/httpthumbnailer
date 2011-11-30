@@ -55,6 +55,14 @@ Then /(.*) part body will be CRLF endend lines$/ do |part, body|
 	@response_multipart.part[part_no(part)].body.should == body.gsub("\n", "\r\n") + "\r\n"
 end
 
+Then /(.*) part body will be CRLF endend lines like$/ do |part, body|	
+	pbody = @response_multipart.part[part_no(part)].body
+	pbody.should match(body)
+	pbody.each do |line|
+		line[-2,2].should == "\r\n"
+	end
+end
+
 Then /(.*) part will contain (.*) image of size (.*)x(.*)/ do |part, format, width, height|
 	mime = @response_multipart.part[part_no(part)].header['Content-Type']
 	data = @response_multipart.part[part_no(part)].body
@@ -76,7 +84,6 @@ end
 And /that image pixel at (.*)x(.*) will be of color (.*)/ do |x, y, color|
 	@image.pixel_color(x.to_i, y.to_i).to_color.sub(/^#/, '0x').should == color
 end
-
 
 And /there will be no leaked images/ do
 	HTTPClient.new.get_content("http://localhost:3100/stats/images").to_i.should == 0

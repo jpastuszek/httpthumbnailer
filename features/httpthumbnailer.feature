@@ -141,3 +141,30 @@ Feature: Generating set of thumbnails with single PUT request
 		And third part mime type will be image/jpeg
 		And there will be no leaked images
 
+	Scenario: Memory limits exhausted while loading
+		Given test-large.jpg file content as request body
+		When I do PUT request http://localhost:3100/thumbnail/crop,16,16,PNG
+		Then response status will be 413
+		And response content type will be text/plain
+		And response body will be CRLF endend lines like
+		"""
+		Error: Thumbnailer::ImageTooLargeError: Magick::ImageMagickError: cache resources exhausted
+		"""
+		And there will be no leaked images
+
+	Scenario: Memory limits exhausted while thumbnailing
+		Given test.jpg file content as request body
+		When I do PUT request http://localhost:3100/thumbnail/crop,16,16,PNG/crop,16000,16000,JPG/crop,16,32,JPEG
+		Then response status will be 200
+		And I will get multipart response
+		Then first part will contain PNG image of size 16x16
+		And first part mime type will be image/png
+		And second part content type will be text/plain
+		And second part body will be CRLF endend lines like
+		"""
+		Error: Magick::ImageMagickError: cache resources exhausted
+		"""
+		Then third part will contain JPEG image of size 16x32
+		And third part mime type will be image/jpeg
+		And there will be no leaked images
+

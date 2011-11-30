@@ -50,6 +50,12 @@ class Thumbnailer
 		end
 	end
 
+	class ImageTooLargeError < ArgumentError
+		def initialize(e)
+			super("#{e.class.name}: #{e}")
+		end
+	end
+
 	class ImageHandler
 		class ImageDestroyedError < RuntimeError
 			def initialize
@@ -86,6 +92,7 @@ class Thumbnailer
 			begin
 				@image = Magick::Image.from_blob(io.read).first.strip!
 			rescue Magick::ImageMagickError => e
+				raise ImageTooLargeError, e if e.message =~ /cache resources exhausted/
 				raise UnsupportedMediaTypeError, e
 			end
 			@methods = methods
@@ -126,6 +133,11 @@ class Thumbnailer
 
 		@logger.info "Initializing thumbniler"
 
+		set_limit(:area, options[:limit_area]) if options.member?(:limit_area)
+		set_limit(:memory, options[:limit_memory]) if options.member?(:limit_memory)
+		set_limit(:map, options[:limit_map]) if options.member?(:limit_map)
+		set_limit(:disk, options[:limit_disk]) if options.member?(:limit_disk)
+
 		@images = 0
 		Magick.trace_proc = lambda do |which, description, id, method|
 			case which
@@ -158,6 +170,11 @@ class Thumbnailer
 
 	def method(method, &impl)
 		@methods[method] = impl
+	end
+
+	def set_limit(limit, value)
+		old = Magick.limit_resource(limit, value)
+		@logger.info "Changed limit of #{limit} from #{old} to #{value}"
 	end
 end
 
