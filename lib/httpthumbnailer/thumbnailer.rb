@@ -99,12 +99,17 @@ class Thumbnailer
 		end
 
 		def thumbnail(spec)
-			ImageHandler.new do
-				process_image(@image, spec).render_on_background!((spec.options['background-color'] or 'white').sub(/^0x/, '#'))
-			end.use do |thumb|
-				thumb.to_blob do |inf|
-					inf.format = spec.format
+			begin
+				ImageHandler.new do
+					process_image(@image, spec).render_on_background!((spec.options['background-color'] or 'white').sub(/^0x/, '#'))
+				end.use do |thumb|
+					thumb.to_blob do |inf|
+						inf.format = spec.format
+					end
 				end
+			rescue Magick::ImageMagickError => e
+				raise ImageTooLargeError, e if e.message =~ /cache resources exhausted/
+				raise
 			end
 		end
 

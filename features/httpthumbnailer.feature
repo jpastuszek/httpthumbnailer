@@ -162,7 +162,7 @@ Feature: Generating set of thumbnails with single PUT request
 		And second part content type will be text/plain
 		And second part body will be CRLF endend lines like
 		"""
-		Error: Magick::ImageMagickError: cache resources exhausted
+		Error: Thumbnailer::ImageTooLargeError: Magick::ImageMagickError: cache resources exhausted
 		"""
 		Then third part will contain JPEG image of size 16x32
 		And third part mime type will be image/jpeg
