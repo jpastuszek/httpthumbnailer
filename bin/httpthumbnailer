@@ -1,5 +1,16 @@
 #!/usr/bin/ruby
 
+require 'cli'
+options = CLI.new do
+	description 'HTTP thumbnailing server'
+	option :bind, :short => :b, :default => 'localhost', :description => "HTTP server bind address"
+	option :port, :short => :p, :default => 3100, :cast => Integer, :description => "HTTP server TCP port"
+	option :server, :short => :s, :default => 'mongrel', :description => "Rack server handler like thin, mongrel, webrick, fastcgi etc."
+	option :limit_memory, :default => 128*1024**2, :cast => Integer, :description => "Image cache heap memory size limit in bytes"
+	option :limit_map, :default => 256*1024**2, :cast => Integer, :description => "Image cache memory mapped file size limit in bytes - used when heap memory limit is used up"
+	option :limit_disk, :default => 0, :cast => Integer, :description => "Image cache temporary file size limit in bytes - used when memory mapped file limit is used up"
+end.parse!
+
 require 'sinatra/base'
 require 'haml'
 require 'RMagick'
@@ -10,17 +21,17 @@ require 'httpthumbnailer/thumbnail_specs'
 
 sinatra = Sinatra.new
 
-sinatra.set :port, 3100
-sinatra.set :bind, 'localhost'
+sinatra.set :port, options.port
+sinatra.set :bind, options.bind
 sinatra.set :environment, 'production'
-sinatra.set :server, ['mongrel']
+sinatra.set :server, options.server
 sinatra.set :lock, true
 sinatra.set :boundary, "thumnail image data"
 sinatra.set :logging, true
 sinatra.set :debug, true
-sinatra.set :limit_memory, 128*10**6 # B (keep in mem)
-sinatra.set :limit_map, 256*10**6 # B (if not fit in mem, map to disk)
-sinatra.set :limit_disk, 0 # B (if not fit in map use standard IO)
+sinatra.set :limit_memory, options.limit_memory
+sinatra.set :limit_map, options.limit_map
+sinatra.set :limit_disk, options.limit_disk
 
 sinatra.before do
 	logger.level = Logger::DEBUG if settings.debug == true
@@ -116,10 +127,5 @@ sinatra.error do
 	plain_exception(env['sinatra.error'])
 end
 
-begin
-	sinatra.run!
-rescue Errno::EACCES, Errno::EADDRNOTAVAIL, SocketError => e
-	puts "Error: failed to bind HTTP server socket (#{options[:bind]}): #{e}"
-	exit 5
-end
+sinatra.run!
 
