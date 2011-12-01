@@ -4,7 +4,6 @@ gem "sinatra", ">= 1.2.6"
 gem "mongrel", ">= 1.1.5"
 gem "rmagick", "~> 2"
 gem "haml", "~> 3"
-gem "fcgi", "~> 0.8"
 gem "cli", "~> 0.0"
 
 # Add dependencies to develop your gem here.
