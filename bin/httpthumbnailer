@@ -44,7 +44,7 @@ sinatra.set :limit_map, options.limit_map
 sinatra.set :limit_disk, options.limit_disk
 
 sinatra.before do
-	logger.level = Logger::DEBUG if settings.debug == true
+	logger.level = Logger::DEBUG if settings.logging and settings.debug
 	if $thumbnailer.nil? 
 		$thumbnailer = Thumbnailer.new(:logger => logger, :limit_memory => settings.limit_memory, :limit_map => settings.limit_map, :limit_disk => settings.limit_disk)
 
