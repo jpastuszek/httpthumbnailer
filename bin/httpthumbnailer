@@ -1,9 +1,11 @@
 #!/usr/bin/ruby
 
 require 'cli'
+require 'ip'
+
 options = CLI.new do
 	description 'HTTP thumbnailing server'
-	option :bind, :short => :b, :default => 'localhost', :description => "HTTP server bind address"
+	option :bind, :short => :b, :default => IP.new('127.0.0.1'), :cast => IP, :description => "HTTP server bind address - use 0.0.0.0 to bind to all interfaces"
 	option :port, :short => :p, :default => 3100, :cast => Integer, :description => "HTTP server TCP port"
 	option :server, :short => :s, :default => 'mongrel', :description => "Rack server handler like thin, mongrel, webrick, fastcgi etc."
 	option :limit_memory, :default => 128*1024**2, :cast => Integer, :description => "Image cache heap memory size limit in bytes"
@@ -22,7 +24,7 @@ require 'httpthumbnailer/thumbnail_specs'
 sinatra = Sinatra.new
 
 sinatra.set :port, options.port
-sinatra.set :bind, options.bind
+sinatra.set :bind, options.bind.to_s
 sinatra.set :environment, 'production'
 sinatra.set :server, options.server
 sinatra.set :lock, true
