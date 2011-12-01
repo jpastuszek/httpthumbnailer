@@ -6,6 +6,8 @@ require 'ip'
 options = CLI.new do
 	description 'HTTP thumbnailing server'
 	switch :no_bind, :description => "Do not bind to TCP socket - useful with -s fastcgi option"
+	switch :no_logging, :description => "Disables logging"
+	switch :debug, :description => "Enables debugging"
 	option :bind, :short => :b, :default => IP.new('127.0.0.1'), :cast => IP, :description => "HTTP server bind address - use 0.0.0.0 to bind to all interfaces"
 	option :port, :short => :p, :default => 3100, :cast => Integer, :description => "HTTP server TCP port"
 	option :server, :short => :s, :default => 'mongrel', :description => "Rack server handler like thin, mongrel, webrick, fastcgi etc."
@@ -35,8 +37,8 @@ sinatra.set :environment, 'production'
 sinatra.set :server, options.server
 sinatra.set :lock, true
 sinatra.set :boundary, "thumnail image data"
-sinatra.set :logging, true
-sinatra.set :debug, true
+sinatra.set :logging, (not options.no_logging)
+sinatra.set :debug, options.debug
 sinatra.set :limit_memory, options.limit_memory
 sinatra.set :limit_map, options.limit_map
 sinatra.set :limit_disk, options.limit_disk
