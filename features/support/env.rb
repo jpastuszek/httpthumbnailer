@@ -62,7 +62,7 @@ def start_server(cmd, pid_file, log_file, test_url)
 		stop_server(pid_file) if Process.pid == ppid
 	end
 
-	Timeout.timeout(10) do
+	Timeout.timeout(20) do
 		begin
 			get test_url
 		rescue Errno::ECONNREFUSED

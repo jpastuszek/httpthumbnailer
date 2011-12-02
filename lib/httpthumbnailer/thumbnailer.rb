@@ -128,11 +128,15 @@ class Thumbnailer
 
 		def thumbnail(spec)
 			begin
+				quality = (spec.options['quality'] or default_quality(spec.format))
+				quality = quality.to_i if quality
+
 				ImageHandler.new do
 					process_image(@image, spec).render_on_background!((spec.options['background-color'] or 'white').sub(/^0x/, '#'))
 				end.use do |thumb|
-					thumb.to_blob do |inf|
-						inf.format = spec.format
+					thumb.to_blob do
+						self.format = spec.format
+						self.quality = quality if quality
 					end
 				end
 			rescue Magick::ImageMagickError => e
@@ -146,6 +150,17 @@ class Thumbnailer
 		end
 
 		private
+
+		def default_quality(format)
+			case format
+			when /png/i
+				95 # max zlib compression, adaptive filtering (photo)
+			when /jpeg|jpg/i
+				85
+			else
+				nil
+			end
+		end
 
 		def find_prescale_factor(max_width, max_height, factor = 1)
 			new_factor = factor * 2

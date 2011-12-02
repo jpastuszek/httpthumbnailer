@@ -179,3 +179,37 @@ Feature: Generating set of thumbnails with single PUT request
 		And third part mime type will be image/jpeg
 		And there will be no leaked images
 
+	Scenario: Quality option - JPEG
+		Given test.jpg file content as request body
+		When I do PUT request http://localhost:3100/thumbnail/crop,32,32,JPEG,quality:10/crop,32,32,JPG,quality:80/crop,32,32,JPEG,quality:90
+		Then response status will be 200
+		And I will get multipart response
+		And first part mime type will be image/jpeg
+		And second part mime type will be image/jpeg
+		And third part mime type will be image/jpeg
+		Then first part will contain body smaller than second part
+		Then second part will contain body smaller than third part
+
+	Scenario: Quality option - JPEG - default 85
+		Given test.jpg file content as request body
+		When I do PUT request http://localhost:3100/thumbnail/crop,32,32,JPEG,quality:84/crop,32,32,JPG/crop,32,32,JPEG,quality:86
+		Then response status will be 200
+		And I will get multipart response
+		And first part mime type will be image/jpeg
+		And second part mime type will be image/jpeg
+		And third part mime type will be image/jpeg
+		Then first part will contain body smaller than second part
+		Then second part will contain body smaller than third part
+
+	Scenario: Quality option - PNG (XY where X - zlib compresion level, Y - filter)
+		Given test.jpg file content as request body
+		When I do PUT request http://localhost:3100/thumbnail/crop,64,64,PNG,quality:90/crop,64,64,PNG,quality:50/crop,64,64,PNG,quality:10
+		Then response status will be 200
+		And I will get multipart response
+		And first part mime type will be image/png
+		And second part mime type will be image/png
+		And third part mime type will be image/png
+		Then first part will contain body smaller than second part
+		Then second part will contain body smaller than third part
+		And there will be no leaked images
+

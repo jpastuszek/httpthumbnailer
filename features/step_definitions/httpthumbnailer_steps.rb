@@ -76,6 +76,17 @@ Then /(.*) part will contain (.*) image of size (.*)x(.*)/ do |part, format, wid
 	@image.rows.should == height.to_i
 end
 
+Then /(.*) part will contain body of size within (.*) of (.*)/ do |part, margin, size|
+	data = @response_multipart.part[part_no(part)].body
+	data.length.should be_within(margin.to_i).of(size.to_i)
+end
+
+Then /(.*) part will contain body smaller than (.*) part/ do |part, big_part|
+	data = @response_multipart.part[part_no(part)].body
+	data_big = @response_multipart.part[part_no(big_part)].body
+	data.length.should < data_big.length
+end
+
 And /(.*) part body will be saved as (.*) for human inspection/ do |part, file|
 	data = @response_multipart.part[part_no(part)].body
 	(support_dir + file).open('w'){|f| f.write(data)}
