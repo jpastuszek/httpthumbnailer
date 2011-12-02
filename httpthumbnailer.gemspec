@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = "httpthumbnailer"
-  s.version = "0.0.13"
+  s.version = "0.0.14"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Jakub Pastuszek"]
-  s.date = "2011-12-01"
+  s.date = "2011-12-02"
   s.description = "Provides HTTP API for thumbnailing images"
   s.email = "jpastuszek@gmail.com"
   s.executables = ["httpthumbnailer"]
@@ -38,6 +38,17 @@ Gem::Specification.new do |s|
     "lib/httpthumbnailer/multipart_response.rb",
     "lib/httpthumbnailer/thumbnail_specs.rb",
     "lib/httpthumbnailer/thumbnailer.rb",
+    "load_test/extralarge.jpg",
+    "load_test/large.jpg",
+    "load_test/large.png",
+    "load_test/load_test.jmx",
+    "load_test/medium.jpg",
+    "load_test/small.jpg",
+    "load_test/tiny.jpg",
+    "load_test/v0.0.13-loading.csv",
+    "load_test/v0.0.13.csv",
+    "load_test/v0.0.14-no-optimization.csv",
+    "load_test/v0.0.14.csv",
     "spec/multipart_response_spec.rb",
     "spec/spec_helper.rb",
     "spec/thumbnail_specs_spec.rb",
