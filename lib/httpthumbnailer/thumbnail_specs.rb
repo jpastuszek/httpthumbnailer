@@ -24,5 +24,19 @@ class ThumbnailSpecs < Array
 		end
 		ts
 	end
+
+	def biggest_spec
+		max_field = -1
+		max_spec = nil
+		each do |spec|
+			field = spec.width * spec.height
+			if max_field < field
+				max_field = field
+				max_spec = spec
+			end
+		end
+
+		max_spec
+	end
 end
 

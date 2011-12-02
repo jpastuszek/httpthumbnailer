@@ -8,6 +8,7 @@ options = CLI.new do
 	switch :no_bind, :description => "Do not bind to TCP socket - useful with -s fastcgi option"
 	switch :no_logging, :description => "Disable logging"
 	switch :debug, :description => "Enable debugging"
+	switch :no_optimization, :description => "Disable size hinting and related optimization (loading, prescaling)"
 	option :bind, :short => :b, :default => IP.new('127.0.0.1'), :cast => IP, :description => "HTTP server bind address - use 0.0.0.0 to bind to all interfaces"
 	option :port, :short => :p, :default => 3100, :cast => Integer, :description => "HTTP server TCP port"
 	option :server, :short => :s, :default => 'mongrel', :description => "Rack server handler like thin, mongrel, webrick, fastcgi etc."
@@ -39,6 +40,7 @@ sinatra.set :lock, true
 sinatra.set :boundary, "thumnail image data"
 sinatra.set :logging, (not options.no_logging)
 sinatra.set :debug, options.debug
+sinatra.set :optimization, (not options.no_optimization)
 sinatra.set :limit_memory, options.limit_memory
 sinatra.set :limit_map, options.limit_map
 sinatra.set :limit_disk, options.limit_disk
@@ -90,7 +92,14 @@ end
 
 sinatra.put %r{^/thumbnail/(.*)} do |specs|
 	thumbnail_specs = ThumbnailSpecs.from_uri(specs)
-	$thumbnailer.load(request.body) do |original_image_handler|
+
+	opts = {}
+	if settings.optimization
+		biggest_spec = thumbnail_specs.biggest_spec
+		opts.merge!({'max-width' => biggest_spec.width, 'max-height' => biggest_spec.height})
+	end
+
+	$thumbnailer.load(request.body, opts) do |original_image_handler|
 		status 200
 		headers "Content-Type" => "multipart/mixed; boundary=\"#{settings.boundary}\""
 

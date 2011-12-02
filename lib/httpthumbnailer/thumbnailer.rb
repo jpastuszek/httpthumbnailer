@@ -89,13 +89,41 @@ class Thumbnailer
 			@options = options
 			@logger = (options[:logger] or Logger.new('/dev/null'))
 
+
+			mw = options['max-width']
+			mh = options['max-height']
+			if mw and mh
+				mw = mw.to_i
+				mh = mh.to_i
+				@logger.info "Using max size hint of: #{mw}x#{mh}"
+			end
+
 			begin
-				@image = Magick::Image.from_blob(io.read).first.strip!
+				@image = Magick::Image.from_blob(io.read) do |info|
+					if mw and mh
+						define('jpeg', 'size', "#{mw*2}x#{mh*2}")
+						define('jbig', 'size', "#{mw*2}x#{mh*2}")
+					end
+				end.first.strip!
+				@logger.info "Loaded image: #{@image.inspect}"
+				
+				if mw and mh
+					f = find_prescale_factor(mw, mh)
+					if f > 1
+						prescale(f)
+						@logger.info "Prescaled image by factor of #{f}: #{@image.inspect}"
+					end
+				end
 			rescue Magick::ImageMagickError => e
 				raise ImageTooLargeError, e if e.message =~ /cache resources exhausted/
 				raise UnsupportedMediaTypeError, e
 			end
+
 			@methods = methods
+		end
+
+		def prescale(f)
+			@image.sample!(@image.columns / f, @image.rows / f)
 		end
 
 		def thumbnail(spec)
@@ -118,6 +146,15 @@ class Thumbnailer
 		end
 
 		private
+
+		def find_prescale_factor(max_width, max_height, factor = 1)
+			new_factor = factor * 2
+			if @image.columns / new_factor > max_width * 2 and @image.rows / new_factor > max_height * 2
+				find_prescale_factor(max_width, max_height, factor * 2)
+			else
+				factor
+			end
+		end
 
 		def process_image(image, spec)
 			impl = @methods[spec.method] or raise UnsupportedMethodError.new(spec.method)
@@ -155,9 +192,9 @@ class Thumbnailer
 		end
 	end
 
-	def load(io)
+	def load(io, options = {})
 		h = ImageHandler.new do
-			OriginalImage.new(io, @methods, @options)
+			OriginalImage.new(io, @methods, @options.merge(options))
 		end
 
 		begin

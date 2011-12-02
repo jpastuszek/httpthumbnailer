@@ -141,9 +141,20 @@ Feature: Generating set of thumbnails with single PUT request
 		And third part mime type will be image/jpeg
 		And there will be no leaked images
 
+	Scenario: Handing of large image data - possible thanks to loading size optimization
+		Given test-large.jpg file content as request body
+		When I do PUT request http://localhost:3100/thumbnail/crop,16,16,PNG/crop,32,32,JPEG
+		Then response status will be 200
+		And I will get multipart response
+		Then first part will contain PNG image of size 16x16
+		And first part mime type will be image/png
+		Then second part will contain JPEG image of size 32x32
+		And second part mime type will be image/jpeg
+		And there will be no leaked images
+
 	Scenario: Memory limits exhausted while loading
 		Given test-large.jpg file content as request body
-		When I do PUT request http://localhost:3100/thumbnail/crop,16,16,PNG
+		When I do PUT request http://localhost:3100/thumbnail/crop,7000,7000,PNG
 		Then response status will be 413
 		And response content type will be text/plain
 		And response body will be CRLF endend lines like
