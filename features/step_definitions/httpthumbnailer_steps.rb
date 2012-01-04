@@ -19,6 +19,11 @@ When /I do (.*) request (.*)/ do |method, url|
 	@response = HTTPClient.new.request(method, url, nil, @request_body)
 end
 
+Then /(.*) header will be (.*)/ do |header, value|
+	@response.header[header].should_not be_empty
+	@response.header[header].first.should == value
+end
+
 Then /I will get multipart response/ do
 	@response.header['Content-Type'].first.should match /^multipart/
 	@response_multipart = MultipartResponse.new(@response.header['Content-Type'].last, @response.body)

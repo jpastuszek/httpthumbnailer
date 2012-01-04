@@ -1,6 +1,6 @@
 Feature: Generating set of thumbnails with single PUT request
 	In order to generate a set of image thumbnails
-	A user must PUT original image to URL in format
+	A user must PUT an image to URL in format
 	/thumbnail[/<thumbnail type>,<width>,<height>,<format>[,<option key>:<option value>]+]+
 
 	Background:
@@ -212,4 +212,16 @@ Feature: Generating set of thumbnails with single PUT request
 		Then first part will contain body smaller than second part
 		Then second part will contain body smaller than third part
 		And there will be no leaked images
+
+	Scenario: Hint on input image mime type - JPEG
+		Given test.jpg file content as request body
+		When I do PUT request http://localhost:3100/thumbnail/crop,16,16,PNG
+		Then response status will be 200
+		And X-Input-Image-Content-Type header will be image/jpeg
+
+	Scenario: Hint on input image mime type - PNG
+		Given test.png file content as request body
+		When I do PUT request http://localhost:3100/thumbnail/crop,16,16,PNG
+		Then response status will be 200
+		And X-Input-Image-Content-Type header will be image/png
 

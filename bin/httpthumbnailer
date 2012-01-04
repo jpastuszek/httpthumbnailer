@@ -99,21 +99,23 @@ sinatra.put %r{^/thumbnail/(.*)} do |specs|
 		opts.merge!({'max-width' => biggest_spec.width, 'max-height' => biggest_spec.height})
 	end
 
-	$thumbnailer.load(request.body, opts) do |original_image_handler|
+	input_image_handler = $thumbnailer.load(request.body, opts)
+	input_image_handler.get do |input_image|
 		status 200
 		headers "Content-Type" => "multipart/mixed; boundary=\"#{settings.boundary}\""
+		headers "X-Input-Image-Content-Type" => input_image.mime_type
 
 		stream do |out| # this is non blocking
-			original_image_handler.use do |original_image|
+			input_image_handler.use do |input_image|
 				thumbnail_specs.each do |spec|
 					logger.info "Thumbnailing: #{spec}"
 					out << "--#{settings.boundary}\r\n"
 
 					begin
-						thumbnail_data = original_image.thumbnail(spec)
-
-						out << "Content-Type: #{spec.mime}\r\n\r\n"
-						out << thumbnail_data
+						input_image.thumbnail(spec) do |thumbnail|
+							out << "Content-Type: #{thumbnail.mime_type}\r\n\r\n"
+							out << thumbnail.data
+						end
 					rescue => e
 						logger.error "Thumbnailing error: #{e.class.name}: #{e}: \n#{e.backtrace.join("\n")}"
 						out << "Content-Type: text/plain\r\n\r\n"

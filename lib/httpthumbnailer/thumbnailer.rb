@@ -22,18 +22,10 @@ class ThumbnailSpec
 		@options = options
 	end
 
-	def mime
-		mime = case format
-			when 'JPG' then 'jpeg'
-			else format.downcase
-		end
-		"image/#{mime}"
-	end
-
 	attr_reader :method, :width, :height, :format, :options
 
 	def to_s
-		"#{method} #{width}x#{height} #{mime} (#{format}) #{options.inspect}"
+		"#{method} #{width}x#{height} (#{format}) #{options.inspect}"
 	end
 end
 
@@ -67,6 +59,17 @@ class Thumbnailer
 			@image = yield
 		end
 
+		def get
+			raise ImageDestroyedError unless @image
+			begin
+				yield @image
+			rescue
+				@image.destroy!
+				@image = nil
+				raise
+			end
+		end
+
 		def use
 			raise ImageDestroyedError unless @image
 			begin
@@ -84,7 +87,7 @@ class Thumbnailer
 		end
 	end
 
-	class OriginalImage
+	class InputImage
 		def initialize(io, methods, options = {})
 			@options = options
 			@logger = (options[:logger] or Logger.new('/dev/null'))
@@ -128,16 +131,10 @@ class Thumbnailer
 
 		def thumbnail(spec)
 			begin
-				quality = (spec.options['quality'] or default_quality(spec.format))
-				quality = quality.to_i if quality
-
 				ImageHandler.new do
 					process_image(@image, spec).render_on_background!((spec.options['background-color'] or 'white').sub(/^0x/, '#'))
-				end.use do |thumb|
-					thumb.to_blob do
-						self.format = spec.format
-						self.quality = quality if quality
-					end
+				end.use do |image|
+					yield Thumbnail.new(image, spec)
 				end
 			rescue Magick::ImageMagickError => e
 				raise ImageTooLargeError, e if e.message =~ /cache resources exhausted/
@@ -145,22 +142,15 @@ class Thumbnailer
 			end
 		end
 
+		def mime_type
+			@image.mime_type
+		end
+
 		def destroy!
 			@image.destroy!
 		end
 
 		private
-
-		def default_quality(format)
-			case format
-			when /png/i
-				95 # max zlib compression, adaptive filtering (photo)
-			when /jpeg|jpg/i
-				85
-			else
-				nil
-			end
-		end
 
 		def find_prescale_factor(max_width, max_height, factor = 1)
 			new_factor = factor * 2
@@ -179,6 +169,47 @@ class Thumbnailer
 			rescue
 				copy.destroy!
 				raise
+			end
+		end
+	end
+
+	class Thumbnail
+		def initialize(image, spec)
+			@image = image
+			@spec = spec
+		end
+
+		def data
+				quality = (@spec.options['quality'] or default_quality(@spec.format))
+				quality = quality.to_i if quality
+
+				spec = @spec
+				@image.to_blob do
+					self.format = spec.format
+					self.quality = quality if quality
+				end
+		end
+
+		def mime_type
+			#@image.mime_type cannot be used since it is raw loaded image
+			#TODO: how do I do it better?
+			mime = case @spec.format
+				when 'JPG' then 'jpeg'
+				else @spec.format.downcase
+			end
+			"image/#{mime}"
+		end
+
+		private
+
+		def default_quality(format)
+			case format
+			when /png/i
+				95 # max zlib compression, adaptive filtering (photo)
+			when /jpeg|jpg/i
+				85
+			else
+				nil
 			end
 		end
 	end
@@ -208,16 +239,8 @@ class Thumbnailer
 	end
 
 	def load(io, options = {})
-		h = ImageHandler.new do
-			OriginalImage.new(io, @methods, @options.merge(options))
-		end
-
-		begin
-			yield h
-		rescue
-			# make sure that we destroy original image if there was an error before it could be used
-			h.destroy!
-			raise
+		ImageHandler.new do
+			InputImage.new(io, @methods, @options.merge(options))
 		end
 	end
 
