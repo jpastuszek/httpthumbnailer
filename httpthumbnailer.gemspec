@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = "httpthumbnailer"
-  s.version = "0.0.14"
+  s.version = "0.1.0"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Jakub Pastuszek"]
-  s.date = "2011-12-02"
+  s.date = "2012-01-04"
   s.description = "Provides HTTP API for thumbnailing images"
   s.email = "jpastuszek@gmail.com"
   s.executables = ["httpthumbnailer"]
@@ -33,6 +33,7 @@ Gem::Specification.new do |s|
     "features/support/test-large.jpg",
     "features/support/test-transparent.png",
     "features/support/test.jpg",
+    "features/support/test.png",
     "features/support/test.txt",
     "httpthumbnailer.gemspec",
     "lib/httpthumbnailer/multipart_response.rb",
@@ -69,8 +70,7 @@ Gem::Specification.new do |s|
       s.add_runtime_dependency(%q<rmagick>, ["~> 2"])
       s.add_runtime_dependency(%q<haml>, ["~> 3"])
       s.add_runtime_dependency(%q<ruby-ip>, ["~> 0.9"])
-      s.add_runtime_dependency(%q<cli>, ["~> 0.0.3"])
-      s.add_runtime_dependency(%q<fcgi>, ["~> 0.8.8"])
+      s.add_runtime_dependency(%q<cli>, ["~> 1.1.0"])
       s.add_development_dependency(%q<rspec>, ["~> 2.3.0"])
       s.add_development_dependency(%q<cucumber>, [">= 0"])
       s.add_development_dependency(%q<bundler>, ["~> 1.0.0"])
@@ -85,8 +85,7 @@ Gem::Specification.new do |s|
       s.add_dependency(%q<rmagick>, ["~> 2"])
       s.add_dependency(%q<haml>, ["~> 3"])
       s.add_dependency(%q<ruby-ip>, ["~> 0.9"])
-      s.add_dependency(%q<cli>, ["~> 0.0.3"])
-      s.add_dependency(%q<fcgi>, ["~> 0.8.8"])
+      s.add_dependency(%q<cli>, ["~> 1.1.0"])
       s.add_dependency(%q<rspec>, ["~> 2.3.0"])
       s.add_dependency(%q<cucumber>, [">= 0"])
       s.add_dependency(%q<bundler>, ["~> 1.0.0"])
@@ -102,8 +101,7 @@ Gem::Specification.new do |s|
     s.add_dependency(%q<rmagick>, ["~> 2"])
     s.add_dependency(%q<haml>, ["~> 3"])
     s.add_dependency(%q<ruby-ip>, ["~> 0.9"])
-    s.add_dependency(%q<cli>, ["~> 0.0.3"])
-    s.add_dependency(%q<fcgi>, ["~> 0.8.8"])
+    s.add_dependency(%q<cli>, ["~> 1.1.0"])
     s.add_dependency(%q<rspec>, ["~> 2.3.0"])
     s.add_dependency(%q<cucumber>, [">= 0"])
     s.add_dependency(%q<bundler>, ["~> 1.0.0"])
