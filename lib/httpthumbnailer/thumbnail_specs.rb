@@ -25,6 +25,14 @@ class ThumbnailSpecs < Array
 		ts
 	end
 
+	def max_width
+		map{|spec| spec.width}.max
+	end
+
+	def max_height
+		map{|spec| spec.height}.max
+	end
+
 	def biggest_spec
 		max_field = -1
 		max_spec = nil

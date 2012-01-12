@@ -95,8 +95,7 @@ sinatra.put %r{^/thumbnail/(.*)} do |specs|
 
 	opts = {}
 	if settings.optimization
-		biggest_spec = thumbnail_specs.biggest_spec
-		opts.merge!({'max-width' => biggest_spec.width, 'max-height' => biggest_spec.height})
+		opts.merge!({'max-width' => thumbnail_specs.max_width, 'max-height' => thumbnail_specs.max_height})
 	end
 
 	input_image_handler = $thumbnailer.load(request.body, opts)
