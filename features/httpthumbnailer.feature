@@ -39,6 +39,30 @@ Feature: Generating set of thumbnails with single PUT request
 		And that image pixel at 32x32 will be of color white
 		And there will be no leaked images
 
+	Scenario: Thumbnails of format INPUT should have same format as input image - for JPEG
+		Given test.jpg file content as request body
+		When I do PUT request http://localhost:3100/thumbnail/crop,16,16,PNG/crop,4,8,INPUT/crop,16,32,INPUT
+		Then response status will be 200
+		And I will get multipart response
+		Then first part will contain PNG image of size 16x16
+		And first part mime type will be image/png
+		Then second part will contain JPEG image of size 4x8
+		And second part mime type will be image/jpeg
+		Then third part will contain JPEG image of size 16x32
+		And third part mime type will be image/jpeg
+
+	Scenario: Thumbnails of format INPUT should have same format as input image - for PNG
+		Given test.png file content as request body
+		When I do PUT request http://localhost:3100/thumbnail/crop,16,16,JPEG/crop,4,8,INPUT/crop,16,32,INPUT
+		Then response status will be 200
+		And I will get multipart response
+		Then first part will contain JPEG image of size 16x16
+		And first part mime type will be image/jpeg
+		Then second part will contain PNG image of size 4x8
+		And second part mime type will be image/png
+		Then third part will contain PNG image of size 16x32
+		And third part mime type will be image/png
+
 	Scenario: Fit thumbnailing method
 		Given test.jpg file content as request body
 		When I do PUT request http://localhost:3100/thumbnail/fit,128,128,PNG

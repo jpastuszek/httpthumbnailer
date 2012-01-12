@@ -134,7 +134,7 @@ class Thumbnailer
 				ImageHandler.new do
 					process_image(@image, spec).render_on_background!((spec.options['background-color'] or 'white').sub(/^0x/, '#'))
 				end.use do |image|
-					yield Thumbnail.new(image, spec)
+					yield Thumbnail.new(image, spec.format == 'INPUT' ? @image.format : spec.format, spec.options['quality'])
 				end
 			rescue Magick::ImageMagickError => e
 				raise ImageTooLargeError, e if e.message =~ /cache resources exhausted/
@@ -174,18 +174,18 @@ class Thumbnailer
 	end
 
 	class Thumbnail
-		def initialize(image, spec)
+		def initialize(image, format, quality = nil)
 			@image = image
-			@spec = spec
+			@format = format
+			@quality = (quality or default_quality(format))
+			@quality &&= @quality.to_i
 		end
 
 		def data
-				quality = (@spec.options['quality'] or default_quality(@spec.format))
-				quality = quality.to_i if quality
-
-				spec = @spec
+				format = @format
+				quality = @quality
 				@image.to_blob do
-					self.format = spec.format
+					self.format = format
 					self.quality = quality if quality
 				end
 		end
@@ -193,9 +193,9 @@ class Thumbnailer
 		def mime_type
 			#@image.mime_type cannot be used since it is raw loaded image
 			#TODO: how do I do it better?
-			mime = case @spec.format
+			mime = case @format
 				when 'JPG' then 'jpeg'
-				else @spec.format.downcase
+				else @format.downcase
 			end
 			"image/#{mime}"
 		end
