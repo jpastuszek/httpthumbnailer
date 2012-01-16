@@ -4,14 +4,27 @@ class ThumbnailSpecs < Array
 	class BadThubnailSpecFormat < ArgumentError
 	end
 
+	class ThumbnailSpec
+		def initialize(method, width, height, format, options = {})
+			@method = method
+			@width = width
+			@height = height
+			@format = format.upcase
+			@options = options
+		end
+
+		attr_reader :method, :width, :height, :format, :options
+
+		def to_s
+			"#{method} #{width}x#{height} (#{format}) #{options.inspect}"
+		end
+	end
+
 	def self.from_uri(specs)
 		ts = ThumbnailSpecs.new
 		specs.split('/').each do |spec|
 			method, width, height, format, *options = *spec.split(',')
 			raise BadThubnailSpecFormat, "missing argument in: #{spec}" unless method and width and height and format
-
-			width = width.to_i
-			height = height.to_i
 
 			opts = {}
 			options.each do |option|
@@ -26,25 +39,17 @@ class ThumbnailSpecs < Array
 	end
 
 	def max_width
-		map{|spec| spec.width}.max
+		map do |spec|
+			return nil if spec.width == 'INPUT'
+			spec.width.to_i
+		end.max
 	end
 
 	def max_height
-		map{|spec| spec.height}.max
-	end
-
-	def biggest_spec
-		max_field = -1
-		max_spec = nil
-		each do |spec|
-			field = spec.width * spec.height
-			if max_field < field
-				max_field = field
-				max_spec = spec
-			end
-		end
-
-		max_spec
+		map do |spec|
+			return nil if spec.height == 'INPUT'
+			spec.height.to_i
+		end.max
 	end
 end
 

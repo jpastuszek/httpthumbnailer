@@ -63,6 +63,18 @@ Feature: Generating set of thumbnails with single PUT request
 		Then third part will contain PNG image of size 16x32
 		And third part mime type will be image/png
 
+	Scenario: Thumbnails of width or height INPUT will have input image width or height
+		Given test.jpg file content as request body
+		When I do PUT request http://localhost:3100/thumbnail/crop,INPUT,16,JPEG/crop,4,INPUT,PNG/crop,INPUT,INPUT,PNG
+		Then response status will be 200
+		And I will get multipart response
+		Then first part will contain JPEG image of size 509x16
+		And first part mime type will be image/jpeg
+		Then second part will contain PNG image of size 4x719
+		And second part mime type will be image/png
+		Then third part will contain PNG image of size 509x719
+		And third part mime type will be image/png
+
 	Scenario: Fit thumbnailing method
 		Given test.jpg file content as request body
 		When I do PUT request http://localhost:3100/thumbnail/fit,128,128,PNG

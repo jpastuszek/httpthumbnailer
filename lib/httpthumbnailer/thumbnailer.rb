@@ -92,7 +92,6 @@ class Thumbnailer
 			@options = options
 			@logger = (options[:logger] or Logger.new('/dev/null'))
 
-
 			mw = options['max-width']
 			mh = options['max-height']
 			if mw and mh
@@ -132,7 +131,10 @@ class Thumbnailer
 		def thumbnail(spec)
 			begin
 				ImageHandler.new do
-					process_image(@image, spec.method, spec.width, spec.height, spec.options).render_on_background!((spec.options['background-color'] or 'white').sub(/^0x/, '#'))
+					width = spec.width == 'INPUT' ? @image.columns : spec.width.to_i
+					height = spec.height == 'INPUT' ? @image.rows : spec.height.to_i
+
+					process_image(@image, spec.method, width, height, spec.options).render_on_background!((spec.options['background-color'] or 'white').sub(/^0x/, '#'))
 				end.use do |image|
 					format = spec.format == 'INPUT' ? @image.format : spec.format
 
