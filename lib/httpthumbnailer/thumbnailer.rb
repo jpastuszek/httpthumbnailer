@@ -132,9 +132,11 @@ class Thumbnailer
 		def thumbnail(spec)
 			begin
 				ImageHandler.new do
-					process_image(@image, spec).render_on_background!((spec.options['background-color'] or 'white').sub(/^0x/, '#'))
+					process_image(@image, spec.method, spec.width, spec.height, spec.options).render_on_background!((spec.options['background-color'] or 'white').sub(/^0x/, '#'))
 				end.use do |image|
-					yield Thumbnail.new(image, spec.format == 'INPUT' ? @image.format : spec.format, spec.options['quality'])
+					format = spec.format == 'INPUT' ? @image.format : spec.format
+
+					yield Thumbnail.new(image, format, spec.options)
 				end
 			rescue Magick::ImageMagickError => e
 				raise ImageTooLargeError, e if e.message =~ /cache resources exhausted/
@@ -161,11 +163,11 @@ class Thumbnailer
 			end
 		end
 
-		def process_image(image, spec)
-			impl = @methods[spec.method] or raise UnsupportedMethodError.new(spec.method)
+		def process_image(image, method, width, height, options)
+			impl = @methods[method] or raise UnsupportedMethodError.new(method)
 			copy = image.copy
 			begin
-				impl.call(copy, spec)
+				impl.call(copy, width, height, options)
 			rescue
 				copy.destroy!
 				raise
@@ -174,10 +176,10 @@ class Thumbnailer
 	end
 
 	class Thumbnail
-		def initialize(image, format, quality = nil)
+		def initialize(image, format, options = {})
 			@image = image
 			@format = format
-			@quality = (quality or default_quality(format))
+			@quality = (options['quality'] or default_quality(format))
 			@quality &&= @quality.to_i
 		end
 

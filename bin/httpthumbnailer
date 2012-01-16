@@ -50,18 +50,18 @@ sinatra.before do
 	if $thumbnailer.nil? 
 		$thumbnailer = Thumbnailer.new(:logger => logger, :limit_memory => settings.limit_memory, :limit_map => settings.limit_map, :limit_disk => settings.limit_disk)
 
-		$thumbnailer.method('crop') do |image, spec|
-			image.resize_to_fill!(spec.width, spec.height)
+		$thumbnailer.method('crop') do |image, width, height, options|
+			image.resize_to_fill!(width, height)
 		end
 
-		$thumbnailer.method('fit') do |image, spec|
-			image.resize_to_fit!(spec.width, spec.height)
+		$thumbnailer.method('fit') do |image, width, height, options|
+			image.resize_to_fit!(width, height)
 		end
 
-		$thumbnailer.method('pad') do |image, spec|
-			image.resize_to_fit!(spec.width, spec.height)
+		$thumbnailer.method('pad') do |image, width, height, options|
+			image.resize_to_fit!(width, height)
 
-			out = Magick::Image.new(spec.width, spec.height) {
+			out = Magick::Image.new(width, height) {
 				self.background_color = Magick::Pixel.new(Magick::MaxRGB, Magick::MaxRGB, Magick::MaxRGB, Magick::MaxRGB) # transparent
 			}.composite!(image, Magick::CenterGravity, Magick::OverCompositeOp)
 
