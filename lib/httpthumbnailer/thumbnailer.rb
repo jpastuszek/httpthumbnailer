@@ -114,12 +114,12 @@ class Thumbnailer
 		def thumbnail(spec)
 			begin
 				ImageHandler.new do
-					width = spec.width == 'INPUT' ? @image.columns : spec.width
-					height = spec.height == 'INPUT' ? @image.rows : spec.height
+					width = spec.width == :input ? @image.columns : spec.width
+					height = spec.height == :input ? @image.rows : spec.height
 
 					process_image(@image, spec.method, width, height, spec.options).render_on_background!((spec.options['background-color'] or 'white').sub(/^0x/, '#'))
 				end.use do |image|
-					format = spec.format == 'INPUT' ? @image.format : spec.format
+					format = spec.format == :input ? @image.format : spec.format
 
 					yield Thumbnail.new(image, format, spec.options)
 				end

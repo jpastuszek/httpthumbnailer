@@ -26,7 +26,7 @@ class ThumbnailSpecs < Array
 			@method = method
 			@width = cast_dimmension(width)
 			@height = cast_dimmension(height)
-			@format = format.upcase
+			@format = (format == 'INPUT' ? :input : format.upcase)
 			@options = options
 		end
 
@@ -39,7 +39,7 @@ class ThumbnailSpecs < Array
 		private
 
 		def cast_dimmension(string)
-			return string if string == 'INPUT'
+			return :input if string == 'INPUT'
 			raise BadThubnailSpecError::BadDimmensionValueError.new(string) unless string =~ /^\d+$/
 			string.to_i
 		end
