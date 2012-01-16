@@ -13,13 +13,19 @@ class ThumbnailSpecs < Array
 				super "missing option key or value in: #{option}"
 			end
 		end
+
+		class BadDimmensionValueError < BadThubnailSpecError
+			def initialize(value)
+				super "bad dimmension value: #{value}"
+			end
+		end
 	end
 
 	class ThumbnailSpec
 		def initialize(method, width, height, format, options = {})
 			@method = method
-			@width = width
-			@height = height
+			@width = cast_dimmension(width)
+			@height = cast_dimmension(height)
 			@format = format.upcase
 			@options = options
 		end
@@ -28,6 +34,14 @@ class ThumbnailSpecs < Array
 
 		def to_s
 			"#{method} #{width}x#{height} (#{format}) #{options.inspect}"
+		end
+
+		private
+
+		def cast_dimmension(string)
+			return string if string == 'INPUT'
+			raise BadThubnailSpecError::BadDimmensionValueError.new(string) unless string =~ /^\d+$/
+			string.to_i
 		end
 	end
 
@@ -51,15 +65,15 @@ class ThumbnailSpecs < Array
 
 	def max_width
 		map do |spec|
-			return nil if spec.width == 'INPUT'
-			spec.width.to_i
+			return nil unless spec.width.is_a? Integer
+			spec.width
 		end.max
 	end
 
 	def max_height
 		map do |spec|
-			return nil if spec.height == 'INPUT'
-			spec.height.to_i
+			return nil unless spec.height.is_a? Integer
+			spec.height
 		end.max
 	end
 end

@@ -141,6 +141,16 @@ Feature: Generating set of thumbnails with single PUT request
 		Error: Thumbnailer::UnsupportedMediaTypeError: Magick::ImageMagickError:
 		"""
 
+	Scenario: Reporitng of bad thumbanil spec format - bad dimmension value
+		Given test.txt file content as request body
+		When I do PUT request http://localhost:3100/thumbnail/crop,128,bogous,PNG
+		Then response status will be 500
+		And response content type will be text/plain
+		And response body will be CRLF endend lines
+		"""
+		Error: ThumbnailSpecs::BadThubnailSpecError::BadDimmensionValueError: bad dimmension value: bogous
+		"""
+
 	Scenario: Reporitng of bad thumbanil spec format - missing param
 		Given test.txt file content as request body
 		When I do PUT request http://localhost:3100/thumbnail/crop,128,PNG

@@ -12,23 +12,6 @@ class Magick::Image
 	end
 end
 
-
-class ThumbnailSpec
-	def initialize(method, width, height, format, options = {})
-		@method = method
-		@width = width
-		@height = height
-		@format = format.upcase
-		@options = options
-	end
-
-	attr_reader :method, :width, :height, :format, :options
-
-	def to_s
-		"#{method} #{width}x#{height} (#{format}) #{options.inspect}"
-	end
-end
-
 class Thumbnailer
 	class UnsupportedMethodError < ArgumentError
 		def initialize(method)
@@ -131,8 +114,8 @@ class Thumbnailer
 		def thumbnail(spec)
 			begin
 				ImageHandler.new do
-					width = spec.width == 'INPUT' ? @image.columns : spec.width.to_i
-					height = spec.height == 'INPUT' ? @image.rows : spec.height.to_i
+					width = spec.width == 'INPUT' ? @image.columns : spec.width
+					height = spec.height == 'INPUT' ? @image.rows : spec.height
 
 					process_image(@image, spec.method, width, height, spec.options).render_on_background!((spec.options['background-color'] or 'white').sub(/^0x/, '#'))
 				end.use do |image|
