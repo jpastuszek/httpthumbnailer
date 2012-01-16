@@ -1,7 +1,18 @@
 require 'httpthumbnailer/thumbnailer'
 
 class ThumbnailSpecs < Array
-	class BadThubnailSpecFormat < ArgumentError
+	class BadThubnailSpecError < ArgumentError
+		class MissingArgumentError < BadThubnailSpecError
+			def initialize(spec)
+				super "missing argument in: #{spec}"
+			end
+		end
+
+		class MissingOptionKeyOrValueError < BadThubnailSpecError
+			def initialize(option)
+				super "missing option key or value in: #{option}"
+			end
+		end
 	end
 
 	class ThumbnailSpec
@@ -24,12 +35,12 @@ class ThumbnailSpecs < Array
 		ts = ThumbnailSpecs.new
 		specs.split('/').each do |spec|
 			method, width, height, format, *options = *spec.split(',')
-			raise BadThubnailSpecFormat, "missing argument in: #{spec}" unless method and width and height and format
+			raise BadThubnailSpecError::MissingArgumentError.new(spec) unless method and width and height and format
 
 			opts = {}
 			options.each do |option|
 				key, value = option.split(':')
-				raise BadThubnailSpecFormat, "missing option key or value in: #{option}" unless key and value
+				raise BadThubnailSpecError::MissingOptionKeyOrValueError.new(option) unless key and value
 				opts[key] = value
 			end
 

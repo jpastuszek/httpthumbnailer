@@ -148,7 +148,7 @@ Feature: Generating set of thumbnails with single PUT request
 		And response content type will be text/plain
 		And response body will be CRLF endend lines
 		"""
-		Error: ThumbnailSpecs::BadThubnailSpecFormat: missing argument in: crop,128,PNG
+		Error: ThumbnailSpecs::BadThubnailSpecError::MissingArgumentError: missing argument in: crop,128,PNG
 		"""
 
 	Scenario: Reporitng of bad thumbanil spec format - bad options format
@@ -158,7 +158,7 @@ Feature: Generating set of thumbnails with single PUT request
 		And response content type will be text/plain
 		And response body will be CRLF endend lines
 		"""
-		Error: ThumbnailSpecs::BadThubnailSpecFormat: missing option key or value in: fas-fda
+		Error: ThumbnailSpecs::BadThubnailSpecError::MissingOptionKeyOrValueError: missing option key or value in: fas-fda
 		"""
 
 	Scenario: Reporitng of image thumbnailing errors
