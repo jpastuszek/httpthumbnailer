@@ -1,6 +1,6 @@
 # httpthumbnailer
 
-HTTP API for image thumbnailing and format conversion.
+HTTP API server for image thumbnailing and format conversion.
 
 It is using **ImageMagick** as the image processing library.
 
