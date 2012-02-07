@@ -75,7 +75,7 @@ In case that the `httpthumbnailer` process crashes (may happen since it is using
 Basically it works like that:
 
 1. PUT your image data to the server with URI describing thumbnail format (one or more)
-2. the server will respond with multi-part content with parts containing data of your thumbnails in order with proper **Content-type** headers set
+2. the server will respond with **multi-part content** with parts containing data of your thumbnails in order with proper **Content-type** headers set
 
 For example the URI may look like this: 
 
