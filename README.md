@@ -2,12 +2,12 @@
 
 HTTP API for image thumbnailing and format conversion.
 
-It is using *ImageMagick* as the image processing library.
+It is using **ImageMagick** as the image processing library.
 
 ## Installing
 
 You will need the following system packages installed: `imagemagick`, `libpng`, `pkg-config`, `make`.
-Optionally you may want to install `fcgi` package and gem to be able to use it as *FastCGI* backend.
+Optionally you may want to install `fcgi` package and gem to be able to use it as **FastCGI** backend.
 
 For Arch Linux you can use this commands:
 
@@ -16,7 +16,7 @@ For Arch Linux you can use this commands:
     pacman -S pkg-config
     pacman -S make
 
-Than you can install the gem as usual:
+Then you can install the gem as usual:
 
     gem install httpthumbnailer
 
@@ -27,17 +27,17 @@ It can be started as a stand alone server or as FastCGI backend.
 ### Stand alone server
 
 This mode is useful for testing.
-By default *Mongrel* will be used as HTTP handling library (you can use --server option to specify different server that is supported by Sinatra).
+By default **Mongrel** will be used as HTTP handling library (you can use --server option to specify different server that is supported by Sinatra).
 
 To start it in that mode run:
 
     httpthumbnailer
 
-By default it will be listening on *localhost* port *3100*.
+By default it will be listening on **localhost** port **3100**.
 
 ### FastCGI
 
-In this mode you can run many *httpthumbnailer* instances so that requests will be load balanced between them equally.
+In this mode you can run many **httpthumbnailer** instances so that requests will be load balanced between them equally.
 Since it is single threaded (some ImageMagick operations may be multithreaded) it will be able to max out only single CPU core.
 Therefore it is recommended to run as many instances as there are CPU cores available.
 
@@ -51,7 +51,7 @@ And you have `fcgi` gem installed with:
 
     gem install fcgi
 
-Here is an example *Lighttpd* configuration:
+Here is an example **Lighttpd** configuration:
 
     $SERVER["socket"] == ":3100" {
         server.reject-expect-100-with-417 = "disable" 
@@ -75,7 +75,7 @@ In case that the `httpthumbnailer` process crashes (may happen since it is using
 Basically it works like that:
 
 # PUT your image data to the server with URI describing thumbnail format (one or more)
-# the server will respond with multi-part content with parts containing data of your thumbnails in order with proper *Content-type* headers set
+# the server will respond with multi-part content with parts containing data of your thumbnails in order with proper **Content-type** headers set
 
 For example the URI may look like this: 
 
