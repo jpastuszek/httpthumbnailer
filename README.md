@@ -41,7 +41,7 @@ In this mode you can run many **httpthumbnailer** instances so that requests wil
 Since it is single threaded (some ImageMagick operations may be multithreaded) it will be able to max out only single CPU core.
 Therefore it is recommended to run as many instances as there are CPU cores available.
 
-Make suer you have FastCGI system library installed.
+Make sure you have FastCGI system library installed.
 
 For Arch Linux you can use this command:
 
@@ -74,8 +74,8 @@ In case that the `httpthumbnailer` process crashes (may happen since it is using
 
 Basically it works like that:
 
-# PUT your image data to the server with URI describing thumbnail format (one or more)
-# the server will respond with multi-part content with parts containing data of your thumbnails in order with proper **Content-type** headers set
+1. PUT your image data to the server with URI describing thumbnail format (one or more)
+2. the server will respond with multi-part content with parts containing data of your thumbnails in order with proper **Content-type** headers set
 
 For example the URI may look like this: 
 
@@ -83,9 +83,9 @@ For example the URI may look like this:
 
 It will generate 3 thumbnails: 
 
-# 16x16 cropped PNG
-# 4x8 cropped JPEG
-# 16x32 colour padded JPEG
+1. 16x16 cropped PNG
+2. 4x8 cropped JPEG
+3. 16x32 colour padded JPEG
 
 For detailed information about the API see [cucumber features](http://github.com/jpastuszek/httpthumbnailer/blob/master/features/httpthumbnailer.feature).
 
