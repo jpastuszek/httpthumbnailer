@@ -1,7 +1,7 @@
 source "http://rubygems.org"
 
 gem "sinatra", ">= 1.2.6"
-gem "mongrel", ">= 1.1.5"
+gem "mongrel", ">= 1.2.0.pre2"
 gem "rmagick", "~> 2"
 gem "haml", "~> 3"
 gem "ruby-ip", "~> 0.9"
