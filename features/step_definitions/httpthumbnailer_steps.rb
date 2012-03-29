@@ -31,7 +31,7 @@ end
 
 Then /response body will be CRLF endend lines like/ do |body|	
 	@response.body.should match(body)
-	@response.body.each do |line|
+	@response.body.each_line do |line|
 		line[-2,2].should == "\r\n"
 	end
 end
@@ -63,7 +63,7 @@ end
 Then /(.*) part body will be CRLF endend lines like$/ do |part, body|	
 	pbody = @response_multipart.part[part_no(part)].body
 	pbody.should match(body)
-	pbody.each do |line|
+	pbody.each_line do |line|
 		line[-2,2].should == "\r\n"
 	end
 end
