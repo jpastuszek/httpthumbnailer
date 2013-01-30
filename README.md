@@ -93,6 +93,12 @@ For detailed information about the API see [cucumber features](http://github.com
 
 To make it easy to use this server there is [httpthumbnailer-client](http://github.com/jpastuszek/httpthumbnailer-client) gem provided.
 
+### Memory limits
+
+Use *--limit-memory* to limit memory usage. 
+To use swap file when *--limit-mmemory* is exhausted set *--limit-disk* and optionally *--limit-map* to use memory mapping.
+When setting *--limit-map* limit make sure that you set *--limit-disk* for at least the amount of *--limit-map* for it to take full effect.
+
 ## Contributing to httpthumbnailer
  
 * Check out the latest master to make sure the feature hasn't been implemented or the bug hasn't been fixed yet

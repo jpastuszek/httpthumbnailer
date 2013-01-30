@@ -12,8 +12,8 @@ options = CLI.new do
 	option :port, :short => :p, :default => 3100, :cast => Integer, :description => "HTTP server TCP port"
 	option :server, :short => :s, :default => 'mongrel', :description => "Rack server handler like thin, mongrel, webrick, fastcgi etc."
 	option :limit_memory, :default => 128*1024**2, :cast => Integer, :description => "Image cache heap memory size limit in bytes"
-	option :limit_map, :default => 256*1024**2, :cast => Integer, :description => "Image cache memory mapped file size limit in bytes - used when heap memory limit is used up"
-	option :limit_disk, :default => 0, :cast => Integer, :description => "Image cache temporary file size limit in bytes - used when memory mapped file limit is used up"
+	option :limit_map, :default => 1024*1024**2, :cast => Integer, :description => "Image cache memory mapped file size limit in bytes - used when heap memory limit is used up"
+	option :limit_disk, :default => 1024*1024**2, :cast => Integer, :description => "Image cache temporary file size limit in bytes - this is total disk usage limit including memory mapped file size"
 end.parse!
 
 require 'sinatra/base'
