@@ -1,6 +1,9 @@
 #!/usr/bin/env ruby
 require 'cli'
 require 'ip'
+require 'cuba'
+require 'RMagick'
+require 'unicorn'
 
 options = CLI.new do
 	description 'HTTP thumbnailing server'
@@ -16,33 +19,44 @@ options = CLI.new do
 	option :limit_disk, :default => 1024*1024**2, :cast => Integer, :description => "Image cache temporary file size limit in bytes - this is total disk usage limit including memory mapped file size"
 end.parse!
 
-require 'sinatra/base'
-require 'haml'
-require 'RMagick'
-
 $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
 require 'httpthumbnailer/thumbnailer'
 require 'httpthumbnailer/thumbnail_specs'
 
-sinatra = Sinatra.new
+Controler = Class.new(Cuba)
 
-unless options.no_bind
-	sinatra.set :port, options.port
-	sinatra.set :bind, options.bind.to_s
-else
-	sinatra.set :port, nil
-	sinatra.set :bind, nil
+Controler.settings[:boundary] = "thumnail image data"
+Controler.settings[:debug] = options.debug
+Controler.settings[:optimization] = (not options.no_optimization)
+Controler.settings[:limit_memory] = options.limit_memory
+Controler.settings[:limit_map] = options.limit_map
+Controler.settings[:limit_disk] = options.limit_disk
+
+require 'httpthumbnailer/plugin/error_matcher'
+require 'httpthumbnailer/plugin/logging'
+require 'httpthumbnailer/rack/error_handling'
+require 'httpthumbnailer/rack/unhandled_request'
+
+Controler.plugin Plugin::ErrorMatcher
+Controler.plugin Plugin::Logging
+
+class HTTPThumbniler < Controler
+	#Controler.plugin Plugin::Thumbnailer
+
+	self.use Rack::ErrorHandling
+	self.use Rack::UnhandledRequest
+	self.define do
+		on error? do
+			log.error env
+		end
+
+		on true do
+			log.info 'hello'
+		end
+	end
 end
-sinatra.set :environment, 'production'
-sinatra.set :server, options.server
-sinatra.set :lock, true
-sinatra.set :boundary, "thumnail image data"
-sinatra.set :logging, (not options.no_logging)
-sinatra.set :debug, options.debug
-sinatra.set :optimization, (not options.no_optimization)
-sinatra.set :limit_memory, options.limit_memory
-sinatra.set :limit_map, options.limit_map
-sinatra.set :limit_disk, options.limit_disk
+
+Unicorn::HttpServer.new(HTTPThumbniler, {}).start.join
 
 sinatra.before do
 	logger.level = Logger::DEBUG if settings.logging and settings.debug

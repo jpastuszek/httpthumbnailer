@@ -1,4 +1,5 @@
 require 'logger'
+require 'rmagick'
 
 class Magick::Image
 	def render_on_background!(background_color)
