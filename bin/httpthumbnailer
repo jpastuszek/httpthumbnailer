@@ -6,8 +6,6 @@ require 'unicorn'
 require 'facter'
 
 $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
-require 'httpthumbnailer/thumbnailer'
-require 'httpthumbnailer/thumbnail_specs'
 
 options = CLI.new do
 	description 'HTTP image thumbnailing server'
@@ -69,6 +67,12 @@ options = CLI.new do
 		description: 'enable debugging logging (DEBUG)'
 end.parse!
 
+
+logger = Logger.new(STDERR)
+logger.level = Logger::WARN
+logger.level = Logger::INFO if options.verbose
+logger.level = Logger::DEBUG if options.debug
+
 Controler = Class.new(Cuba)
 
 Controler.settings[:boundary] = 'thumnail image data'
@@ -84,13 +88,14 @@ require 'httpthumbnailer/rack/error_handling'
 require 'httpthumbnailer/rack/unhandled_request'
 
 require 'httpthumbnailer/error_reporter'
+require 'httpthumbnailer/thumbnailer'
 
 Controler.plugin Plugin::ErrorMatcher
 Controler.plugin Plugin::Logging
 Controler.plugin Plugin::ResponseHelpers
 
 class HTTPThumbniler < Controler
-	#Controler.plugin Plugin::Thumbnailer
+	Controler.plugin Plugin::Thumbnailer
 
 	self.use Rack::ErrorHandling
 	self.use Rack::UnhandledRequest
@@ -103,16 +108,15 @@ class HTTPThumbniler < Controler
 			write_plain 200, 'OK'
 		end
 
+		on 'thumbnail' do
+			run Thumbnailer
+		end
+
 		on true do
 			log.info 'hello'
 		end
 	end
 end
-
-logger = Logger.new(STDERR)
-logger.level = Logger::WARN
-logger.level = Logger::INFO if options.verbose
-logger.level = Logger::DEBUG if options.debug
 
 unicorn_options = {}
 unicorn_options[:logger] = logger
@@ -125,108 +129,4 @@ unicorn_options[:user] = options.user if options.user
 unicorn_options[:preload_app] = true
 
 Unicorn::HttpServer.new(HTTPThumbniler, unicorn_options).start.join
-
-sinatra.before do
-	logger.level = Logger::DEBUG if settings.logging and settings.debug
-	if $thumbnailer.nil? 
-		$thumbnailer = Thumbnailer.new(:logger => logger, :limit_memory => settings.limit_memory, :limit_map => settings.limit_map, :limit_disk => settings.limit_disk)
-
-		$thumbnailer.method('crop') do |image, width, height, options|
-			image.resize_to_fill!(width, height)
-		end
-
-		$thumbnailer.method('fit') do |image, width, height, options|
-			image.resize_to_fit!(width, height)
-		end
-
-		$thumbnailer.method('pad') do |image, width, height, options|
-			image.resize_to_fit!(width, height)
-
-			out = Magick::Image.new(width, height) {
-				self.background_color = Magick::Pixel.new(Magick::MaxRGB, Magick::MaxRGB, Magick::MaxRGB, Magick::MaxRGB) # transparent
-			}.composite!(image, Magick::CenterGravity, Magick::OverCompositeOp)
-
-			image.destroy!
-			out
-		end
-	end
-end
-
-sinatra.helpers do
-	def plain_response(msg)
-		headers "Content-Type" => "text/plain"
-		body msg.gsub("\n", "\r\n") + "\r\n"
-	end
-
-	def plain_exception(exception)
-		plain_response("Error: #{exception.class.name}: #{exception}")
-	end
-end
-
-sinatra.get '/' do
-	logger.info 'hello'
-end
-
-sinatra.get '/stats/images' do
-	$thumbnailer.images.to_s
-end
-
-sinatra.put %r{^/thumbnail/(.*)} do |specs|
-	thumbnail_specs = ThumbnailSpecs.from_uri(specs)
-
-	opts = {}
-	if settings.optimization
-		opts.merge!({'max-width' => thumbnail_specs.max_width, 'max-height' => thumbnail_specs.max_height})
-	end
-
-	input_image_handler = $thumbnailer.load(request.body, opts)
-	input_image_handler.get do |input_image|
-		status 200
-		headers "Content-Type" => "multipart/mixed; boundary=\"#{settings.boundary}\""
-		headers "X-Input-Image-Content-Type" => input_image.mime_type
-
-		stream do |out| # this is non blocking
-			input_image_handler.use do |input_image|
-				thumbnail_specs.each do |spec|
-					logger.info "Thumbnailing: #{spec}"
-					out << "--#{settings.boundary}\r\n"
-
-					begin
-						input_image.thumbnail(spec) do |thumbnail|
-							out << "Content-Type: #{thumbnail.mime_type}\r\n\r\n"
-							out << thumbnail.data
-						end
-					rescue => e
-						logger.error "Thumbnailing error: #{e.class.name}: #{e}: \n#{e.backtrace.join("\n")}"
-						out << "Content-Type: text/plain\r\n\r\n"
-						out << "Error: #{e.class.name}: #{e}\r\n"
-					ensure
-						out << "\r\n"
-					end
-				end
-				out << "--#{settings.boundary}--"
-			end
-		end
-	end
-end
-
-sinatra.error Thumbnailer::UnsupportedMediaTypeError do
-	plain_exception(env['sinatra.error'])
-	halt 415
-end
-
-sinatra.error Thumbnailer::ImageTooLargeError do
-	plain_exception(env['sinatra.error'])
-	halt 413
-end
-
-sinatra.error 404 do
-	plain_response("Resource '#{request.path_info}' not found")
-end
-
-sinatra.error do
-	plain_exception(env['sinatra.error'])
-end
-
-sinatra.run!
 
