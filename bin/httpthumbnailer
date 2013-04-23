@@ -108,13 +108,11 @@ class HTTPThumbniler < Controler
 			write_plain 200, 'OK'
 		end
 
-		on 'thumbnail' do
-			run Thumbnailer
+		on root do
+			write_plain 200, 'HTTP Thumbniler'
 		end
 
-		on true do
-			log.info 'hello'
-		end
+		run Thumbnailer
 	end
 end
 

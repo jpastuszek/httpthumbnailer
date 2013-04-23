@@ -119,7 +119,7 @@ Feature: Generating set of thumbnails with single PUT request
 		And response content type will be text/plain
 		And response body will be CRLF endend lines
 		"""
-		Resource '/blah' not found
+		Error: request for URI '/blah' was not handled by the server
 		"""
 
 	Scenario: Reporitng of missing resource for PUT
@@ -128,7 +128,7 @@ Feature: Generating set of thumbnails with single PUT request
 		And response content type will be text/plain
 		And response body will be CRLF endend lines
 		"""
-		Resource '/blah/thumbnail/crop,0,0,PNG/fit,0,0,JPG/pad,0,0,JPEG' not found
+		Error: request for URI '/blah/thumbnail/crop,0,0,PNG/fit,0,0,JPG/pad,0,0,JPEG' was not handled by the server
 		"""
 
 	Scenario: Reporitng of unsupported media type
@@ -138,7 +138,7 @@ Feature: Generating set of thumbnails with single PUT request
 		And response content type will be text/plain
 		And response body will be CRLF endend lines like
 		"""
-		Error: Thumbnailer::UnsupportedMediaTypeError: Magick::ImageMagickError:
+		Error: Magick::ImageMagickError:
 		"""
 
 	Scenario: Reporitng of bad thumbanil spec format - bad dimmension value
@@ -148,7 +148,7 @@ Feature: Generating set of thumbnails with single PUT request
 		And response content type will be text/plain
 		And response body will be CRLF endend lines
 		"""
-		Error: ThumbnailSpecs::BadThubnailSpecError::BadDimmensionValueError: bad dimmension value: bogous
+		Error: bad dimmension value: bogous
 		"""
 
 	Scenario: Reporitng of bad thumbanil spec format - missing param
@@ -158,7 +158,7 @@ Feature: Generating set of thumbnails with single PUT request
 		And response content type will be text/plain
 		And response body will be CRLF endend lines
 		"""
-		Error: ThumbnailSpecs::BadThubnailSpecError::MissingArgumentError: missing argument in: crop,128,PNG
+		Error: missing argument in: crop,128,PNG
 		"""
 
 	Scenario: Reporitng of bad thumbanil spec format - bad options format
@@ -168,7 +168,7 @@ Feature: Generating set of thumbnails with single PUT request
 		And response content type will be text/plain
 		And response body will be CRLF endend lines
 		"""
-		Error: ThumbnailSpecs::BadThubnailSpecError::MissingOptionKeyOrValueError: missing option key or value in: fas-fda
+		Error: missing option key or value in: fas-fda
 		"""
 
 	Scenario: Reporitng of image thumbnailing errors
@@ -205,7 +205,7 @@ Feature: Generating set of thumbnails with single PUT request
 		And response content type will be text/plain
 		And response body will be CRLF endend lines like
 		"""
-		Error: Thumbnailer::ImageTooLargeError: Magick::ImageMagickError: cache resources exhausted
+		Error: Magick::ImageMagickError: cache resources exhausted
 		"""
 		And there will be no leaked images
 
@@ -219,7 +219,7 @@ Feature: Generating set of thumbnails with single PUT request
 		And second part content type will be text/plain
 		And second part body will be CRLF endend lines like
 		"""
-		Error: Thumbnailer::ImageTooLargeError: Magick::ImageMagickError: cache resources exhausted
+		Error: Magick::ImageMagickError: cache resources exhausted
 		"""
 		Then third part will contain JPEG image of size 16x32
 		And third part mime type will be image/jpeg

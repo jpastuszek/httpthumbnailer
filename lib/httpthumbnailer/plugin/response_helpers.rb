@@ -7,7 +7,7 @@ module Plugin
 		end
 
 		def write_error(code, error)
-			msg = "Error: #{error.class.name}: #{error}"
+			msg = "Error: #{error}"
 			log.info "Sending #{code} error response: #{msg}"
 			write_plain code, msg
 		end

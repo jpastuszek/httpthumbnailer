@@ -5,7 +5,13 @@ class Thumbnailer < Controler
 	self.plugin Plugin::Thumbnailer
 
 	self.define do
-		on put, /(.*)/ do |specs|
+		on 'stats' do
+			on 'images' do
+				res.write thumbnailer.images.to_s
+			end
+		end
+
+		on put, 'thumbnail', /(.*)/ do |specs|
 			thumbnail_specs = ThumbnailSpecs.from_uri(specs)
 			log.info "thumbnailing image to: #{thumbnail_specs.join(', ')}"
 
