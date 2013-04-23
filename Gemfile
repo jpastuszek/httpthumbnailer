@@ -5,6 +5,7 @@ gem "unicorn", ">= 4.6.2"
 gem "rmagick", "~> 2"
 gem "ruby-ip", "~> 0.9"
 gem "cli", "~> 1.1.0"
+gem "facter", "~> 1.6.11"
 
 # Add dependencies to develop your gem here.
 # Include everything needed to run rake, tests, features, etc.

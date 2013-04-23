@@ -2,31 +2,76 @@
 require 'cli'
 require 'ip'
 require 'cuba'
-require 'RMagick'
 require 'unicorn'
-
-options = CLI.new do
-	description 'HTTP thumbnailing server'
-	switch :no_bind, :description => "Do not bind to TCP socket - useful with -s fastcgi option"
-	switch :no_logging, :description => "Disable logging"
-	switch :debug, :description => "Enable debugging"
-	switch :no_optimization, :description => "Disable size hinting and related optimization (loading, prescaling)"
-	option :bind, :short => :b, :default => IP.new('127.0.0.1'), :cast => IP, :description => "HTTP server bind address - use 0.0.0.0 to bind to all interfaces"
-	option :port, :short => :p, :default => 3100, :cast => Integer, :description => "HTTP server TCP port"
-	option :server, :short => :s, :default => 'mongrel', :description => "Rack server handler like thin, mongrel, webrick, fastcgi etc."
-	option :limit_memory, :default => 128*1024**2, :cast => Integer, :description => "Image cache heap memory size limit in bytes"
-	option :limit_map, :default => 1024*1024**2, :cast => Integer, :description => "Image cache memory mapped file size limit in bytes - used when heap memory limit is used up"
-	option :limit_disk, :default => 1024*1024**2, :cast => Integer, :description => "Image cache temporary file size limit in bytes - this is total disk usage limit including memory mapped file size"
-end.parse!
+require 'facter'
 
 $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
 require 'httpthumbnailer/thumbnailer'
 require 'httpthumbnailer/thumbnail_specs'
 
+options = CLI.new do
+	description 'HTTP image thumbnailing server'
+	option :log_file,
+		short: :l,
+		cast: Pathname,
+		description: 'log file to log to',
+		default: 'wcc-user-manager.log'
+	option :pid_file,
+		short: :p,
+		cast: Pathname,
+		description: 'file to store lock PID',
+		default: 'wcc-user-manager.pid'
+	switch :foreground,
+		short: :f,
+		description: 'stay in foreground'
+	option :bind,
+		short: :b,
+		cast: IP,
+		description: 'HTTP server bind address - use 0.0.0.0 to bind to all interfaces',
+		default: IP.new('127.0.0.1')
+	option :port,
+		short: :P,
+		cast: Integer,
+		description: 'HTTP server TCP port',
+		default: 3100
+	option :user,
+		short: :u,
+		description: 'run worker processes as user'
+	option :worker_processes,
+		short: :w,
+		cast: Integer,
+		description: 'start given number of worker processes',
+		default: Facter.sp_number_processors.to_i + 1
+	option :worker_timeout,
+		short: :t,
+		cast: Integer,
+		description: 'workers handling the request taking longer than this time period will be forcibly killed',
+		default: 60
+	option :limit_memory,
+		cast: Integer,
+		description: 'image cache heap memory size limit in bytes',
+		default: 128*1024**2
+	option :limit_map,
+		cast: Integer,
+		description: 'image cache memory mapped file size limit in bytes - used when heap memory limit is used up',
+		default: 1024*1024**2
+	option :limit_disk,
+		cast: Integer,
+		description: 'image cache temporary file size limit in bytes - this is total disk usage limit including memory mapped file size',
+		default: 1024*1024**2
+	switch :no_optimization,
+		description: 'disable size hinting and related optimization (hinted loading, prescaling)'
+	switch :verbose,
+		short: :v,
+		description: 'enable verbose logging (INFO)'
+	switch :debug,
+		short: :d,
+		description: 'enable debugging logging (DEBUG)'
+end.parse!
+
 Controler = Class.new(Cuba)
 
-Controler.settings[:boundary] = "thumnail image data"
-Controler.settings[:debug] = options.debug
+Controler.settings[:boundary] = 'thumnail image data'
 Controler.settings[:optimization] = (not options.no_optimization)
 Controler.settings[:limit_memory] = options.limit_memory
 Controler.settings[:limit_map] = options.limit_map
@@ -34,11 +79,15 @@ Controler.settings[:limit_disk] = options.limit_disk
 
 require 'httpthumbnailer/plugin/error_matcher'
 require 'httpthumbnailer/plugin/logging'
+require 'httpthumbnailer/plugin/response_helpers'
 require 'httpthumbnailer/rack/error_handling'
 require 'httpthumbnailer/rack/unhandled_request'
 
+require 'httpthumbnailer/error_reporter'
+
 Controler.plugin Plugin::ErrorMatcher
 Controler.plugin Plugin::Logging
+Controler.plugin Plugin::ResponseHelpers
 
 class HTTPThumbniler < Controler
 	#Controler.plugin Plugin::Thumbnailer
@@ -47,7 +96,11 @@ class HTTPThumbniler < Controler
 	self.use Rack::UnhandledRequest
 	self.define do
 		on error? do
-			log.error env
+			run ErrorReporter
+		end
+
+		on 'health_check' do
+			write_plain 200, 'OK'
 		end
 
 		on true do
@@ -56,7 +109,22 @@ class HTTPThumbniler < Controler
 	end
 end
 
-Unicorn::HttpServer.new(HTTPThumbniler, {}).start.join
+logger = Logger.new(STDERR)
+logger.level = Logger::WARN
+logger.level = Logger::INFO if options.verbose
+logger.level = Logger::DEBUG if options.debug
+
+unicorn_options = {}
+unicorn_options[:logger] = logger
+unicorn_options[:worker_processes] = options.worker_processes
+unicorn_options[:timeout] = options.worker_timeout
+unicorn_options[:listeners] = ["#{options.bind}:#{options.port}"]
+unicorn_options[:user] = options.user if options.user
+
+# unicorn will start the app and than fork it
+unicorn_options[:preload_app] = true
+
+Unicorn::HttpServer.new(HTTPThumbniler, unicorn_options).start.join
 
 sinatra.before do
 	logger.level = Logger::DEBUG if settings.logging and settings.debug
