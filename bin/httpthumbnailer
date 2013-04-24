@@ -67,18 +67,30 @@ options = CLI.new do
 		description: 'enable debugging logging (DEBUG)'
 end.parse!
 
+require 'httpthumbnailer/root_logger'
 
-logger = Logger.new(STDERR)
-logger.level = Logger::WARN
-logger.level = Logger::INFO if options.verbose
-logger.level = Logger::DEBUG if options.debug
+root_logger = RootLogger.new(STDERR)
+root_logger.level = RootLogger::WARN
+root_logger.level = RootLogger::INFO if options.verbose
+root_logger.level = RootLogger::DEBUG if options.debug
 
-Controler = Class.new(Cuba)
+class Controler < Cuba
+	def self.root_logger=(root_logger)
+		@@root_logger = root_logger
+	end
+
+	def self.logger_for(class_obj)
+		@@root_logger.logger_for(class_obj)
+	end
+end
+
+Controler.root_logger = root_logger
 
 Controler.settings[:optimization] = (not options.no_optimization)
 Controler.settings[:limit_memory] = options.limit_memory
 Controler.settings[:limit_map] = options.limit_map
 Controler.settings[:limit_disk] = options.limit_disk
+Controler.settings[:listeners] = ["#{options.bind}:#{options.port}"]
 
 require 'httpthumbnailer/plugin/error_matcher'
 require 'httpthumbnailer/plugin/logging'
@@ -96,8 +108,10 @@ Controler.plugin Plugin::ResponseHelpers
 class HTTPThumbniler < Controler
 	Controler.plugin Plugin::Thumbnailer
 
+	self.use Raindrops::Middleware, path: '/stats/requests'
 	self.use Rack::ErrorHandling
 	self.use Rack::UnhandledRequest
+
 	self.define do
 		on error? do
 			run ErrorReporter
@@ -116,7 +130,7 @@ class HTTPThumbniler < Controler
 end
 
 unicorn_options = {}
-unicorn_options[:logger] = logger
+unicorn_options[:logger] = root_logger.logger_for(Unicorn::HttpServer)
 unicorn_options[:worker_processes] = options.worker_processes
 unicorn_options[:timeout] = options.worker_timeout
 unicorn_options[:listeners] = ["#{options.bind}:#{options.port}"]

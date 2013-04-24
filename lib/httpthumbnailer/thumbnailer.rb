@@ -6,9 +6,11 @@ class Thumbnailer < Controler
 
 	self.define do
 		on 'stats' do
-			on 'images' do
-				res.write thumbnailer.images.to_s
+			on :stat do |stat|
+				write_plain 200, thumbnailer.stats[stat.to_sym].to_s || raise(ArgumentError, "unknown stat #{stat}")
 			end
+
+			write_plain 200, thumbnailer.stats.map{|stat, value| "#{stat}: #{value}"}.join("\n")
 		end
 
 		on put, 'thumbnail', /(.*)/ do |specs|

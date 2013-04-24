@@ -202,10 +202,14 @@ module Plugin
 		end
 
 		class Service
+			class Stats < Raindrops::Struct.new(:images_loaded, :total_images_loaded)
+			end
+
 			def initialize(options = {})
 				@methods = {}
 				@options = options
 				@logger = (options[:logger] or Logger.new('/dev/null'))
+				@stats = Stats.new
 
 				@logger.info "initializing thumbniler"
 
@@ -214,15 +218,15 @@ module Plugin
 				set_limit(:map, options[:limit_map]) if options.member?(:limit_map)
 				set_limit(:disk, options[:limit_disk]) if options.member?(:limit_disk)
 
-				@images = 0
 				Magick.trace_proc = lambda do |which, description, id, method|
 					case which
 					when :c
-						@images += 1
+						@stats.incr_images_loaded
+						@stats.incr_total_images_loaded
 					when :d
-						@images -= 1
+						@stats.decr_images_loaded
 					end
-					@logger.debug "image event: #{which}, #{description}, #{id}, #{method}: loaded images: #{images}"
+					@logger.debug "image event: #{which}, #{description}, #{id}, #{method}: loaded images: #{@stats.images_loaded}"
 				end
 			end
 
@@ -232,8 +236,12 @@ module Plugin
 				end
 			end
 
-			def images
-				@images
+			def stats
+				out = {}
+				Stats::MEMBERS.each.with_index.map do |stat, index|
+					out[stat] = @stats[index]
+				end
+				out
 			end
 
 			def method(method, &impl)
@@ -246,14 +254,12 @@ module Plugin
 			end
 		end
 
-		def thumbnailer
-			return @@service if defined? @@service 
-
+		def self.setup(app)
 			@@service = Service.new(
-				limit_memory: settings[:limit_memory],
-				limit_map: settings[:limit_map],
-				limit_disk: settings[:limit_disk],
-				logger: logger_for(Service) # This is only available during request call
+				limit_memory: app.settings[:limit_memory],
+				limit_map: app.settings[:limit_map],
+				limit_disk: app.settings[:limit_disk],
+				logger: app.logger_for(Service)
 			)
 
 			@@service.method('crop') do |image, width, height, options|
@@ -274,7 +280,9 @@ module Plugin
 				image.destroy!
 				out
 			end
+		end
 
+		def thumbnailer
 			@@service
 		end
 	end
