@@ -106,8 +106,6 @@ Controler.plugin Plugin::Logging
 Controler.plugin Plugin::ResponseHelpers
 
 class HTTPThumbniler < Controler
-	Controler.plugin Plugin::Thumbnailer
-
 	self.use Raindrops::Middleware, path: '/stats/requests'
 	self.use Rack::ErrorHandling
 	self.use Rack::UnhandledRequest
@@ -135,9 +133,6 @@ unicorn_options[:worker_processes] = options.worker_processes
 unicorn_options[:timeout] = options.worker_timeout
 unicorn_options[:listeners] = ["#{options.bind}:#{options.port}"]
 unicorn_options[:user] = options.user if options.user
-
-# unicorn will start the app and than fork it
-unicorn_options[:preload_app] = true
 
 Unicorn::HttpServer.new(HTTPThumbniler, unicorn_options).start.join
 
