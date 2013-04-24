@@ -209,6 +209,7 @@ Feature: Generating set of thumbnails with single PUT request
 		"""
 		And there will be no leaked images
 
+	@test
 	Scenario: Memory limits exhausted while thumbnailing
 		Given test.jpg file content as request body
 		When I do PUT request http://localhost:3100/thumbnail/crop,16,16,PNG/crop,16000,16000,JPG/crop,16,32,JPEG

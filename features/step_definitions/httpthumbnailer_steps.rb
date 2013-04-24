@@ -57,15 +57,12 @@ Then /(.*) part content type will be (.*)/ do |part, content_type|
 end
 
 Then /(.*) part body will be CRLF endend lines$/ do |part, body|	
-	@response_multipart.part[part_no(part)].body.should == body.gsub("\n", "\r\n") + "\r\n"
+	@response_multipart.part[part_no(part)].body.should == body.gsub("\n", "\r\n")
 end
 
 Then /(.*) part body will be CRLF endend lines like$/ do |part, body|	
 	pbody = @response_multipart.part[part_no(part)].body
 	pbody.should match(body)
-	pbody.each_line do |line|
-		line[-2,2].should == "\r\n"
-	end
 end
 
 Then /(.*) part will contain (.*) image of size (.*)x(.*)/ do |part, format, width, height|

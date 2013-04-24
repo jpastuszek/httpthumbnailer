@@ -75,7 +75,6 @@ logger.level = Logger::DEBUG if options.debug
 
 Controler = Class.new(Cuba)
 
-Controler.settings[:boundary] = 'thumnail image data'
 Controler.settings[:optimization] = (not options.no_optimization)
 Controler.settings[:limit_memory] = options.limit_memory
 Controler.settings[:limit_map] = options.limit_map

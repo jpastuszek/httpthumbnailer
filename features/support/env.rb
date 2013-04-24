@@ -7,16 +7,17 @@ rescue Bundler::BundlerError => e
   exit e.status_code
 end
 
-$LOAD_PATH.unshift(File.dirname(__FILE__) + '/../../lib')
 
 require 'rspec/expectations'
 require 'daemon'
 require 'timeout'
 require 'httpclient'
-require 'httpthumbnailer/multipart_response'
 require "open3"
 require "thread"
 require 'RMagick'
+
+$LOAD_PATH.unshift(p File.dirname(__FILE__))
+require 'multipart_response'
 
 def gem_dir
 		Pathname.new(__FILE__).dirname + '..' + '..'

@@ -24,30 +24,21 @@ class Thumbnailer < Controler
 
 			input_image_handler.get do |input_image|
 				log.debug "original image loaded"
-
-				res.status = 200
-				res["Content-Type"] = "multipart/mixed; boundary=\"#{settings[:boundary]}\""
-				res["X-Input-Image-Content-Type"] = input_image.mime_type
+				write_preamble 200, "X-Input-Image-Content-Type" => input_image.mime_type
 
 				input_image_handler.use do |input_image|
 					thumbnail_specs.each do |spec|
 						log.info "generating thumbnail: #{spec}"
-						res.write "--#{settings[:boundary]}\r\n"
-
 						begin
 							input_image.thumbnail(spec) do |thumbnail|
-								res.write "Content-Type: #{thumbnail.mime_type}\r\n\r\n"
-								res.write thumbnail.data
+								write_part thumbnail.mime_type, thumbnail.data
 							end
-						rescue => e
-							log.error "thumbnailing error: #{e.class.name}: #{e}: \n#{e.backtrace.join("\n")}"
-							res.write "Content-Type: text/plain\r\n\r\n"
-							res.write "Error: #{e}\r\n"
-						ensure
-							res.write "\r\n"
+						rescue => error
+							log.error "thumbnailing error", error
+							write_error_part error
 						end
 					end
-					res.write "--#{settings[:boundary]}--"
+					write_epilogue
 				end
 			end
 		end
