@@ -42,7 +42,7 @@ class Thumbnailer < Controler
 						rescue => e
 							log.error "thumbnailing error: #{e.class.name}: #{e}: \n#{e.backtrace.join("\n")}"
 							res.write "Content-Type: text/plain\r\n\r\n"
-							res.write "Error: #{e.class.name}: #{e}\r\n"
+							res.write "Error: #{e}\r\n"
 						ensure
 							res.write "\r\n"
 						end

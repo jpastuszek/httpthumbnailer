@@ -138,7 +138,7 @@ Feature: Generating set of thumbnails with single PUT request
 		And response content type will be text/plain
 		And response body will be CRLF endend lines like
 		"""
-		Error: Magick::ImageMagickError:
+		Error: unsupported media type: no decode delegate for this image format
 		"""
 
 	Scenario: Reporitng of bad thumbanil spec format - bad dimmension value
@@ -181,7 +181,7 @@ Feature: Generating set of thumbnails with single PUT request
 		And second part content type will be text/plain
 		And second part body will be CRLF endend lines
 		"""
-		Error: ArgumentError: invalid result dimension (0, 0 given)
+		Error: invalid result dimension (0, 0 given)
 		"""
 		Then third part will contain JPEG image of size 16x32
 		And third part mime type will be image/jpeg
@@ -205,7 +205,7 @@ Feature: Generating set of thumbnails with single PUT request
 		And response content type will be text/plain
 		And response body will be CRLF endend lines like
 		"""
-		Error: Magick::ImageMagickError: cache resources exhausted
+		Error: image too large: cache resources exhausted
 		"""
 		And there will be no leaked images
 
@@ -219,7 +219,7 @@ Feature: Generating set of thumbnails with single PUT request
 		And second part content type will be text/plain
 		And second part body will be CRLF endend lines like
 		"""
-		Error: Magick::ImageMagickError: cache resources exhausted
+		Error: image too large: cache resources exhausted
 		"""
 		Then third part will contain JPEG image of size 16x32
 		And third part mime type will be image/jpeg

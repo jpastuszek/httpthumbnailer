@@ -17,19 +17,19 @@ module Plugin
 	module Thumbnailer
 		class UnsupportedMethodError < ArgumentError
 			def initialize(method)
-				super("Thumbnail method '#{method}' is not supported")
+				super("thumbnail method '#{method}' is not supported")
 			end
 		end
 
 		class UnsupportedMediaTypeError < ArgumentError
-			def initialize(e)
-				super("#{e.class.name}: #{e}")
+			def initialize(error)
+				super("unsupported media type: #{error}")
 			end
 		end
 
 		class ImageTooLargeError < ArgumentError
-			def initialize(e)
-				super("#{e.class.name}: #{e}")
+			def initialize(error)
+				super("image too large: #{error}")
 			end
 		end
 
@@ -49,8 +49,7 @@ module Plugin
 				begin
 					yield @image
 				rescue
-					@image.destroy! if @image
-					@image = nil
+					destroy!
 					raise
 				end
 			end
@@ -60,8 +59,7 @@ module Plugin
 				begin
 					yield @image
 				ensure
-					@image.destroy! if @image
-					@image = nil
+					destroy!
 				end
 			end
 
