@@ -71,7 +71,8 @@ module Plugin
 		end
 
 		class InputImage
-			def initialize(io, methods, options = {})
+			def initialize(io, methods, stats, options = {})
+				@stats = stats
 				@options = options
 				@logger = (options[:logger] or Logger.new('/dev/null'))
 
@@ -91,12 +92,14 @@ module Plugin
 						end
 					end.first.strip!
 					@logger.info "loaded image: #{@image.inspect}"
+					@stats.incr_total_images_loaded
 					
 					if mw and mh
 						f = find_prescale_factor(mw, mh)
 						if f > 1
 							prescale(f)
 							@logger.info "prescaled image by factor of #{f}: #{@image.inspect}"
+							@stats.incr_total_images_prescaled
 						end
 					end
 				rescue Magick::ImageMagickError => e
@@ -107,10 +110,6 @@ module Plugin
 				@methods = methods
 			end
 
-			def prescale(f)
-				@image.sample!(@image.columns / f, @image.rows / f)
-			end
-
 			def thumbnail(spec)
 				begin
 					ImageHandler.new do
@@ -119,6 +118,7 @@ module Plugin
 
 						process_image(@image, spec.method, width, height, spec.options).render_on_background!((spec.options['background-color'] or 'white').sub(/^0x/, '#'))
 					end.use do |image|
+						@stats.incr_total_thumbnails_created
 						format = spec.format == :input ? @image.format : spec.format
 
 						yield Thumbnail.new(image, format, spec.options)
@@ -138,6 +138,10 @@ module Plugin
 			end
 
 			private
+
+			def prescale(f)
+				@image.sample!(@image.columns / f, @image.rows / f)
+			end
 
 			def find_prescale_factor(max_width, max_height, factor = 1)
 				new_factor = factor * 2
@@ -202,7 +206,20 @@ module Plugin
 		end
 
 		class Service
-			class Stats < Raindrops::Struct.new(:images_loaded, :total_images_loaded)
+			class Stats < Raindrops::Struct.new(
+					:total_images_loaded, 
+					:total_images_prescaled, 
+					:total_thumbnails_created, 
+					:images_loaded, 
+					:total_images_created,
+					:total_images_destroyed,
+					:total_images_created_from_blob,
+					:total_images_created_initialize_copy,
+					:total_images_created_initalize,
+					:total_images_created_resize,
+					:total_images_created_crop,
+					:total_images_created_sample
+				)
 			end
 
 			def initialize(options = {})
@@ -222,9 +239,26 @@ module Plugin
 					case which
 					when :c
 						@stats.incr_images_loaded
-						@stats.incr_total_images_loaded
+						@stats.incr_total_images_created
+						case method
+						when :from_blob
+							@stats.incr_total_images_created_from_blob
+						when :initialize_copy
+							@stats.incr_total_images_created_initialize_copy
+						when :initialize
+							@stats.incr_total_images_created_initalize
+						when :resize!
+							@stats.incr_total_images_created_resize
+						when :crop!
+							@stats.incr_total_images_created_crop
+						when :sample!
+							@stats.incr_total_images_created_sample
+						else
+							@logger.warn "uncounted image creation method: #{method}"
+						end
 					when :d
 						@stats.decr_images_loaded
+						@stats.incr_total_images_destroyed
 					end
 					@logger.debug "image event: #{which}, #{description}, #{id}, #{method}: loaded images: #{@stats.images_loaded}"
 				end
@@ -232,7 +266,7 @@ module Plugin
 
 			def load(io, options = {})
 				ImageHandler.new do
-					InputImage.new(io, @methods, @options.merge(options))
+					InputImage.new(io, @methods, @stats, @options.merge(options))
 				end
 			end
 
