@@ -83,6 +83,7 @@ DEPENDENCIES
   facter (~> 1.6.11)
   httpclient (~> 2.2)
   jeweler (~> 1.6.4)
+  raindrops (~> 0.11)
   rdoc (~> 3.9)
   rmagick (~> 2)
   rspec (~> 2.13)

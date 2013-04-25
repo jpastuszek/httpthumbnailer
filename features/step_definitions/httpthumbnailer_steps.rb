@@ -4,7 +4,7 @@ end
 
 Given /httpthumbnailer server is running at (.*)/ do |url|
 	start_server(
-		"bundle exec #{script('httpthumbnailer')}",
+		"bundle exec #{script('httpthumbnailer')} -f",
 		'/tmp/httpthumbnailer.pid',
 		support_dir + 'server.log',
 		url

@@ -3,22 +3,24 @@ require 'cli'
 require 'ip'
 require 'cuba'
 require 'unicorn'
+require 'raindrops'
 require 'facter'
+require 'daemon'
 
 $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
 
-options = CLI.new do
+settings = CLI.new do
 	description 'HTTP image thumbnailing server'
 	option :log_file,
 		short: :l,
 		cast: Pathname,
 		description: 'log file to log to',
-		default: 'wcc-user-manager.log'
+		default: 'httpthumbnailer.log'
 	option :pid_file,
 		short: :p,
 		cast: Pathname,
 		description: 'file to store lock PID',
-		default: 'wcc-user-manager.pid'
+		default: 'httpthumbnailer.pid'
 	switch :foreground,
 		short: :f,
 		description: 'stay in foreground'
@@ -71,8 +73,10 @@ require 'httpthumbnailer/root_logger'
 
 root_logger = RootLogger.new(STDERR)
 root_logger.level = RootLogger::WARN
-root_logger.level = RootLogger::INFO if options.verbose
-root_logger.level = RootLogger::DEBUG if options.debug
+root_logger.level = RootLogger::INFO if settings.verbose
+root_logger.level = RootLogger::DEBUG if settings.debug
+
+Daemon.daemonize(settings.pid_file, settings.log_file) unless settings.foreground
 
 class Controler < Cuba
 	def self.root_logger=(root_logger)
@@ -86,11 +90,11 @@ end
 
 Controler.root_logger = root_logger
 
-Controler.settings[:optimization] = (not options.no_optimization)
-Controler.settings[:limit_memory] = options.limit_memory
-Controler.settings[:limit_map] = options.limit_map
-Controler.settings[:limit_disk] = options.limit_disk
-Controler.settings[:listeners] = ["#{options.bind}:#{options.port}"]
+Controler.settings[:optimization] = (not settings.no_optimization)
+Controler.settings[:limit_memory] = settings.limit_memory
+Controler.settings[:limit_map] = settings.limit_map
+Controler.settings[:limit_disk] = settings.limit_disk
+Controler.settings[:listeners] = ["#{settings.bind}:#{settings.port}"]
 
 require 'httpthumbnailer/plugin/error_matcher'
 require 'httpthumbnailer/plugin/logging'
@@ -127,12 +131,12 @@ class HTTPThumbniler < Controler
 	end
 end
 
-unicorn_options = {}
-unicorn_options[:logger] = root_logger.logger_for(Unicorn::HttpServer)
-unicorn_options[:worker_processes] = options.worker_processes
-unicorn_options[:timeout] = options.worker_timeout
-unicorn_options[:listeners] = ["#{options.bind}:#{options.port}"]
-unicorn_options[:user] = options.user if options.user
+unicorn_settings = {}
+unicorn_settings[:logger] = root_logger.logger_for(Unicorn::HttpServer)
+unicorn_settings[:worker_processes] = settings.worker_processes
+unicorn_settings[:timeout] = settings.worker_timeout
+unicorn_settings[:listeners] = ["#{settings.bind}:#{settings.port}"]
+unicorn_settings[:user] = settings.user if settings.user
 
-Unicorn::HttpServer.new(HTTPThumbniler, unicorn_options).start.join
+Unicorn::HttpServer.new(HTTPThumbniler, unicorn_settings).start.join
 
