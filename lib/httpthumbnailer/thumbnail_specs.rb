@@ -1,5 +1,3 @@
-require 'httpthumbnailer/thumbnailer'
-
 class ThumbnailSpecs < Array
 	class BadThubnailSpecError < ArgumentError
 		class MissingArgumentError < BadThubnailSpecError
