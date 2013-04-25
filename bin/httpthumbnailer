@@ -104,19 +104,29 @@ require 'httpthumbnailer/rack/unhandled_request'
 
 require 'httpthumbnailer/error_reporter'
 require 'httpthumbnailer/thumbnailer'
+require 'httpthumbnailer/stats'
 
 Controler.plugin Plugin::ErrorMatcher
 Controler.plugin Plugin::Logging
 Controler.plugin Plugin::ResponseHelpers
 
 class HTTPThumbniler < Controler
-	self.use Raindrops::Middleware, path: '/stats/requests'
+	raindrops_stats = Raindrops::Middleware::Stats.new
+	self.use Raindrops::Middleware, stats: raindrops_stats
+
 	self.use Rack::ErrorHandling
 	self.use Rack::UnhandledRequest
+
+	Stats << raindrops_stats
+	Stats << Thumbnailer.stats
 
 	self.define do
 		on error? do
 			run ErrorReporter
+		end
+		
+		on 'stats' do
+			run Stats
 		end
 
 		on 'health_check' do
@@ -124,10 +134,12 @@ class HTTPThumbniler < Controler
 		end
 
 		on root do
-			write_plain 200, 'HTTP Thumbniler'
+			write_plain 200, 'HTTP Thumbnailer'
 		end
 
-		run Thumbnailer
+		on true do
+			run Thumbnailer
+		end
 	end
 end
 

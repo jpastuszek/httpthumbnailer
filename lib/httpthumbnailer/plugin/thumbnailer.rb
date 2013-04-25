@@ -215,7 +215,7 @@ module Plugin
 					:total_images_destroyed,
 					:total_images_created_from_blob,
 					:total_images_created_initialize_copy,
-					:total_images_created_initalize,
+					:total_images_created_initialize,
 					:total_images_created_resize,
 					:total_images_created_crop,
 					:total_images_created_sample
@@ -246,7 +246,7 @@ module Plugin
 						when :initialize_copy
 							@stats.incr_total_images_created_initialize_copy
 						when :initialize
-							@stats.incr_total_images_created_initalize
+							@stats.incr_total_images_created_initialize
 						when :resize!
 							@stats.incr_total_images_created_resize
 						when :crop!
@@ -271,11 +271,7 @@ module Plugin
 			end
 
 			def stats
-				out = {}
-				Stats::MEMBERS.each.with_index.map do |stat, index|
-					out[stat] = @stats[index]
-				end
-				out
+				@stats
 			end
 
 			def method(method, &impl)
@@ -313,6 +309,18 @@ module Plugin
 
 				image.destroy!
 				out
+			end
+
+			app.stats = @@service.stats
+		end
+
+		module ClassMethods
+			def stats=(stats)
+				@@stats = stats
+			end
+
+			def stats
+				@@stats
 			end
 		end
 
