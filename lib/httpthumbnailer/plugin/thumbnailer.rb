@@ -12,6 +12,21 @@ class Magick::Image
 			}.composite!(image, Magick::CenterGravity, Magick::OverCompositeOp)
 		end
 	end
+
+	# non coping version
+	def resize_to_fill(ncols, nrows = nil, gravity = Magick::CenterGravity)
+		nrows ||= ncols
+		if ncols != columns || nrows != rows
+			scale = [ncols/columns.to_f, nrows/rows.to_f].max
+			img = resize(scale*columns+0.5, scale*rows+0.5)
+			return img.crop!(gravity, ncols, nrows, true) if ncols != columns || nrows != rows
+			return img
+		else
+			return crop(gravity, ncols, nrows, true) if ncols != columns || nrows != rows
+			# nothing to do make sure we return copy
+			return copy
+		end
+	end
 end
 
 module Plugin
@@ -165,13 +180,8 @@ module Plugin
 
 			def process_image(image, method, width, height, options)
 				impl = @methods[method] or raise UnsupportedMethodError.new(method)
-				copy = image.copy
-				begin
-					impl.call(copy, width, height, options)
-				rescue
-					copy.destroy!
-					raise
-				end
+				# expecting original image not modified or destroyed
+				impl.call(image, width, height, options)
 			end
 		end
 
@@ -258,6 +268,8 @@ module Plugin
 							@stats.incr_total_images_created_initialize_copy
 						when :initialize
 							@stats.incr_total_images_created_initialize
+						when :resize
+							@stats.incr_total_images_created_resize
 						when :resize!
 							@stats.incr_total_images_created_resize
 						when :crop!
@@ -303,17 +315,19 @@ module Plugin
 				logger: app.logger_for(Service)
 			)
 
+			# first operation needs to be coping (no !) so we don't destroy original image
 			@@service.method('crop') do |image, width, height, options|
-				image.resize_to_fill!(width, height)
+				image.resize_to_fill(width, height)
 			end
 
 			@@service.method('fit') do |image, width, height, options|
-				image.resize_to_fit!(width, height)
+				image.resize_to_fit(width, height)
 			end
 
 			@@service.method('pad') do |image, width, height, options|
-				image.resize_to_fit!(width, height)
-				image.render_on_background!(options['background-color'], width, height)
+				image
+				.resize_to_fit(width, height)
+				.render_on_background!(options['background-color'], width, height)
 			end
 
 			app.stats = @@service.stats
