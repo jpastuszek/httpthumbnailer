@@ -29,6 +29,7 @@ Feature: Generating set of thumbnails with single PUT request
 		And third part mime type will be image/jpeg
 		And there will be no leaked images
 
+	@transparent
 	Scenario: Transparent image to JPEG handling - default background color white
 		Given test-transparent.png file content as request body
 		When I do PUT request http://localhost:3100/thumbnail/fit,128,128,JPEG
@@ -83,6 +84,7 @@ Feature: Generating set of thumbnails with single PUT request
 		And first part will contain PNG image of size 91x128
 		And there will be no leaked images
 
+	@transparent
 	Scenario: Pad thumbnailing method - default background color white
 		Given test.jpg file content as request body
 		When I do PUT request http://localhost:3100/thumbnail/pad,128,128,PNG
@@ -93,6 +95,7 @@ Feature: Generating set of thumbnails with single PUT request
 		And that image pixel at 2x2 will be of color white
 		And there will be no leaked images
 
+	@transparent
 	Scenario: Pad thumbnailing method with specified background color
 		Given test.jpg file content as request body
 		When I do PUT request http://localhost:3100/thumbnail/pad,128,128,PNG,background-color:green

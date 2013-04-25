@@ -16,7 +16,7 @@ require "open3"
 require "thread"
 require 'RMagick'
 
-$LOAD_PATH.unshift(p File.dirname(__FILE__))
+$LOAD_PATH.unshift(File.dirname(__FILE__))
 require 'multipart_response'
 
 def gem_dir
@@ -43,7 +43,6 @@ def part_no(part)
 		else fail "add more parts?"
 	end
 end
-
 
 def get(url)
 	HTTPClient.new.get_content(url)

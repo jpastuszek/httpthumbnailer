@@ -3,12 +3,9 @@ Given /httpthumbnailer log is empty/ do
 end
 
 Given /httpthumbnailer server is running at (.*)/ do |url|
-	start_server(
-		"bundle exec #{script('httpthumbnailer')} -f",
-		'/tmp/httpthumbnailer.pid',
-		support_dir + 'server.log',
-		url
-	)
+	log = support_dir + 'server.log'
+	cmd = "bundle exec #{script('httpthumbnailer')} -f -v -d -l #{log}"
+	start_server(cmd, '/tmp/httpthumbnailer.pid', log, url)
 end
 
 Given /(.*) file content as request body/ do |file|

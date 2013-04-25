@@ -2,12 +2,13 @@ require 'rmagick'
 require 'httpthumbnailer/thumbnailer'
 
 class Magick::Image
-	def render_on_background!(background_color)
+	def render_on_background!(background_color, width = nil, height = nil)
 		Plugin::Thumbnailer::ImageHandler.new do
 			self
 		end.use do |image|
-			Magick::Image.new(image.columns, image.rows) {
+			Magick::Image.new(width || image.columns, height || image.rows) {
 				self.background_color = background_color
+				self.depth = 8
 			}.composite!(image, Magick::CenterGravity, Magick::OverCompositeOp)
 		end
 	end
@@ -111,12 +112,22 @@ module Plugin
 			end
 
 			def thumbnail(spec)
+				spec = spec.dup
+				# default backgraud is white
+				spec.options['background-color'] = spec.options.fetch('background-color', 'white').sub(/^0x/, '#')
+
 				begin
 					ImageHandler.new do
 						width = spec.width == :input ? @image.columns : spec.width
 						height = spec.height == :input ? @image.rows : spec.height
 
-						process_image(@image, spec.method, width, height, spec.options).render_on_background!((spec.options['background-color'] or 'white').sub(/^0x/, '#'))
+						image = process_image(@image, spec.method, width, height, spec.options)
+						if image.alpha?
+							@logger.info 'image has alpha, rendering on background'
+							image.render_on_background!(spec.options['background-color'])
+						else
+							image
+						end
 					end.use do |image|
 						@stats.incr_total_thumbnails_created
 						format = spec.format == :input ? @image.format : spec.format
@@ -302,13 +313,7 @@ module Plugin
 
 			@@service.method('pad') do |image, width, height, options|
 				image.resize_to_fit!(width, height)
-
-				out = Magick::Image.new(width, height) {
-					self.background_color = Magick::Pixel.new(Magick::MaxRGB, Magick::MaxRGB, Magick::MaxRGB, Magick::MaxRGB) # transparent
-				}.composite!(image, Magick::CenterGravity, Magick::OverCompositeOp)
-
-				image.destroy!
-				out
+				image.render_on_background!(options['background-color'], width, height)
 			end
 
 			app.stats = @@service.stats
