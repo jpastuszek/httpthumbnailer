@@ -1,4 +1,4 @@
-require 'rmagick'
+require 'RMagick'
 require 'httpthumbnailer/thumbnailer'
 
 class Magick::Image
