@@ -6,10 +6,14 @@ class Magick::Image
 		Plugin::Thumbnailer::ImageHandler.new do
 			self
 		end.use do |image|
-			Magick::Image.new(width || image.columns, height || image.rows) {
-				self.background_color = background_color
-				self.depth = 8
-			}.composite!(image, Magick::CenterGravity, Magick::OverCompositeOp)
+			Plugin::Thumbnailer::ImageHandler.new do
+				Magick::Image.new(width || image.columns, height || image.rows) {
+					self.background_color = background_color
+					self.depth = 8
+				}
+			end.get do |background|
+				return background.composite!(image, Magick::CenterGravity, Magick::OverCompositeOp)
+			end
 		end
 	end
 
@@ -18,9 +22,12 @@ class Magick::Image
 		nrows ||= ncols
 		if ncols != columns || nrows != rows
 			scale = [ncols/columns.to_f, nrows/rows.to_f].max
-			img = resize(scale*columns+0.5, scale*rows+0.5)
-			return img.crop!(gravity, ncols, nrows, true) if ncols != columns || nrows != rows
-			return img
+			Plugin::Thumbnailer::ImageHandler.new do
+				resize(scale*columns+0.5, scale*rows+0.5)
+			end.get do |image|
+				return image.crop!(gravity, ncols, nrows, true) if ncols != columns || nrows != rows
+				return image
+			end
 		else
 			return crop(gravity, ncols, nrows, true) if ncols != columns || nrows != rows
 			# nothing to do make sure we return copy
@@ -139,10 +146,9 @@ module Plugin
 						image = process_image(@image, spec.method, width, height, spec.options)
 						if image.alpha?
 							@logger.info 'image has alpha, rendering on background'
-							image.render_on_background!(spec.options['background-color'])
-						else
-							image
+							next image.render_on_background!(spec.options['background-color'])
 						end
+						image
 					end.use do |image|
 						@stats.incr_total_thumbnails_created
 						format = spec.format == :input ? @image.format : spec.format
