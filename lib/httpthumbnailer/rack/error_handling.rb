@@ -21,7 +21,7 @@ module Rack
 					env["app.error"] = error
 
 					return @app.call(env)
-				rescue => fatal
+				rescue
 					raise 
 				end
 			end

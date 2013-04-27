@@ -92,14 +92,14 @@ module Plugin
 						yield Thumbnail.new(image, image_format, spec.options)
 					end
 				rescue Magick::ImageMagickError => error
-					raise ImageTooLargeError.new(error) if error.message =~ /cache resources exhausted/
+					raise ImageTooLargeError, error.message if error.message =~ /cache resources exhausted/
 					raise
 				end
 			end
 
 			def process_image(method, width, height, options)
 				replace do |image|
-					impl = @methods[method] or raise UnsupportedMethodError.new(method)
+					impl = @methods[method] or raise UnsupportedMethodError, method
 					impl.call(image, width, height, options)
 				end
 			end
@@ -226,8 +226,8 @@ module Plugin
 						end
 					end
 					images.shift.replace do |image|
-						images.each do |image|
-							image.destroy!
+						images.each do |other|
+							other.destroy!
 						end
 						@logger.info "loaded image: #{image.inspect}"
 						@stats.incr_total_images_loaded
@@ -248,7 +248,7 @@ module Plugin
 						image
 					end
 				rescue Magick::ImageMagickError => error
-					raise ImageTooLargeError.new(error) if error.message =~ /cache resources exhausted/
+					raise ImageTooLargeError, error if error.message =~ /cache resources exhausted/
 					raise UnsupportedMediaTypeError, error
 				end
 			end
