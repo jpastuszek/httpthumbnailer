@@ -1,40 +1,5 @@
 require 'RMagick'
-require 'httpthumbnailer/thumbnailer'
-
-class Magick::Image
-	def render_on_background!(background_color, width = nil, height = nil)
-		Plugin::Thumbnailer::ImageHandler.new do
-			self
-		end.use do |image|
-			Plugin::Thumbnailer::ImageHandler.new do
-				Magick::Image.new(width || image.columns, height || image.rows) {
-					self.background_color = background_color
-					self.depth = 8
-				}
-			end.get do |background|
-				return background.composite!(image, Magick::CenterGravity, Magick::OverCompositeOp)
-			end
-		end
-	end
-
-	# non coping version
-	def resize_to_fill(ncols, nrows = nil, gravity = Magick::CenterGravity)
-		nrows ||= ncols
-		if ncols != columns || nrows != rows
-			scale = [ncols/columns.to_f, nrows/rows.to_f].max
-			Plugin::Thumbnailer::ImageHandler.new do
-				resize(scale*columns+0.5, scale*rows+0.5)
-			end.get do |image|
-				return image.crop!(gravity, ncols, nrows, true) if ncols != columns || nrows != rows
-				return image
-			end
-		else
-			return crop(gravity, ncols, nrows, true) if ncols != columns || nrows != rows
-			# nothing to do make sure we return copy
-			return copy
-		end
-	end
-end
+require 'raindrops'
 
 module Plugin
 	module Thumbnailer
@@ -56,81 +21,54 @@ module Plugin
 			end
 		end
 
-		class ImageHandler
-			class ImageDestroyedError < RuntimeError
-				def initialize
-					super("image was already used")
-				end
-			end
-
-			def initialize
-				@image = yield
-			end
-
-			def get
-				raise ImageDestroyedError unless @image
+		module ImageProcessing
+			def replace
+				@use_count ||= 0
+				processed = nil
 				begin
-					yield @image
-				rescue
-					destroy!
-					raise
+					processed = yield self
+					processed = self unless processed
+					fail 'got destroyed image' if processed.destroyed?
+				ensure
+					self.destroy! if @use_count <= 0 if self != processed
 				end
+				processed
 			end
 
 			def use
-				raise ImageDestroyedError unless @image
-				begin
-					yield @image
-				ensure
-					destroy!
+				lock do |image|
+					yield image
+					image
 				end
 			end
 
-			def destroy!
-				return unless @image
-				@image.destroy!
-				@image = nil
+			private
+
+			def lock
+				@use_count ||= 0
+				@use_count += 1
+				begin
+					yield self
+				ensure
+					@use_count -=1
+					self.destroy! if @use_count <= 0
+				end
 			end
 		end
 
-		class InputImage
-			def initialize(io, methods, stats, options = {})
-				@stats = stats
-				@options = options
-				@logger = (options[:logger] or Logger.new('/dev/null'))
+		module InputImage
+			include ImageProcessing
 
-				mw = options['max-width']
-				mh = options['max-height']
-				if mw and mh
-					mw = mw.to_i
-					mh = mh.to_i
-					@logger.info "using max size hint of: #{mw}x#{mh}"
-				end
-
-				begin
-					@image = Magick::Image.from_blob(io.read) do |info|
-						if mw and mh
-							define('jpeg', 'size', "#{mw*2}x#{mh*2}")
-							define('jbig', 'size', "#{mw*2}x#{mh*2}")
-						end
-					end.first.strip!
-					@logger.info "loaded image: #{@image.inspect}"
-					@stats.incr_total_images_loaded
-					
-					if mw and mh
-						f = find_prescale_factor(mw, mh)
-						if f > 1
-							prescale(f)
-							@logger.info "prescaled image by factor of #{f}: #{@image.inspect}"
-							@stats.incr_total_images_prescaled
-						end
-					end
-				rescue Magick::ImageMagickError => e
-					raise ImageTooLargeError, e if e.message =~ /cache resources exhausted/
-					raise UnsupportedMediaTypeError, e
-				end
-
+			def methods=(methods)
 				@methods = methods
+			end
+
+			def stats=(stats)
+				@stats = stats
+			end
+
+			def logger=(logger)
+				@logger = logger
 			end
 
 			def thumbnail(spec)
@@ -138,56 +76,35 @@ module Plugin
 				# default backgraud is white
 				spec.options['background-color'] = spec.options.fetch('background-color', 'white').sub(/^0x/, '#')
 
+				width = spec.width == :input ? columns : spec.width
+				height = spec.height == :input ? rows : spec.height
+
 				begin
-					ImageHandler.new do
-						width = spec.width == :input ? @image.columns : spec.width
-						height = spec.height == :input ? @image.rows : spec.height
-
-						image = process_image(@image, spec.method, width, height, spec.options)
-						if image.alpha?
-							@logger.info 'image has alpha, rendering on background'
-							next image.render_on_background!(spec.options['background-color'])
+					process_image(spec.method, width, height, spec.options).replace do |thumbnail|
+						if thumbnail.alpha?
+							@logger.info 'thumbnail has alpha, rendering on background'
+							thumbnail.render_on_background(spec.options['background-color'])
 						end
-						image
-					end.use do |image|
+					end.use do |thumbnail|
 						@stats.incr_total_thumbnails_created
-						format = spec.format == :input ? @image.format : spec.format
+						image_format = spec.format == :input ? format : spec.format
 
-						yield Thumbnail.new(image, format, spec.options)
+						yield Thumbnail.new(thumbnail, image_format, spec.options)
 					end
-				rescue Magick::ImageMagickError => e
-					raise ImageTooLargeError, e if e.message =~ /cache resources exhausted/
+				rescue Magick::ImageMagickError => error
+					error = 'test'
+					p error
+					raise error
+					raise ImageTooLargeError.new(error) if error.message =~ /cache resources exhausted/
 					raise
 				end
 			end
 
-			def mime_type
-				@image.mime_type
-			end
-
-			def destroy!
-				@image.destroy!
-			end
-
-			private
-
-			def prescale(f)
-				@image.sample!(@image.columns / f, @image.rows / f)
-			end
-
-			def find_prescale_factor(max_width, max_height, factor = 1)
-				new_factor = factor * 2
-				if @image.columns / new_factor > max_width * 2 and @image.rows / new_factor > max_height * 2
-					find_prescale_factor(max_width, max_height, factor * 2)
-				else
-					factor
+			def process_image(method, width, height, options)
+				replace do |image|
+					impl = @methods[method] or raise UnsupportedMethodError.new(method)
+					impl.call(image, width, height, options)
 				end
-			end
-
-			def process_image(image, method, width, height, options)
-				impl = @methods[method] or raise UnsupportedMethodError.new(method)
-				# expecting original image not modified or destroyed
-				impl.call(image, width, height, options)
 			end
 		end
 
@@ -280,7 +197,7 @@ module Plugin
 							@stats.incr_total_images_created_resize
 						when :crop!
 							@stats.incr_total_images_created_crop
-						when :sample!
+						when :sample
 							@stats.incr_total_images_created_sample
 						else
 							@logger.warn "uncounted image creation method: #{method}"
@@ -294,8 +211,46 @@ module Plugin
 			end
 
 			def load(io, options = {})
-				ImageHandler.new do
-					InputImage.new(io, @methods, @stats, @options.merge(options))
+				mw = options['max-width']
+				mh = options['max-height']
+				if mw and mh
+					mw = mw.to_i
+					mh = mh.to_i
+					@logger.info "using max size hint of: #{mw}x#{mh}"
+				end
+
+				begin
+					images = Magick::Image.from_blob(io.read) do |info|
+						if mw and mh
+							define('jpeg', 'size', "#{mw*2}x#{mh*2}")
+							define('jbig', 'size', "#{mw*2}x#{mh*2}")
+						end
+					end
+					images.shift.replace do |image|
+						images.each do |image|
+							image.destroy!
+						end
+						@logger.info "loaded image: #{image.inspect}"
+						@stats.incr_total_images_loaded
+						image.strip!
+					end.replace do |image|
+						if mw and mh
+							f = image.find_prescale_factor(mw, mh)
+							if f > 1
+								image = image.prescale(f)
+								@logger.info "prescaled image by factor of #{f}: #{image.inspect}"
+								@stats.incr_total_images_prescaled
+							end
+						end
+						image.extend InputImage
+						image.methods = @methods
+						image.stats = @stats
+						image.logger = @logger
+						image
+					end
+				rescue Magick::ImageMagickError => error
+					raise ImageTooLargeError.new(error) if error.message =~ /cache resources exhausted/
+					raise UnsupportedMediaTypeError, error
 				end
 			end
 
@@ -321,7 +276,6 @@ module Plugin
 				logger: app.logger_for(Service)
 			)
 
-			# first operation needs to be coping (no !) so we don't destroy original image
 			@@service.method('crop') do |image, width, height, options|
 				image.resize_to_fill(width, height)
 			end
@@ -331,9 +285,9 @@ module Plugin
 			end
 
 			@@service.method('pad') do |image, width, height, options|
-				image
-				.resize_to_fit(width, height)
-				.render_on_background!(options['background-color'], width, height)
+				image.resize_to_fit(width, height).replace do |resize|
+					resize.render_on_background(options['background-color'], width, height)
+				end
 			end
 
 			app.stats = @@service.stats
@@ -351,6 +305,45 @@ module Plugin
 
 		def thumbnailer
 			@@service
+		end
+	end
+end
+
+class Magick::Image
+	include Plugin::Thumbnailer::ImageProcessing
+
+	def render_on_background(background_color, width = nil, height = nil)
+		Magick::Image.new(width || self.columns, height || self.rows) {
+			self.background_color = background_color
+			self.depth = 8
+		}.replace do |background|
+			background.composite!(self, Magick::CenterGravity, Magick::OverCompositeOp)
+		end
+	end
+
+	# non coping version
+	def resize_to_fill(ncols, nrows = nil, gravity = Magick::CenterGravity)
+		nrows ||= ncols
+		if ncols != columns || nrows != rows
+			scale = [ncols/columns.to_f, nrows/rows.to_f].max
+			resize(scale*columns+0.5, scale*rows+0.5).replace do |image|
+				image.crop(gravity, ncols, nrows, true) if ncols != columns || nrows != rows
+			end
+		else
+			crop(gravity, ncols, nrows, true) if ncols != columns || nrows != rows
+		end
+	end
+
+	def prescale(f)
+		sample(columns / f, rows / f)
+	end
+
+	def find_prescale_factor(max_width, max_height, factor = 1)
+		new_factor = factor * 2
+		if columns / new_factor > max_width * 2 and rows / new_factor > max_height * 2
+			find_prescale_factor(max_width, max_height, factor * 2)
+		else
+			factor
 		end
 	end
 end
