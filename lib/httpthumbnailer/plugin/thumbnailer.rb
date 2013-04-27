@@ -80,21 +80,18 @@ module Plugin
 				height = spec.height == :input ? rows : spec.height
 
 				begin
-					process_image(spec.method, width, height, spec.options).replace do |thumbnail|
-						if thumbnail.alpha?
+					process_image(spec.method, width, height, spec.options).replace do |image|
+						if image.alpha?
 							@logger.info 'thumbnail has alpha, rendering on background'
-							thumbnail.render_on_background(spec.options['background-color'])
+							image.render_on_background(spec.options['background-color'])
 						end
-					end.use do |thumbnail|
+					end.use do |image|
 						@stats.incr_total_thumbnails_created
 						image_format = spec.format == :input ? format : spec.format
 
-						yield Thumbnail.new(thumbnail, image_format, spec.options)
+						yield Thumbnail.new(image, image_format, spec.options)
 					end
 				rescue Magick::ImageMagickError => error
-					error = 'test'
-					p error
-					raise error
 					raise ImageTooLargeError.new(error) if error.message =~ /cache resources exhausted/
 					raise
 				end
@@ -195,6 +192,8 @@ module Plugin
 							@stats.incr_total_images_created_resize
 						when :resize!
 							@stats.incr_total_images_created_resize
+						when :crop
+							@stats.incr_total_images_created_crop
 						when :crop!
 							@stats.incr_total_images_created_crop
 						when :sample

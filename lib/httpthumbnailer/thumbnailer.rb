@@ -21,8 +21,8 @@ class Thumbnailer < Controler
 				thumbnail_specs.each do |spec|
 					log.info "generating thumbnail: #{spec}"
 					begin
-						input_image.thumbnail(spec) do |thumbnail|
-							write_part thumbnail.mime_type, thumbnail.data
+						input_image.thumbnail(spec) do |image|
+							write_part image.mime_type, image.data
 						end
 					rescue => error
 						log.error "thumbnailing error", error
