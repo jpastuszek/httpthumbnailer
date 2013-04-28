@@ -201,6 +201,7 @@ Feature: Generating set of thumbnails with single PUT request
 		And second part mime type will be image/jpeg
 		And there will be no leaked images
 
+	@resources
 	Scenario: Memory limits exhausted while loading
 		Given test-large.jpg file content as request body
 		When I do PUT request http://localhost:3100/thumbnail/crop,7000,7000,PNG
@@ -212,6 +213,7 @@ Feature: Generating set of thumbnails with single PUT request
 		"""
 		And there will be no leaked images
 
+	@resources
 	Scenario: Memory limits exhausted while thumbnailing
 		Given test.jpg file content as request body
 		When I do PUT request http://localhost:3100/thumbnail/crop,16,16,PNG/crop,16000,16000,JPG/crop,16,32,JPEG

@@ -59,8 +59,8 @@ module Plugin
 		module InputImage
 			include ImageProcessing
 
-			def methods=(methods)
-				@methods = methods
+			def processing_methods=(processing_methods)
+				@processing_methods = processing_methods
 			end
 
 			def stats=(stats)
@@ -92,14 +92,15 @@ module Plugin
 						yield Thumbnail.new(image, image_format, spec.options)
 					end
 				rescue Magick::ImageMagickError => error
-					raise ImageTooLargeError, error.message if error.message =~ /cache resources exhausted/
-					raise
+					# Magick::Image overwrites raise (sic!)
+					Kernel.raise ImageTooLargeError, error.message if error.message =~ /cache resources exhausted/
+					Kernel.raise
 				end
 			end
 
 			def process_image(method, width, height, options)
 				replace do |image|
-					impl = @methods[method] or raise UnsupportedMethodError, method
+					impl = @processing_methods[method] or raise UnsupportedMethodError, method
 					impl.call(image, width, height, options)
 				end
 			end
@@ -164,7 +165,7 @@ module Plugin
 			end
 
 			def initialize(options = {})
-				@methods = {}
+				@processing_methods = {}
 				@options = options
 				@logger = (options[:logger] or Logger.new('/dev/null'))
 				@stats = Stats.new
@@ -242,7 +243,7 @@ module Plugin
 							end
 						end
 						image.extend InputImage
-						image.methods = @methods
+						image.processing_methods = @processing_methods
 						image.stats = @stats
 						image.logger = @logger
 						image
@@ -258,7 +259,7 @@ module Plugin
 			end
 
 			def method(method, &impl)
-				@methods[method] = impl
+				@processing_methods[method] = impl
 			end
 
 			def set_limit(limit, value)
