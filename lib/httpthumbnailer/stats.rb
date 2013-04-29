@@ -1,23 +1,12 @@
-class Stats < Controler
-	def self.<<(stats)
-		(@@stats ||= []) << stats
+module Stats
+	def def_stats(*stat_names)
+		@@local_stats ||= {}
+		stats_class = eval "Raindrops::Struct.new(#{stat_names.map{|s| ":#{s.to_s}"}.join(', ')})"
+		@@local_stats[self] = stats_class.new
 	end
-	
-	self.define do
-		all_stats = {}
-		@@stats.each do |stats|
-			stats.class::MEMBERS.each.with_index.map do |stat, index|
-				all_stats[stat] = stats[index]
-			end
-		end
 
-		on :stat do |stat|
-			write_plain 200, all_stats[stat.to_sym].to_s || raise(ArgumentError, "unknown stat #{stat}")
-		end
-
-		on true do
-			write_plain 200, all_stats.map{|stat, value| "#{stat}: #{value}"}.join("\n")
-		end
+	def stats
+		@@local_stats[self]
 	end
 end
 

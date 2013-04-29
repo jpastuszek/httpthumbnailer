@@ -96,6 +96,7 @@ Controler.settings[:limit_map] = settings.limit_map
 Controler.settings[:limit_disk] = settings.limit_disk
 Controler.settings[:listeners] = ["#{settings.bind}:#{settings.port}"]
 
+require 'httpthumbnailer/stats'
 require 'httpthumbnailer/plugin/error_matcher'
 require 'httpthumbnailer/plugin/logging'
 require 'httpthumbnailer/plugin/response_helpers'
@@ -103,30 +104,40 @@ require 'httpthumbnailer/rack/error_handling'
 require 'httpthumbnailer/rack/unhandled_request'
 
 require 'httpthumbnailer/error_reporter'
+require 'httpthumbnailer/stats_reporter'
 require 'httpthumbnailer/thumbnailer'
-require 'httpthumbnailer/stats'
 
 Controler.plugin Plugin::ErrorMatcher
 Controler.plugin Plugin::Logging
 Controler.plugin Plugin::ResponseHelpers
 
 class HTTPThumbniler < Controler
+	extend Stats
+	def_stats(
+		:total_requests, 
+		:total_errors 
+	)
+
 	raindrops_stats = Raindrops::Middleware::Stats.new
 	self.use Raindrops::Middleware, stats: raindrops_stats
 
 	self.use Rack::ErrorHandling
 	self.use Rack::UnhandledRequest
 
-	Stats << raindrops_stats
-	Stats << Thumbnailer.stats
+	StatsReporter << HTTPThumbniler.stats
+	StatsReporter << raindrops_stats
+	StatsReporter << Plugin::Thumbnailer::Service.stats
+	StatsReporter << Plugin::ResponseHelpers.stats
 
 	self.define do
+		HTTPThumbniler.stats.incr_total_requests
 		on error? do
+			HTTPThumbniler.stats.incr_total_errors
 			run ErrorReporter
 		end
 		
 		on 'stats' do
-			run Stats
+			run StatsReporter
 		end
 
 		on 'health_check' do

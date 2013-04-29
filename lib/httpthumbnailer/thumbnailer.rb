@@ -21,9 +21,7 @@ class Thumbnailer < Controler
 
 				log.info "generating thumbnail: #{spec}"
 				input_image.thumbnail(spec) do |image|
-					res["Content-Type"] = image.mime_type
-					res.status = 200
-					res.write image.data
+					write 200, image.mime_type, image.data
 				end
 			end
 		end

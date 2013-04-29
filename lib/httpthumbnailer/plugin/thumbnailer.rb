@@ -59,10 +59,9 @@ module Plugin
 			include ClassLogging
 			extend Forwardable
 
-			def initialize(image, processing_methods, stats, options = {})
+			def initialize(image, processing_methods, options = {})
 				@image = image
 				@processing_methods = processing_methods
-				@stats = stats
 			end
 
 			def thumbnail(spec)
@@ -82,7 +81,7 @@ module Plugin
 							image.render_on_background(spec.options['background-color'])
 						end
 					end.use do |image|
-						@stats.incr_total_thumbnails_created
+						Service.stats.incr_total_thumbnails_created
 						image_format = spec.format == :input ? @image.format : spec.format
 
 						yield Thumbnail.new(image, image_format, spec.options)
@@ -161,27 +160,25 @@ module Plugin
 		class Service
 			include ClassLogging
 
-			class Stats < Raindrops::Struct.new(
-					:total_images_loaded, 
-					:total_images_prescaled, 
-					:total_thumbnails_created, 
-					:images_loaded, 
-					:max_images_loaded, 
-					:total_images_created,
-					:total_images_destroyed,
-					:total_images_created_from_blob,
-					:total_images_created_initialize_copy,
-					:total_images_created_initialize,
-					:total_images_created_resize,
-					:total_images_created_crop,
-					:total_images_created_sample
-				)
-			end
+			extend Stats
+			def_stats(
+				:total_images_loaded, 
+				:total_images_prescaled, 
+				:total_thumbnails_created, 
+				:images_loaded, 
+				:max_images_loaded, 
+				:total_images_created,
+				:total_images_destroyed,
+				:total_images_created_from_blob,
+				:total_images_created_initialize,
+				:total_images_created_resize,
+				:total_images_created_crop,
+				:total_images_created_sample
+			)
 
 			def initialize(options = {})
 				@processing_methods = {}
 				@options = options
-				@stats = Stats.new
 
 				log.info "initializing thumbniler"
 
@@ -193,34 +190,32 @@ module Plugin
 				Magick.trace_proc = lambda do |which, description, id, method|
 					case which
 					when :c
-						@stats.incr_images_loaded
-						@stats.max_images_loaded = @stats.images_loaded if @stats.images_loaded > @stats.max_images_loaded
-						@stats.incr_total_images_created
+						Service.stats.incr_images_loaded
+						Service.stats.max_images_loaded = Service.stats.images_loaded if Service.stats.images_loaded > Service.stats.max_images_loaded
+						Service.stats.incr_total_images_created
 						case method
 						when :from_blob
-							@stats.incr_total_images_created_from_blob
-						when :initialize_copy
-							@stats.incr_total_images_created_initialize_copy
+							Service.stats.incr_total_images_created_from_blob
 						when :initialize
-							@stats.incr_total_images_created_initialize
+							Service.stats.incr_total_images_created_initialize
 						when :resize
-							@stats.incr_total_images_created_resize
+							Service.stats.incr_total_images_created_resize
 						when :resize!
-							@stats.incr_total_images_created_resize
+							Service.stats.incr_total_images_created_resize
 						when :crop
-							@stats.incr_total_images_created_crop
+							Service.stats.incr_total_images_created_crop
 						when :crop!
-							@stats.incr_total_images_created_crop
+							Service.stats.incr_total_images_created_crop
 						when :sample
-							@stats.incr_total_images_created_sample
+							Service.stats.incr_total_images_created_sample
 						else
 							log.warn "uncounted image creation method: #{method}"
 						end
 					when :d
-						@stats.decr_images_loaded
-						@stats.incr_total_images_destroyed
+						Service.stats.decr_images_loaded
+						Service.stats.incr_total_images_destroyed
 					end
-					log.debug{"image event: #{which}, #{description}, #{id}, #{method}: loaded images: #{@stats.images_loaded}"}
+					log.debug{"image event: #{which}, #{description}, #{id}, #{method}: loaded images: #{Service.stats.images_loaded}"}
 				end
 			end
 
@@ -245,7 +240,7 @@ module Plugin
 							other.destroy!
 						end
 						log.info "loaded image: #{image.inspect}"
-						@stats.incr_total_images_loaded
+						Service.stats.incr_total_images_loaded
 						image.strip!
 					end.replace do |image|
 						if mw and mh
@@ -253,19 +248,15 @@ module Plugin
 							if f > 1
 								image = image.prescale(f)
 								log.info "prescaled image by factor of #{f}: #{image.inspect}"
-								@stats.incr_total_images_prescaled
+								Service.stats.incr_total_images_prescaled
 							end
 						end
-						InputImage.new(image, @processing_methods, @stats)
+						InputImage.new(image, @processing_methods)
 					end
 				rescue Magick::ImageMagickError => error
 					raise ImageTooLargeError, error if error.message =~ /cache resources exhausted/
 					raise UnsupportedMediaTypeError, error
 				end
-			end
-
-			def stats
-				@stats
 			end
 
 			def processing_method(method, &impl)
@@ -301,18 +292,6 @@ module Plugin
 				image.resize_to_fit(width, height).replace do |resize|
 					resize.render_on_background(options['background-color'], width, height)
 				end if image.columns != width or image.rows != height
-			end
-
-			app.stats = @@service.stats
-		end
-
-		module ClassMethods
-			def stats=(stats)
-				@@stats = stats
-			end
-
-			def stats
-				@@stats
 			end
 		end
 

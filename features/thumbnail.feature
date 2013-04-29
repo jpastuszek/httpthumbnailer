@@ -6,6 +6,7 @@ Feature: Generating single thumbnail with PUT request
 	Background:
 		Given httpthumbnailer server is running at http://localhost:3100/
 
+	@test
 	Scenario: Single thumbnail
 		Given test.jpg file content as request body
 		When I do PUT request http://localhost:3100/thumbnail/crop,16,16,PNG
