@@ -246,7 +246,7 @@ module Plugin
 								@stats.incr_total_images_prescaled
 							end
 						end
-						InputImage.new(image, @processing_methods, @stats, logger: log)
+						InputImage.new(image, @processing_methods, @stats)
 					end
 				rescue Magick::ImageMagickError => error
 					raise ImageTooLargeError, error if error.message =~ /cache resources exhausted/
