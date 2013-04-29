@@ -45,6 +45,10 @@ Then /response content type will be (.*)/ do |content_type|
 	@response.header['Content-Type'].first.should == content_type
 end
 
+Then /response mime type will be (.*)/ do |mime_type|
+	step "response content type will be #{mime_type}"
+end
+
 Then /(.*) part mime type will be (.*)/ do |part, mime|
 	@response_multipart.part[part_no(part)].header['Content-Type'].should == mime
 end
@@ -61,6 +65,20 @@ Then /(.*) part body will be CRLF endend lines like$/ do |part, body|
 	pbody = @response_multipart.part[part_no(part)].body
 	pbody.should match(body)
 end
+
+Then /response will contain (.*) image of size (.*)x(.*)/ do |format, width, height|
+	mime = @response.header['Content-Type'].first
+	data = @response.body
+	fail("expecte image got #{mime}: #{data}") unless mime =~ /^image\//
+
+	@image.destroy! if @image
+	@image = Magick::Image.from_blob(data).first
+
+	@image.format.should == format
+	@image.columns.should == width.to_i
+	@image.rows.should == height.to_i
+end
+
 
 Then /(.*) part will contain (.*) image of size (.*)x(.*)/ do |part, format, width, height|
 	mime = @response_multipart.part[part_no(part)].header['Content-Type']
