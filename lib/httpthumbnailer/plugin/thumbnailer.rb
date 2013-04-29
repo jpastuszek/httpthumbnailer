@@ -50,13 +50,13 @@ module Plugin
 		end
 
 		class InputImage
+			include ClassLogging
 			extend Forwardable
 
 			def initialize(image, processing_methods, stats, options = {})
 				@image = image
 				@processing_methods = processing_methods
 				@stats = stats
-				@logger = options[:logger] || Logger.new('/dev/null')
 			end
 
 			def thumbnail(spec)
@@ -70,7 +70,7 @@ module Plugin
 				begin
 					process_image(spec.method, width, height, spec.options).replace do |image|
 						if image.alpha?
-							@logger.info 'thumbnail has alpha, rendering on background'
+							log.info 'thumbnail has alpha, rendering on background'
 							image.render_on_background(spec.options['background-color'])
 						end
 					end.use do |image|
@@ -108,6 +108,8 @@ module Plugin
 		end
 
 		class Thumbnail
+			include ClassLogging
+
 			def initialize(image, format, options = {})
 				@image = image
 				@format = format
@@ -149,6 +151,8 @@ module Plugin
 		end
 
 		class Service
+			include ClassLogging
+
 			class Stats < Raindrops::Struct.new(
 					:total_images_loaded, 
 					:total_images_prescaled, 
@@ -168,10 +172,9 @@ module Plugin
 			def initialize(options = {})
 				@processing_methods = {}
 				@options = options
-				@logger = options[:logger] || Logger.new('/dev/null')
 				@stats = Stats.new
 
-				@logger.info "initializing thumbniler"
+				log.info "initializing thumbniler"
 
 				set_limit(:area, options[:limit_area]) if options.member?(:limit_area)
 				set_limit(:memory, options[:limit_memory]) if options.member?(:limit_memory)
@@ -201,13 +204,13 @@ module Plugin
 						when :sample
 							@stats.incr_total_images_created_sample
 						else
-							@logger.warn "uncounted image creation method: #{method}"
+							log.warn "uncounted image creation method: #{method}"
 						end
 					when :d
 						@stats.decr_images_loaded
 						@stats.incr_total_images_destroyed
 					end
-					@logger.debug{"image event: #{which}, #{description}, #{id}, #{method}: loaded images: #{@stats.images_loaded}"}
+					log.debug{"image event: #{which}, #{description}, #{id}, #{method}: loaded images: #{@stats.images_loaded}"}
 				end
 			end
 
@@ -217,7 +220,7 @@ module Plugin
 				if mw and mh
 					mw = mw.to_i
 					mh = mh.to_i
-					@logger.info "using max size hint of: #{mw}x#{mh}"
+					log.info "using max size hint of: #{mw}x#{mh}"
 				end
 
 				begin
@@ -231,7 +234,7 @@ module Plugin
 						images.each do |other|
 							other.destroy!
 						end
-						@logger.info "loaded image: #{image.inspect}"
+						log.info "loaded image: #{image.inspect}"
 						@stats.incr_total_images_loaded
 						image.strip!
 					end.replace do |image|
@@ -239,11 +242,11 @@ module Plugin
 							f = image.find_prescale_factor(mw, mh)
 							if f > 1
 								image = image.prescale(f)
-								@logger.info "prescaled image by factor of #{f}: #{image.inspect}"
+								log.info "prescaled image by factor of #{f}: #{image.inspect}"
 								@stats.incr_total_images_prescaled
 							end
 						end
-						InputImage.new(image, @processing_methods, @stats, logger: @logger)
+						InputImage.new(image, @processing_methods, @stats, logger: log)
 					end
 				rescue Magick::ImageMagickError => error
 					raise ImageTooLargeError, error if error.message =~ /cache resources exhausted/
@@ -261,16 +264,19 @@ module Plugin
 
 			def set_limit(limit, value)
 				old = Magick.limit_resource(limit, value)
-				@logger.info "changed limit of #{limit} from #{old} to #{value}"
+				log.info "changed limit of #{limit} from #{old} to #{value}"
 			end
 		end
 
 		def self.setup(app)
+			Service.logger = app.logger_for(Service)
+			InputImage.logger = app.logger_for(InputImage)
+			Thumbnail.logger = app.logger_for(Thumbnail)
+
 			@@service = Service.new(
 				limit_memory: app.settings[:limit_memory],
 				limit_map: app.settings[:limit_map],
-				limit_disk: app.settings[:limit_disk],
-				logger: app.logger_for(Service)
+				limit_disk: app.settings[:limit_disk]
 			)
 
 			@@service.processing_method('crop') do |image, width, height, options|

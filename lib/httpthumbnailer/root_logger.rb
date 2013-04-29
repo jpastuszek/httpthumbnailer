@@ -35,3 +35,18 @@ class RootLogger < Logger
 	end
 end
 
+module ClassLogging
+	def logger=(logger)
+		@@logger = logger
+	end
+
+	def log
+		return @@logger if defined? @@logger
+		@@logger = Logger.new(STDERR)
+	end
+
+	def self.included(class_obj)
+		class_obj.extend self
+	end
+end
+
