@@ -280,17 +280,17 @@ module Plugin
 			)
 
 			@@service.processing_method('crop') do |image, width, height, options|
-				image.resize_to_fill(width, height)
+				image.resize_to_fill(width, height) if image.columns != width or image.rows != height
 			end
 
 			@@service.processing_method('fit') do |image, width, height, options|
-				image.resize_to_fit(width, height)
+				image.resize_to_fit(width, height) if image.columns != width or image.rows != height
 			end
 
 			@@service.processing_method('pad') do |image, width, height, options|
 				image.resize_to_fit(width, height).replace do |resize|
 					resize.render_on_background(options['background-color'], width, height)
-				end
+				end if image.columns != width or image.rows != height
 			end
 
 			app.stats = @@service.stats
