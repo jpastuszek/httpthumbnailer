@@ -52,13 +52,29 @@ Feature: Generating single thumbnail with PUT request
 		Then response should contain PNG image of size 509x719
 		And response mime type should be image/png
 
+	@fit
 	Scenario: Fit thumbnailing method
 		Given test.jpg file content as request body
 		When I do PUT request http://localhost:3100/thumbnail/fit,128,128,PNG
 		Then response status should be 200
 		Then response should contain PNG image of size 91x128
+		Given test.jpg file content as request body
+		When I do PUT request http://localhost:3100/thumbnail/fit,1024,1024,PNG
+		Then response status should be 200
+		Then response should contain PNG image of size 725x1024
 
-	@transparent
+	@limit
+	Scenario: Limit thumbnailing method should reduce image size when needed
+		Given test.jpg file content as request body
+		When I do PUT request http://localhost:3100/thumbnail/limit,128,128,PNG
+		Then response status should be 200
+		Then response should contain PNG image of size 91x128
+		Given test.jpg file content as request body
+		When I do PUT request http://localhost:3100/thumbnail/limit,1024,1024,PNG
+		Then response status should be 200
+		Then response should contain PNG image of size 509x719
+
+	@pad @transparent
 	Scenario: Pad thumbnailing method - default background color white
 		Given test.jpg file content as request body
 		When I do PUT request http://localhost:3100/thumbnail/pad,128,128,PNG
@@ -67,7 +83,7 @@ Feature: Generating single thumbnail with PUT request
 		Then response should contain PNG image of size 128x128
 		And that image pixel at 2x2 should be of color white
 
-	@transparent
+	@pad @transparent
 	Scenario: Pad thumbnailing method with specified background color
 		Given test.jpg file content as request body
 		When I do PUT request http://localhost:3100/thumbnail/pad,128,128,PNG,background-color:green

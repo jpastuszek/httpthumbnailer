@@ -229,12 +229,24 @@ module Plugin
 				end
 
 				begin
-					images = Magick::Image.from_blob(io.read) do |info|
+					blob = io.read
+					images = Magick::Image.from_blob(blob) do |info|
 						if mw and mh
 							define('jpeg', 'size', "#{mw*2}x#{mh*2}")
 							define('jbig', 'size', "#{mw*2}x#{mh*2}")
 						end
 					end
+
+					image = images.first
+					if image.columns > image.base_columns or image.rows > image.base_rows
+						log.warn "input image got upscaled from: #{image.base_columns}x#{image.base_rows} to #{image.columns}x#{image.rows}: reloading without max size hint!"
+						images.each do |other|
+							other.destroy!
+						end
+						images = Magick::Image.from_blob(blob)
+					end
+					blob = nil
+
 					images.shift.replace do |image|
 						images.each do |other|
 							other.destroy!
@@ -292,6 +304,10 @@ module Plugin
 				image.resize_to_fit(width, height).replace do |resize|
 					resize.render_on_background(options['background-color'], width, height)
 				end if image.columns != width or image.rows != height
+			end
+
+			@@service.processing_method('limit') do |image, width, height, options|
+				image.resize_to_fit(width, height) if image.columns > width or image.rows > height
 			end
 		end
 
