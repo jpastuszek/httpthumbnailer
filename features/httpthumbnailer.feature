@@ -7,6 +7,7 @@ Feature: Generating set of thumbnails with single PUT request
 		Given httpthumbnailer log is empty
 		Given httpthumbnailer server is running at http://localhost:3100/
 
+	@test
 	Scenario: Single thumbnail
 		Given test.jpg file content as request body
 		When I do PUT request http://localhost:3100/thumbnail/crop,16,16,PNG
@@ -40,6 +41,7 @@ Feature: Generating set of thumbnails with single PUT request
 		And that image pixel at 32x32 will be of color white
 		And there will be no leaked images
 
+	@test
 	Scenario: Thumbnails of format INPUT should have same format as input image - for JPEG
 		Given test.jpg file content as request body
 		When I do PUT request http://localhost:3100/thumbnail/crop,16,16,PNG/crop,4,8,INPUT/crop,16,32,INPUT

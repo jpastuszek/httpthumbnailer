@@ -15,7 +15,7 @@ class Thumbnailer < Controler
 			end
 
 			thumbnailer.load(req.body, opts).use do |input_image|
-				log.debug "original image loaded"
+				log.info "original image loaded: #{input_image.mime_type}"
 				write_preamble 200, "X-Input-Image-Content-Type" => input_image.mime_type
 
 				thumbnail_specs.each do |spec|

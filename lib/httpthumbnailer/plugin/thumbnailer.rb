@@ -1,5 +1,6 @@
 require 'RMagick'
 require 'raindrops'
+require 'forwardable'
 
 module Plugin
 	module Thumbnailer
@@ -30,25 +31,17 @@ module Plugin
 					processed = self unless processed
 					fail 'got destroyed image' if processed.destroyed?
 				ensure
-					self.destroy! if @use_count <= 0 if self != processed
+					self.destroy! if @use_count <= 0 if processed != self
 				end
 				processed
 			end
 
 			def use
-				lock do |image|
-					yield image
-					image
-				end
-			end
-
-			private
-
-			def lock
 				@use_count ||= 0
 				@use_count += 1
 				begin
 					yield self
+					self
 				ensure
 					@use_count -=1
 					self.destroy! if @use_count <= 0
@@ -56,19 +49,14 @@ module Plugin
 			end
 		end
 
-		module InputImage
-			include ImageProcessing
+		class InputImage
+			extend Forwardable
 
-			def processing_methods=(processing_methods)
+			def initialize(image, processing_methods, stats, options = {})
+				@image = image
 				@processing_methods = processing_methods
-			end
-
-			def stats=(stats)
 				@stats = stats
-			end
-
-			def logger=(logger)
-				@logger = logger
+				@logger = options[:logger] || Logger.new('/dev/null')
 			end
 
 			def thumbnail(spec)
@@ -76,8 +64,8 @@ module Plugin
 				# default backgraud is white
 				spec.options['background-color'] = spec.options.fetch('background-color', 'white').sub(/^0x/, '#')
 
-				width = spec.width == :input ? columns : spec.width
-				height = spec.height == :input ? rows : spec.height
+				width = spec.width == :input ? @image.columns : spec.width
+				height = spec.height == :input ? @image.rows : spec.height
 
 				begin
 					process_image(spec.method, width, height, spec.options).replace do |image|
@@ -87,22 +75,35 @@ module Plugin
 						end
 					end.use do |image|
 						@stats.incr_total_thumbnails_created
-						image_format = spec.format == :input ? format : spec.format
+						image_format = spec.format == :input ? @image.format : spec.format
 
 						yield Thumbnail.new(image, image_format, spec.options)
 					end
 				rescue Magick::ImageMagickError => error
-					# Magick::Image overwrites raise (sic!)
-					Kernel.raise ImageTooLargeError, error.message if error.message =~ /cache resources exhausted/
-					Kernel.raise
+					raise ImageTooLargeError, error.message if error.message =~ /cache resources exhausted/
+					raise
 				end
 			end
 
 			def process_image(method, width, height, options)
-				replace do |image|
+				@image.replace do |image|
 					impl = @processing_methods[method] or raise UnsupportedMethodError, method
 					impl.call(image, width, height, options)
 				end
+			end
+
+			# behave as @image in processing
+			def use
+				@image.use do |image|
+					yield self
+				end
+			end
+
+			def_delegators :@image, :destroy!, :destroyed?, :mime_type
+
+			# needs to be seen as @image when returned in replace block
+			def ==(image)
+				super image or @image == image
 			end
 		end
 
@@ -124,7 +125,7 @@ module Plugin
 			end
 
 			def mime_type
-				#@image.mime_type cannot be used since it is raw loaded image
+				#@image.mime_type cannot be used since it is raw crated image
 				#TODO: how do I do it better?
 				mime = case @format
 					when 'JPG' then 'jpeg'
@@ -167,7 +168,7 @@ module Plugin
 			def initialize(options = {})
 				@processing_methods = {}
 				@options = options
-				@logger = (options[:logger] or Logger.new('/dev/null'))
+				@logger = options[:logger] || Logger.new('/dev/null')
 				@stats = Stats.new
 
 				@logger.info "initializing thumbniler"
@@ -206,7 +207,7 @@ module Plugin
 						@stats.decr_images_loaded
 						@stats.incr_total_images_destroyed
 					end
-					@logger.debug "image event: #{which}, #{description}, #{id}, #{method}: loaded images: #{@stats.images_loaded}"
+					@logger.debug{"image event: #{which}, #{description}, #{id}, #{method}: loaded images: #{@stats.images_loaded}"}
 				end
 			end
 
@@ -242,11 +243,7 @@ module Plugin
 								@stats.incr_total_images_prescaled
 							end
 						end
-						image.extend InputImage
-						image.processing_methods = @processing_methods
-						image.stats = @stats
-						image.logger = @logger
-						image
+						InputImage.new(image, @processing_methods, @stats, logger: @logger)
 					end
 				rescue Magick::ImageMagickError => error
 					raise ImageTooLargeError, error if error.message =~ /cache resources exhausted/
@@ -258,7 +255,7 @@ module Plugin
 				@stats
 			end
 
-			def method(method, &impl)
+			def processing_method(method, &impl)
 				@processing_methods[method] = impl
 			end
 
@@ -276,15 +273,15 @@ module Plugin
 				logger: app.logger_for(Service)
 			)
 
-			@@service.method('crop') do |image, width, height, options|
+			@@service.processing_method('crop') do |image, width, height, options|
 				image.resize_to_fill(width, height)
 			end
 
-			@@service.method('fit') do |image, width, height, options|
+			@@service.processing_method('fit') do |image, width, height, options|
 				image.resize_to_fit(width, height)
 			end
 
-			@@service.method('pad') do |image, width, height, options|
+			@@service.processing_method('pad') do |image, width, height, options|
 				image.resize_to_fit(width, height).replace do |resize|
 					resize.render_on_background(options['background-color'], width, height)
 				end
@@ -324,13 +321,13 @@ class Magick::Image
 	# non coping version
 	def resize_to_fill(ncols, nrows = nil, gravity = Magick::CenterGravity)
 		nrows ||= ncols
-		if ncols != columns || nrows != rows
-			scale = [ncols/columns.to_f, nrows/rows.to_f].max
-			resize(scale*columns+0.5, scale*rows+0.5).replace do |image|
-				image.crop(gravity, ncols, nrows, true) if ncols != columns || nrows != rows
+		if ncols != columns or nrows != rows
+			scale = [ncols / columns.to_f, nrows / rows.to_f].max
+			resize(scale * columns + 0.5, scale * rows + 0.5).replace do |image|
+				image.crop(gravity, ncols, nrows, true) if ncols != columns or nrows != rows
 			end
 		else
-			crop(gravity, ncols, nrows, true) if ncols != columns || nrows != rows
+			crop(gravity, ncols, nrows, true) if ncols != columns or nrows != rows
 		end
 	end
 
