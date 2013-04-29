@@ -1,7 +1,3 @@
-Given /httpthumbnailer log is empty/ do
-		(support_dir + 'server.log').truncate(0)
-end
-
 Given /httpthumbnailer server is running at (.*)/ do |url|
 	log = support_dir + 'server.log'
 	cmd = "bundle exec #{script('httpthumbnailer')} -f -v -d -l #{log}"
@@ -16,57 +12,61 @@ When /I do (.*) request (.*)/ do |method, url|
 	@response = HTTPClient.new.request(method, url, nil, @request_body)
 end
 
-Then /(.*) header will be (.*)/ do |header, value|
+When /I save response body/ do
+	@saved_response_body = @response.body
+end
+
+Then /(.*) header should be (.*)/ do |header, value|
 	@response.header[header].should_not be_empty
 	@response.header[header].first.should == value
 end
 
-Then /I will get multipart response/ do
+Then /I should get multipart response/ do
 	@response.header['Content-Type'].first.should match /^multipart/
 	@response_multipart = MultipartResponse.new(@response.header['Content-Type'].last, @response.body)
 end
 
-Then /response body will be CRLF endend lines like/ do |body|	
+Then /response body should be CRLF endend lines like/ do |body|	
 	@response.body.should match(body)
 	@response.body.each_line do |line|
 		line[-2,2].should == "\r\n"
 	end
 end
 
-Then /response body will be CRLF endend lines$/ do |body|	
+Then /response body should be CRLF endend lines$/ do |body|	
 	@response.body.should == body.gsub("\n", "\r\n") + "\r\n"
 end
 
-Then /response status will be (.*)/ do |status|
+Then /response status should be (.*)/ do |status|
 	@response.status.should == status.to_i
 end
 
-Then /response content type will be (.*)/ do |content_type|
+Then /response content type should be (.*)/ do |content_type|
 	@response.header['Content-Type'].first.should == content_type
 end
 
-Then /response mime type will be (.*)/ do |mime_type|
-	step "response content type will be #{mime_type}"
+Then /response mime type should be (.*)/ do |mime_type|
+	step "response content type should be #{mime_type}"
 end
 
-Then /(.*) part mime type will be (.*)/ do |part, mime|
+Then /(.*) part mime type should be (.*)/ do |part, mime|
 	@response_multipart.part[part_no(part)].header['Content-Type'].should == mime
 end
 
-Then /(.*) part content type will be (.*)/ do |part, content_type|
+Then /(.*) part content type should be (.*)/ do |part, content_type|
 	@response_multipart.part[part_no(part)].header['Content-Type'].should == content_type
 end
 
-Then /(.*) part body will be CRLF endend lines$/ do |part, body|	
+Then /(.*) part body should be CRLF endend lines$/ do |part, body|	
 	@response_multipart.part[part_no(part)].body.should == body.gsub("\n", "\r\n")
 end
 
-Then /(.*) part body will be CRLF endend lines like$/ do |part, body|	
+Then /(.*) part body should be CRLF endend lines like$/ do |part, body|	
 	pbody = @response_multipart.part[part_no(part)].body
 	pbody.should match(body)
 end
 
-Then /response will contain (.*) image of size (.*)x(.*)/ do |format, width, height|
+Then /response should contain (.*) image of size (.*)x(.*)/ do |format, width, height|
 	mime = @response.header['Content-Type'].first
 	data = @response.body
 	fail("expecte image got #{mime}: #{data}") unless mime =~ /^image\//
@@ -80,7 +80,7 @@ Then /response will contain (.*) image of size (.*)x(.*)/ do |format, width, hei
 end
 
 
-Then /(.*) part will contain (.*) image of size (.*)x(.*)/ do |part, format, width, height|
+Then /(.*) part should contain (.*) image of size (.*)x(.*)/ do |part, format, width, height|
 	mime = @response_multipart.part[part_no(part)].header['Content-Type']
 	data = @response_multipart.part[part_no(part)].body
 	fail("expecte image got #{mime}: #{data}") unless mime =~ /^image\//
@@ -93,15 +93,13 @@ Then /(.*) part will contain (.*) image of size (.*)x(.*)/ do |part, format, wid
 	@image.rows.should == height.to_i
 end
 
-Then /(.*) part will contain body of size within (.*) of (.*)/ do |part, margin, size|
-	data = @response_multipart.part[part_no(part)].body
-	data.length.should be_within(margin.to_i).of(size.to_i)
+Then /saved response body will be smaller than response body/ do
+	@saved_response_body.length.should < @response.body.length
 end
 
-Then /(.*) part will contain body smaller than (.*) part/ do |part, big_part|
-	data = @response_multipart.part[part_no(part)].body
-	data_big = @response_multipart.part[part_no(big_part)].body
-	data.length.should < data_big.length
+And /response will be saved as (.*) for human inspection/ do |file|
+	data = @response.body
+	(support_dir + file).open('w'){|f| f.write(data)}
 end
 
 And /(.*) part body will be saved as (.*) for human inspection/ do |part, file|
@@ -109,11 +107,11 @@ And /(.*) part body will be saved as (.*) for human inspection/ do |part, file|
 	(support_dir + file).open('w'){|f| f.write(data)}
 end
 
-And /that image pixel at (.*)x(.*) will be of color (.*)/ do |x, y, color|
+And /that image pixel at (.*)x(.*) should be of color (.*)/ do |x, y, color|
 	@image.pixel_color(x.to_i, y.to_i).to_color.sub(/^#/, '0x').should == color
 end
 
-And /there will be no leaked images/ do
-	HTTPClient.new.get_content("http://localhost:3100/stats/images").to_i.should == 0
+And /there should be no leaked images/ do
+	Integer(HTTPClient.new.get_content("http://localhost:3100/stats/images_loaded").strip).should == 0
 end
 

@@ -11,7 +11,8 @@ class Thumbnailer < Controler
 
 			opts = {}
 			if settings[:optimization]
-				opts.merge!({'max-width' => spec.width, 'max-height' => spec.height})
+				opts['max-width'] = spec.width if spec.width.is_a? Integer
+				opts['max-height'] = spec.height if spec.height.is_a? Integer
 			end
 
 			thumbnailer.load(req.body, opts).use do |input_image|
@@ -33,7 +34,8 @@ class Thumbnailer < Controler
 
 			opts = {}
 			if settings[:optimization]
-				opts.merge!({'max-width' => thumbnail_specs.max_width, 'max-height' => thumbnail_specs.max_height})
+					opts['max-width'] = thumbnail_specs.max_width
+					opts['max-height'] = thumbnail_specs.max_height
 			end
 
 			thumbnailer.load(req.body, opts).use do |input_image|

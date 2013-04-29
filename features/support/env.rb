@@ -49,8 +49,10 @@ def get(url)
 end
 
 def start_server(cmd, pid_file, log_file, test_url)
-	stop_server(pid_file)
+	pid_file = Pathname.new(pid_file)
+	return if pid_file.exist?
 
+	Pathname.new(log_file).truncate(0)
 	fork do
 		Daemon.daemonize(pid_file, log_file)
 		exec(cmd)
@@ -88,5 +90,13 @@ def stop_server(pid_file)
 			pid_file.unlink
 		end
 	end
+end
+
+at_exit do
+	stop_server '/tmp/httpthumbnailer.pid'
+end
+
+After do |scenario|
+	step "there should be no leaked images"
 end
 

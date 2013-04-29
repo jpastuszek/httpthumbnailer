@@ -22,6 +22,12 @@ module Plugin
 			end
 		end
 
+		class ZeroSizedImageError < ArgumentError
+			def initialize(width, height)
+				super("at least one image dimension is zero: #{width}x#{height}")
+			end
+		end
+
 		module ImageProcessing
 			def replace
 				@use_count ||= 0
@@ -66,6 +72,8 @@ module Plugin
 
 				width = spec.width == :input ? @image.columns : spec.width
 				height = spec.height == :input ? @image.rows : spec.height
+
+				raise ZeroSizedImageError.new(width, height) if width == 0 or height == 0
 
 				begin
 					process_image(spec.method, width, height, spec.options).replace do |image|

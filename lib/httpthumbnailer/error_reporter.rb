@@ -21,6 +21,14 @@ class ErrorReporter < Controler
 			write_error 413, env['app.error']
 		end
 
+		on error(
+				ThumbnailSpec::BadThubnailSpecError,
+				Plugin::Thumbnailer::ZeroSizedImageError,
+				ArgumentError
+		) do
+			write_error 400, env['app.error']
+		end
+
 		on error StandardError do
 			write_error 500, env['app.error']
 		end
