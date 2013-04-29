@@ -166,6 +166,7 @@ module Plugin
 					:total_images_prescaled, 
 					:total_thumbnails_created, 
 					:images_loaded, 
+					:max_images_loaded, 
 					:total_images_created,
 					:total_images_destroyed,
 					:total_images_created_from_blob,
@@ -193,6 +194,7 @@ module Plugin
 					case which
 					when :c
 						@stats.incr_images_loaded
+						@stats.max_images_loaded = @stats.images_loaded if @stats.images_loaded > @stats.max_images_loaded
 						@stats.incr_total_images_created
 						case method
 						when :from_blob

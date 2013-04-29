@@ -78,6 +78,7 @@ def stop_server(pid_file)
 	pid_file = Pathname.new(pid_file)
 	return unless pid_file.exist?
 
+	STDERR.puts HTTPClient.new.get_content("http://localhost:3100/stats")
 	pid = pid_file.read.strip.to_i
 
 	Timeout.timeout(20) do
@@ -97,6 +98,7 @@ at_exit do
 end
 
 After do |scenario|
-	step "there should be no leaked images"
+	step 'there should be no leaked images'
+	step 'there should be maximum 3 images loaded during single request'
 end
 

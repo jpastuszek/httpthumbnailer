@@ -115,3 +115,7 @@ And /there should be no leaked images/ do
 	Integer(HTTPClient.new.get_content("http://localhost:3100/stats/images_loaded").strip).should == 0
 end
 
+And /there should be maximum (.*) images loaded during single request/ do |max|
+	Integer(HTTPClient.new.get_content("http://localhost:3100/stats/max_images_loaded").strip).should <= max.to_i
+end
+
