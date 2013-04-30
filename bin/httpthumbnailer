@@ -72,6 +72,7 @@ settings = CLI.new do
 	switch :debug,
 		short: :d,
 		description: 'enable debugging logging (DEBUG)'
+	version (Pathname.new(__FILE__).dirname + '..' + 'VERSION').read
 end.parse!
 
 require 'httpthumbnailer/root_logger'
