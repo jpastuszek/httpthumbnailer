@@ -47,7 +47,11 @@ class Thumbnailer < Controler
 							write_part image.mime_type, image.data
 						end
 					rescue => error
-						log.error "thumbnailing error", error
+						log.error "unhandled error while generating multipart response for thumbnail spec: #{spec}", error unless [
+							Plugin::Thumbnailer::ImageTooLargeError,
+							ThumbnailSpec::BadThubnailSpecError,
+							Plugin::Thumbnailer::ZeroSizedImageError
+						].member? error.class
 						write_error_part error
 					end
 				end

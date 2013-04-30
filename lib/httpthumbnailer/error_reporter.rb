@@ -2,13 +2,6 @@ class ErrorReporter < Controler
 	self.plugin Plugin::ResponseHelpers
 
 	self.define do
-		log.error "error while processing request: #{env['REQUEST_METHOD']} #{env['SCRIPT_NAME']}[#{env["PATH_INFO"]}]", env['app.error']
-		log.debug {
-			out = StringIO.new
-			PP::pp(env, out, 200)
-			"Request: \n" + out.string
-		}
-
 		on error Rack::UnhandledRequest::UnhandledRequestError do
 			write_error 404, env['app.error']
 		end
@@ -23,11 +16,17 @@ class ErrorReporter < Controler
 
 		on error(
 				ThumbnailSpec::BadThubnailSpecError,
-				Plugin::Thumbnailer::ZeroSizedImageError,
-				ArgumentError
+				Plugin::Thumbnailer::ZeroSizedImageError
 		) do
 			write_error 400, env['app.error']
 		end
+
+		log.error "unhandled error while processing request: #{env['REQUEST_METHOD']} #{env['SCRIPT_NAME']}[#{env["PATH_INFO"]}]", env['app.error']
+		log.debug {
+			out = StringIO.new
+			PP::pp(env, out, 200)
+			"Request: \n" + out.string
+		}
 
 		on error StandardError do
 			write_error 500, env['app.error']
