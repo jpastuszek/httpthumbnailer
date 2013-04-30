@@ -1,6 +1,8 @@
 require 'RMagick'
 require 'raindrops'
 require 'forwardable'
+require 'httpthumbnailer/root_logger'
+require 'httpthumbnailer/stats'
 
 module Plugin
 	module Thumbnailer
@@ -37,7 +39,7 @@ module Plugin
 					processed = self unless processed
 					fail 'got destroyed image' if processed.destroyed?
 				ensure
-					self.destroy! if @use_count <= 0 if processed != self
+					self.destroy! if @use_count <= 0 unless processed.equal? self
 				end
 				processed
 			end
@@ -109,8 +111,8 @@ module Plugin
 			def_delegators :@image, :destroy!, :destroyed?, :mime_type
 
 			# needs to be seen as @image when returned in replace block
-			def ==(image)
-				super image or @image == image
+			def equal?(image)
+				super image or @image.equal? image
 			end
 		end
 
