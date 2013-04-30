@@ -10,21 +10,21 @@ require 'daemon'
 $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
 
 settings = CLI.new do
-	description 'HTTP image thumbnailing server'
+	description 'Image thumbnailing HTTP server'
 	option :log_file,
 		short: :l,
 		cast: Pathname,
-		description: 'log file to log to',
+		description: 'log file location',
 		default: 'httpthumbnailer.log'
 	option :access_log_file,
 		short: :a,
 		cast: Pathname,
-		description: 'NCSA access log file',
+		description: 'NCSA access log file location',
 		default: 'httpthumbnailer_access.log'
 	option :pid_file,
 		short: :p,
 		cast: Pathname,
-		description: 'file to store lock PID',
+		description: 'PID file location',
 		default: 'httpthumbnailer.pid'
 	switch :foreground,
 		short: :f,
@@ -37,11 +37,11 @@ settings = CLI.new do
 	option :port,
 		short: :P,
 		cast: Integer,
-		description: 'HTTP server TCP port',
+		description: 'HTTP server TCP listen port',
 		default: 3100
 	option :user,
 		short: :u,
-		description: 'run worker processes as user'
+		description: 'run worker processes as given user'
 	option :worker_processes,
 		short: :w,
 		cast: Integer,
@@ -65,13 +65,13 @@ settings = CLI.new do
 		description: 'image cache temporary file size limit in bytes - this is total disk usage limit including memory mapped file size',
 		default: 1024*1024**2
 	switch :no_optimization,
-		description: 'disable size hinting and related optimization (hinted loading, prescaling)'
+		description: 'disable load time size hinting and prescaling optimizations'
 	switch :verbose,
 		short: :v,
 		description: 'enable verbose logging (INFO)'
 	switch :debug,
 		short: :d,
-		description: 'enable debugging logging (DEBUG)'
+		description: 'enable debug logging (DEBUG)'
 	version (Pathname.new(__FILE__).dirname + '..' + 'VERSION').read
 end.parse!
 
