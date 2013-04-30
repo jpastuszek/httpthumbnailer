@@ -111,6 +111,11 @@ And /that image pixel at (.*)x(.*) should be of color (.*)/ do |x, y, color|
 	@image.pixel_color(x.to_i, y.to_i).to_color.sub(/^#/, '0x').should == color
 end
 
+And /that image should be (.*) bit image/ do |bits|
+	@image.depth.should == bits.to_i
+end
+
+
 And /there should be no leaked images/ do
 	Integer(HTTPClient.new.get_content("http://localhost:3100/stats/images_loaded").strip).should == 0
 end

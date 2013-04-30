@@ -13,6 +13,7 @@ Feature: Generating set of thumbnails with single PUT request
 		Then response status should be 200
 		And I should get multipart response
 		Then first part should contain PNG image of size 16x16
+		And that image should be 8 bit image
 		And first part mime type should be image/png
 
 	@multipart

@@ -12,6 +12,7 @@ Feature: Generating single thumbnail with PUT request
 		When I do PUT request http://localhost:3100/thumbnail/crop,16,16,PNG
 		Then response status should be 200
 		Then response should contain PNG image of size 16x16
+		And that image should be 8 bit image
 		And response mime type should be image/png
 
 	@transparent
@@ -34,6 +35,7 @@ Feature: Generating single thumbnail with PUT request
 		When I do PUT request http://localhost:3100/thumbnail/crop,4,8,INPUT
 		Then response status should be 200
 		Then response should contain PNG image of size 4x8
+		And that image should be 8 bit image
 		And response mime type should be image/png
 
 	@input_size
