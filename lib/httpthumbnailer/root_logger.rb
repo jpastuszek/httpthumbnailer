@@ -6,9 +6,8 @@ class RootLogger < Logger
 
 		def initialize(logger, class_obj)
 			@logger = logger
-			self.progname = class_obj.name
-
-			self.formatter = proc do |severity, datetime, progname, msg|
+			@logger.progname = class_obj.name
+			@logger.formatter = proc do |severity, datetime, progname, msg|
 				"[#{datetime.utc.strftime "%Y-%m-%d %H:%M:%S.%6N %Z"}] [#{$$} #{progname}] #{severity}: #{msg}\n"
 			end
 		end
