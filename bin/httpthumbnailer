@@ -123,7 +123,7 @@ require 'httpthumbnailer/stats_reporter'
 require 'httpthumbnailer/thumbnailer'
 
 if settings.formats
-	root_logger.info "supported formats: #{Plugin::Thumbnailer::Service.formats.join(' ')}"
+	root_logger.logger_for(CLI).info "supported formats: #{Plugin::Thumbnailer::Service.formats.join(' ')}"
 	exit 0
 end
 
