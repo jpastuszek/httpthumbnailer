@@ -52,7 +52,8 @@ def start_server(cmd, pid_file, log_file, test_url)
 	pid_file = Pathname.new(pid_file)
 	return if pid_file.exist?
 
-	Pathname.new(log_file).truncate(0)
+	log_file = Pathname.new(log_file)
+	log_file.truncate(0) if log_file.exist?
 	fork do
 		Daemon.daemonize(pid_file, log_file)
 		exec(cmd)
@@ -64,7 +65,7 @@ def start_server(cmd, pid_file, log_file, test_url)
 		stop_server(pid_file) if Process.pid == ppid
 	end
 
-	Timeout.timeout(20) do
+	Timeout.timeout(6) do
 		begin
 			get test_url
 		rescue Errno::ECONNREFUSED
@@ -91,10 +92,6 @@ def stop_server(pid_file)
 			pid_file.unlink
 		end
 	end
-end
-
-at_exit do
-	stop_server '/tmp/httpthumbnailer.pid'
 end
 
 After do |scenario|
