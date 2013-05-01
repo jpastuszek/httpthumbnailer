@@ -6,7 +6,11 @@ class RootLogger < Logger
 
 		def initialize(logger, class_obj)
 			@logger = logger
-			@class_name = class_obj.name
+			self.progname = class_obj.name
+
+			self.formatter = proc do |severity, datetime, progname, msg|
+				"[#{datetime.utc.strftime "%Y-%m-%d %H:%M:%S.%6N %Z"}] [#{$$} #{progname}] #{severity}: #{msg}\n"
+			end
 		end
 
 		def respond_to?(method)
@@ -15,15 +19,19 @@ class RootLogger < Logger
 
 		def method_missing(name, *args, &block)
 			if @@levels.include? name
-				message = args.map do |arg|
-					if arg.is_a? Exception
-						"#{arg.class.name}: #{arg.message}\n#{arg.backtrace.join("\n")}"
-					else
-						arg.to_s
-					end
-				end.join(': ')
+				message = if block_given?
+					self.progname
+				else
+					args.map do |arg|
+						if arg.is_a? Exception
+							"#{arg.class.name}: #{arg.message}\n#{arg.backtrace.join("\n")}"
+						else
+							arg.to_s
+						end
+					end.join(': ')
+				end
 
-				@logger.send(name, "[#{@class_name}] " + message, &block)
+				@logger.send(name, message, &block)
 			else
 				@logger.send(name, *args, &block)
 			end
