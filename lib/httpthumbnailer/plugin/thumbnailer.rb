@@ -169,6 +169,7 @@ module Plugin
 				:total_thumbnails_created, 
 				:images_loaded, 
 				:max_images_loaded, 
+				:max_images_loaded_worker, 
 				:total_images_created,
 				:total_images_destroyed,
 				:total_images_created_from_blob,
@@ -181,6 +182,7 @@ module Plugin
 			def initialize(options = {})
 				@processing_methods = {}
 				@options = options
+				@images_loaded = 0
 
 				log.info "initializing thumbniler"
 
@@ -193,7 +195,9 @@ module Plugin
 					case which
 					when :c
 						Service.stats.incr_images_loaded
+						@images_loaded += 1
 						Service.stats.max_images_loaded = Service.stats.images_loaded if Service.stats.images_loaded > Service.stats.max_images_loaded
+						Service.stats.max_images_loaded_worker = @images_loaded if @images_loaded > Service.stats.max_images_loaded_worker
 						Service.stats.incr_total_images_created
 						case method
 						when :from_blob
@@ -215,6 +219,7 @@ module Plugin
 						end
 					when :d
 						Service.stats.decr_images_loaded
+						@images_loaded -= 1
 						Service.stats.incr_total_images_destroyed
 					end
 					log.debug{"image event: #{which}, #{description}, #{id}, #{method}: loaded images: #{Service.stats.images_loaded}"}
