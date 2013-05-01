@@ -179,12 +179,16 @@ module Plugin
 				:total_images_created_sample
 			)
 
+			def self.formats
+				Magick.formats.keys.sort
+			end
+
 			def initialize(options = {})
 				@processing_methods = {}
 				@options = options
 				@images_loaded = 0
 
-				log.info "initializing thumbniler"
+				log.info "initializing thumbnailer: #{Magick::Version} #{Magick::Magick_version}"
 
 				set_limit(:area, options[:limit_area]) if options.member?(:limit_area)
 				set_limit(:memory, options[:limit_memory]) if options.member?(:limit_memory)

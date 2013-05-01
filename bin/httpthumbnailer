@@ -29,6 +29,9 @@ settings = CLI.new do
 	switch :foreground,
 		short: :f,
 		description: 'stay in foreground'
+	switch :formats,
+		short: :F,
+		description: 'print supported frmats and exit'
 	option :bind,
 		short: :b,
 		cast: IP,
@@ -75,6 +78,11 @@ settings = CLI.new do
 	version (Pathname.new(__FILE__).dirname + '..' + 'VERSION').read
 end.parse!
 
+if settings.formats
+	settings.foreground = true 
+	settings.verbose = true 
+end
+
 require 'httpthumbnailer/root_logger'
 
 root_logger = RootLogger.new(STDERR)
@@ -113,6 +121,11 @@ require 'httpthumbnailer/rack/unhandled_request'
 require 'httpthumbnailer/error_reporter'
 require 'httpthumbnailer/stats_reporter'
 require 'httpthumbnailer/thumbnailer'
+
+if settings.formats
+	root_logger.info "supported formats: #{Plugin::Thumbnailer::Service.formats.join(' ')}"
+	exit 0
+end
 
 Controler.plugin Plugin::ErrorMatcher
 Controler.plugin Plugin::Logging
