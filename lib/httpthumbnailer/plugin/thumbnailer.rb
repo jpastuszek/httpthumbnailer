@@ -179,8 +179,24 @@ module Plugin
 				:total_images_created_sample
 			)
 
-			def self.formats
-				Magick.formats.keys.sort
+			def self.input_formats
+				Magick.formats.select do |name, mode|
+					mode.include? 'r'
+				end.keys
+			end
+
+			def self.output_formats
+				Magick.formats.select do |name, mode|
+					mode.include? 'w'
+				end.keys
+			end
+
+			def self.rmagick_version
+				Magick::Version
+			end
+
+			def self.magick_version
+				Magick::Magick_version
 			end
 
 			def initialize(options = {})
@@ -188,7 +204,7 @@ module Plugin
 				@options = options
 				@images_loaded = 0
 
-				log.info "initializing thumbnailer: #{Magick::Version} #{Magick::Magick_version}"
+				log.info "initializing thumbnailer: #{self.class.rmagick_version} #{self.class.magick_version}"
 
 				set_limit(:area, options[:limit_area]) if options.member?(:limit_area)
 				set_limit(:memory, options[:limit_memory]) if options.member?(:limit_memory)
@@ -288,7 +304,7 @@ module Plugin
 
 			def set_limit(limit, value)
 				old = Magick.limit_resource(limit, value)
-				log.info "changed limit of #{limit} from #{old} to #{value}"
+				log.info "changed #{limit} limit from #{old} to #{value} bytes"
 			end
 		end
 

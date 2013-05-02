@@ -39,10 +39,10 @@ describe  do
 		it 'should report class name' do
 			TestApp = Class.new
 			subject.logger_for(TestApp).info 'hello world'
-			log_out.string.should include '[TestApp]'
+			log_out.string.should include 'TestApp'
 
 			subject.logger_for(String).info 'hello world'
-			log_out.string.should include '[String]'
+			log_out.string.should include 'String'
 		end
 
 		it 'should log exceptions' do

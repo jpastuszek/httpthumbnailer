@@ -31,7 +31,7 @@ settings = CLI.new do
 		description: 'stay in foreground'
 	switch :formats,
 		short: :F,
-		description: 'print supported frmats and exit'
+		description: 'print backend versions and supported formats'
 	option :bind,
 		short: :b,
 		cast: IP,
@@ -79,8 +79,17 @@ settings = CLI.new do
 end.parse!
 
 if settings.formats
-	settings.foreground = true 
-	settings.verbose = true 
+	require 'httpthumbnailer/plugin/thumbnailer'
+	puts "Versions:"
+	puts "\t#{Plugin::Thumbnailer::Service.rmagick_version}"
+	puts "\t#{Plugin::Thumbnailer::Service.magick_version}"
+	puts
+	puts "Input formats:"
+	puts "\t#{Plugin::Thumbnailer::Service.input_formats.join(' ')}"
+	puts
+	puts "Output formats:"
+	puts "\t#{Plugin::Thumbnailer::Service.output_formats.join(' ')}"
+	exit 0
 end
 
 require 'httpthumbnailer/root_logger'
@@ -121,11 +130,6 @@ require 'httpthumbnailer/rack/unhandled_request'
 require 'httpthumbnailer/error_reporter'
 require 'httpthumbnailer/stats_reporter'
 require 'httpthumbnailer/thumbnailer'
-
-if settings.formats
-	root_logger.logger_for(CLI).info "supported formats: #{Plugin::Thumbnailer::Service.formats.join(' ')}"
-	exit 0
-end
 
 Controler.plugin Plugin::ErrorMatcher
 Controler.plugin Plugin::Logging
