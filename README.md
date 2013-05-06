@@ -85,16 +85,16 @@ To generate multiple thumbnails of single image send that image with **PUT** req
 
     /thumbnails/<operation type>,<width>,<height>,<format>[,<option key>:<option value>]*[/<operation type>,<width>,<height>,<format>[,<option key>:<option value>]*]*
 
-Server will respond with **multi-part content** with each part containing **Content-Type** header and thumbnail data corresponding to format defined in the URL.
+Server will respond with **multi-part content** with each part containing **Content-Type** header and thumbnail data corresponding to format defined in the URI.
 
 For example the URI may look like this: 
 
     /thumbnails/crop,16,16,png/crop,4,8,jpg/pad,16,32,jpeg
 
 httpthumbnailer will generate 3 thumbnails: 
-1. 16x16 cropped PNG
-2. 4x8 cropped JPEG
-3. 16x32 colour padded JPEG
+ 1. 16x16 cropped PNG
+ 2. 4x8 cropped JPEG
+ 3. 16x32 colour padded JPEG
 
 For detailed information about the API see [cucumber features](http://github.com/jpastuszek/httpthumbnailer/blob/master/features/thumbnails.feature).
 
