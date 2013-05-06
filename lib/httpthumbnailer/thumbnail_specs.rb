@@ -47,7 +47,7 @@ class ThumbnailSpec
 		@method = method
 		@width = cast_dimmension(width)
 		@height = cast_dimmension(height)
-		@format = (format == 'INPUT' ? :input : format.upcase)
+		@format = (format == 'input' ? :input : format.upcase)
 		@options = options
 	end
 
@@ -69,13 +69,13 @@ class ThumbnailSpec
 	attr_reader :method, :width, :height, :format, :options
 
 	def to_s
-		"#{method} #{width}x#{height} (#{format}) #{options.inspect}"
+		"#{method} #{width}x#{height} (#{format.downcase}) #{options.inspect}"
 	end
 
 	private
 
 	def cast_dimmension(string)
-		return :input if string == 'INPUT'
+		return :input if string == 'input'
 		raise BadThubnailSpecError::BadDimmensionValueError.new(string) unless string =~ /^\d+$/
 		string.to_i
 	end

@@ -182,13 +182,13 @@ module Plugin
 			def self.input_formats
 				Magick.formats.select do |name, mode|
 					mode.include? 'r'
-				end.keys
+				end.keys.map(&:downcase)
 			end
 
 			def self.output_formats
 				Magick.formats.select do |name, mode|
 					mode.include? 'w'
-				end.keys
+				end.keys.map(&:downcase)
 			end
 
 			def self.rmagick_version

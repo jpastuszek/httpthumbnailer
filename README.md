@@ -50,6 +50,12 @@ As operation type you can select one of the following options:
 ### Supported formats
 
 List of supported formats can be displayed with `httpthumbnailer --formats`.
+Optionaly format `input` can be used to use the same thumbnail format as input image.
+
+### Thumbnail width and height
+
+Width and height values are interpreted depending on operation.
+`input` string can be used for width or/and height to use input image width or height.
 
 ### API
 
@@ -63,7 +69,7 @@ Server will respond with thumbnail data with correct **Content-Type** header val
 
 For example the URI may look like this: 
 
-    /thumbnails/crop,16,16,PNG
+    /thumbnails/crop,16,16,png
 
 For detailed information about the API see [cucumber features](http://github.com/jpastuszek/httpthumbnailer/blob/master/features/thumbnail.feature).
 
@@ -77,7 +83,7 @@ Server will respond with **multi-part content** with each part containing **Cont
 
 For example the URI may look like this: 
 
-    /thumbnails/crop,16,16,PNG/crop,4,8,JPG/pad,16,32,JPEG
+    /thumbnails/crop,16,16,png/crop,4,8,jpg/pad,16,32,jpeg
 
 httpthumbnailer will generate 3 thumbnails: 
 1. 16x16 cropped PNG

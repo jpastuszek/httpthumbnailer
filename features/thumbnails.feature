@@ -9,7 +9,7 @@ Feature: Generating set of thumbnails with single PUT request
 	@multipart
 	Scenario: Single thumbnail
 		Given test.jpg file content as request body
-		When I do PUT request http://localhost:3100/thumbnails/crop,16,16,PNG
+		When I do PUT request http://localhost:3100/thumbnails/crop,16,16,png
 		Then response status should be 200
 		And I should get multipart response
 		Then first part should contain PNG image of size 16x16
@@ -19,7 +19,7 @@ Feature: Generating set of thumbnails with single PUT request
 	@multipart
 	Scenario: Multiple thumbnails
 		Given test.jpg file content as request body
-		When I do PUT request http://localhost:3100/thumbnails/crop,16,16,PNG/crop,4,8,JPG/crop,16,32,JPEG
+		When I do PUT request http://localhost:3100/thumbnails/crop,16,16,png/crop,4,8,jpeg/crop,16,32,jpeg
 		Then response status should be 200
 		And I should get multipart response
 		Then first part should contain PNG image of size 16x16
@@ -30,9 +30,9 @@ Feature: Generating set of thumbnails with single PUT request
 		And third part mime type should be image/jpeg
 
 	@input_size
-	Scenario: Thumbnails of width or height INPUT should have input image width or height
+	Scenario: Thumbnails of width or height input should have input image width or height
 		Given test.jpg file content as request body
-		When I do PUT request http://localhost:3100/thumbnails/crop,INPUT,16,JPEG/crop,4,INPUT,PNG/crop,INPUT,INPUT,PNG
+		When I do PUT request http://localhost:3100/thumbnails/crop,input,16,jpeg/crop,4,input,png/crop,input,input,png
 		Then response status should be 200
 		And I should get multipart response
 		Then first part should contain JPEG image of size 509x16
@@ -45,7 +45,7 @@ Feature: Generating set of thumbnails with single PUT request
 	@leaking
 	Scenario: Image leaking on error
 		Given test.jpg file content as request body
-		When I do PUT request http://localhost:3100/thumbnails/crop,0,0,PNG/fit,0,0,JPG/pad,0,0,JPEG
+		When I do PUT request http://localhost:3100/thumbnails/crop,0,0,png/fit,0,0,jpeg/pad,0,0,jpeg
 		Then response status should be 200
 		And I should get multipart response
 		And first part content type should be text/plain
@@ -55,7 +55,7 @@ Feature: Generating set of thumbnails with single PUT request
 	@error_handling
 	Scenario: Reporitng of bad thumbanil spec format problems
 		Given test.txt file content as request body
-		When I do PUT request http://localhost:3100/thumbnails/crop,2,2,PNG/crop,128,bogous,PNG
+		When I do PUT request http://localhost:3100/thumbnails/crop,2,2,png/crop,128,bogous,png
 		Then response status should be 400
 		And response content type should be text/plain
 		And response body should be CRLF endend lines
@@ -66,7 +66,7 @@ Feature: Generating set of thumbnails with single PUT request
 	@error_handling
 	Scenario: Reporitng of image thumbnailing errors
 		Given test.jpg file content as request body
-		When I do PUT request http://localhost:3100/thumbnails/crop,16,16,PNG/crop,0,0,JPG/crop,16,32,JPEG
+		When I do PUT request http://localhost:3100/thumbnails/crop,16,16,png/crop,0,0,jpeg/crop,16,32,jpeg
 		Then response status should be 200
 		And I should get multipart response
 		Then first part should contain PNG image of size 16x16
@@ -82,7 +82,7 @@ Feature: Generating set of thumbnails with single PUT request
 	@resources
 	Scenario: Memory limits exhausted while thumbnailing
 		Given test.jpg file content as request body
-		When I do PUT request http://localhost:3100/thumbnails/crop,16,16,PNG/crop,16000,16000,JPG/crop,16,32,JPEG
+		When I do PUT request http://localhost:3100/thumbnails/crop,16,16,png/crop,16000,16000,jpeg/crop,16,32,jpeg
 		Then response status should be 200
 		And I should get multipart response
 		Then first part should contain PNG image of size 16x16
@@ -98,11 +98,11 @@ Feature: Generating set of thumbnails with single PUT request
 	@hint
 	Scenario: Hint on input image mime type
 		Given test.jpg file content as request body
-		When I do PUT request http://localhost:3100/thumbnails/crop,16,16,PNG
+		When I do PUT request http://localhost:3100/thumbnails/crop,16,16,png
 		Then response status should be 200
 		And X-Input-Image-Content-Type header should be image/jpeg
 		Given test.png file content as request body
-		When I do PUT request http://localhost:3100/thumbnails/crop,16,16,PNG
+		When I do PUT request http://localhost:3100/thumbnails/crop,16,16,png
 		Then response status should be 200
 		And X-Input-Image-Content-Type header should be image/png
 
