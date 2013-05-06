@@ -75,7 +75,7 @@ Server will respond with thumbnail data with correct **Content-Type** header val
 
 For example the URI may look like this: 
 
-    /thumbnails/pad,100,100,png,background-color:green
+    /thumbnail/pad,100,100,png,background-color:green
 
 For detailed information about the API see [cucumber features](http://github.com/jpastuszek/httpthumbnailer/blob/master/features/thumbnail.feature).
 
