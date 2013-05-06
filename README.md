@@ -2,12 +2,12 @@
 
 HTTP API server for image thumbnailing and format conversion.
 
-It is using **ImageMagick** as the image processing library.
+It is using **ImageMagick** or **GraphicsMagick** via **RMagick** gem as the image processing library.
 
 ## Installing
 
-You will need the following system packages installed: `imagemagick`, `libpng`, `pkg-config`, `make`.
-Optionally you may want to install `fcgi` package and gem to be able to use it as **FastCGI** backend.
+You will need the following system packages installed: `imagemagick`, `pkg-config` and `make`.
+For PNG support install `libpng`. You may want to consult **ImageMagick** installation guide for more information on supported formats and required libraries.
 
 For Arch Linux you can use this commands:
 
@@ -22,82 +22,80 @@ Then you can install the gem as usual:
 
 ## Usage
 
-It can be started as a stand alone server or as FastCGI backend.
+httpthumbnailer uses worker based server model (thanks to **unicorn** gem).
 
-### Stand alone server
+To start the thumbnailer use `httpthumbnailer` command.
+By default it will start in background and will spawn CPU core number + 1 number of worker processes.
+It will be listening on **localhost** port **3100**.
 
-This mode is useful for testing.
-By default **Mongrel** will be used as HTTP handling library (you can use --server option to specify different server that is supported by Sinatra).
+To start in foreground with verbose output use `httpthumbnailer --verbose --foreground`.
+To see available switches and options use `httpthumbnailer --help`.
 
-To start it in that mode run:
+When running in background the master server process will store it's PID in `httpthumbnailer.pid` file. You can change pid file location with `--pid-file` option.
+If running as root you can use `--user` option to specify user with whose privileges the worker processes will be running.
 
-    httpthumbnailer
+### Logging
 
-By default it will be listening on **localhost** port **3100**.
+`httpthumbnailer` logs to `httpthumbnailer.log` file in current directory by default. You can change log file location with `--log-file` option and verbosity with `--verbose` or `--debug` switch.
+Additionally `httpthumbnailer` will log requests in common NCSA format to `httpthumbnailer_access.log` file. Use `--access-log-file` option to change location of access log.
 
-### FastCGI
+### Supported operations
 
-In this mode you can run many **httpthumbnailer** instances so that requests will be load balanced between them equally.
-Since it is single threaded (some ImageMagick operations may be multithreaded) it will be able to max out only single CPU core.
-Therefore it is recommended to run as many instances as there are CPU cores available.
+As operation type you can select one of the following options:
+* fit - fit image within given dimensions keeping aspect ratio
+* crop - cut image to fit within given dimensions keeping aspect ratio
+* pad - fit scale image and pad image with background colour to given dimensions keeping aspect ratio
+* limit - fit scale image to given dimensions if it is larger than that dimensions
 
-Make sure you have FastCGI system library installed.
+### Supported formats
 
-For Arch Linux you can use this command:
-
-    pacman -S fcgi
-
-And you have `fcgi` gem installed with:
-
-    gem install fcgi
-
-Here is an example **Lighttpd** configuration:
-
-    $SERVER["socket"] == ":3100" {
-        server.reject-expect-100-with-417 = "disable" 
-    	fastcgi.debug = 1
-    	fastcgi.server    = ( "/" =>
-    		((
-    			"socket" => "/var/run/lighttpd/httpthumbniler.sock",
-    			"bin-path" => "/usr/bin/httpthumbnailer -s fastcgi --no-bind --no-logging",
-    			"max-procs" => 2,
-    			"check-local" => "disable",
-    			"fix-root-scriptname" => "enable",
-    		))
-    	)
-    }
-
-The `"max-procs" => 2` controls the number of instances started.
-In case that the `httpthumbnailer` process crashes (may happen since it is using native libraries) it will be restarted by Lighttpd.
+List of supported formats can be displayed with `httpthumbnailer --formats`.
 
 ### API
 
-Basically it works like that:
+#### Single thumbnail API
 
-1. PUT your image data to the server with URI describing thumbnail format (one or more)
-2. the server will respond with **multi-part content** with parts containing data of your thumbnails in order with proper **Content-type** headers set
+To generate single thumbnail send input image with **PUT** request to URI in format:
+
+    /thumbnail/<operation type>,<width>,<height>,<format>
+
+Server will respond with thumbnail data with correct **Content-Type** header value.
 
 For example the URI may look like this: 
 
-    /thumbnail/crop,16,16,PNG/crop,4,8,JPG/pad,16,32,JPEG
+    /thumbnails/crop,16,16,PNG
 
-It will generate 3 thumbnails: 
+For detailed information about the API see [cucumber features](http://github.com/jpastuszek/httpthumbnailer/blob/master/features/thumbnail.feature).
 
+#### Multipart API
+
+To generate multiple thumbnails of single image send that image with **PUT** request to URI in format:
+
+    /thumbnails/<operation type>,<width>,<height>,<format>[/<operation type>,<width>,<height>,<format>]*
+
+Server will respond with **multi-part content** with each part containing **Content-Type** header and thumbnail data corresponding to format defined in the URL.
+
+For example the URI may look like this: 
+
+    /thumbnails/crop,16,16,PNG/crop,4,8,JPG/pad,16,32,JPEG
+
+httpthumbnailer will generate 3 thumbnails: 
 1. 16x16 cropped PNG
 2. 4x8 cropped JPEG
 3. 16x32 colour padded JPEG
 
-For detailed information about the API see [cucumber features](http://github.com/jpastuszek/httpthumbnailer/blob/master/features/httpthumbnailer.feature).
+For detailed information about the API see [cucumber features](http://github.com/jpastuszek/httpthumbnailer/blob/master/features/thumbnails.feature).
 
 ### API client
 
-To make it easy to use this server there is [httpthumbnailer-client](http://github.com/jpastuszek/httpthumbnailer-client) gem provided.
+To make it easy to use this server [httpthumbnailer-client](http://github.com/jpastuszek/httpthumbnailer-client) gem is provided.
 
 ### Memory limits
 
-Use *--limit-memory* to limit memory usage. 
-To use swap file when *--limit-mmemory* is exhausted set *--limit-disk* and optionally *--limit-map* to use memory mapping.
-When setting *--limit-map* limit make sure that you set *--limit-disk* for at least the amount of *--limit-map* for it to take full effect.
+Each worker uses **ImageMagick** memory usage limit feature.
+By default it will use up to 256MiB of RAM and up to 1GiB of disk backed virtual memory.
+To change this defaults use `--limit-memory` option for RAM limit, `--limit-disk` and `--limit-map` to control disk and memory mapping limits in bytes.
+When setting `--limit-map` limit make sure that you set `--limit-disk` for at least the amount of `--limit-map` for it to take full effect.
 
 ## Contributing to httpthumbnailer
  
