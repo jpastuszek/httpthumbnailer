@@ -57,19 +57,25 @@ Optionally format `input` can be used to use the same thumbnail format as input 
 Width and height values are interpreted depending on operation.
 `input` string can be used for width and/or height to use input image width or height.
 
+### Thumbnail options
+
+Following options can be used with thumbnail specification:
+* quality - set output image quality; this is format specific: for JPEG 0 is maximum compression and 100 is maximum quality, for PNG first digit is zlib compression level and second one is filter level
+* background-color - color in HTML notation or textual description ('red', 'green' etc.) used for background when processing transparent images or padding; by default white background is used
+
 ### API
 
 #### Single thumbnail API
 
 To generate single thumbnail send input image with **PUT** request to URI in format:
 
-    /thumbnail/<operation type>,<width>,<height>,<format>
+    /thumbnail/<operation type>,<width>,<height>,<format>[,<option key>:<option value>]*
 
 Server will respond with thumbnail data with correct **Content-Type** header value.
 
 For example the URI may look like this: 
 
-    /thumbnails/crop,16,16,png
+    /thumbnails/pad,100,100,png,background-color:green
 
 For detailed information about the API see [cucumber features](http://github.com/jpastuszek/httpthumbnailer/blob/master/features/thumbnail.feature).
 
@@ -77,7 +83,7 @@ For detailed information about the API see [cucumber features](http://github.com
 
 To generate multiple thumbnails of single image send that image with **PUT** request to URI in format:
 
-    /thumbnails/<operation type>,<width>,<height>,<format>[/<operation type>,<width>,<height>,<format>]*
+    /thumbnails/<operation type>,<width>,<height>,<format>[,<option key>:<option value>]*[/<operation type>,<width>,<height>,<format>[,<option key>:<option value>]*]*
 
 Server will respond with **multi-part content** with each part containing **Content-Type** header and thumbnail data corresponding to format defined in the URL.
 
@@ -100,8 +106,7 @@ To make it easy to use this server [httpthumbnailer-client](http://github.com/jp
 
 Each worker uses **ImageMagick** memory usage limit feature.
 By default it will use up to 128MiB of RAM and up to 1GiB of disk backed virtual memory.
-To change this defaults use `--limit-memory` option for RAM limit, `--limit-disk` to control disk memory mapping limits in MiB.
-When setting `--limit-map` limit make sure that you set `--limit-disk` for at least the amount of `--limit-map` for it to take full effect.
+To change this defaults use `--limit-memory` option for RAM limit and `--limit-disk` to control file backed memory mapping limit in MiB.
 
 ## Contributing to httpthumbnailer
  
