@@ -50,12 +50,12 @@ As operation type you can select one of the following options:
 ### Supported formats
 
 List of supported formats can be displayed with `httpthumbnailer --formats`.
-Optionaly format `input` can be used to use the same thumbnail format as input image.
+Optionally format `input` can be used to use the same thumbnail format as input image.
 
 ### Thumbnail width and height
 
 Width and height values are interpreted depending on operation.
-`input` string can be used for width or/and height to use input image width or height.
+`input` string can be used for width and/or height to use input image width or height.
 
 ### API
 
@@ -99,8 +99,8 @@ To make it easy to use this server [httpthumbnailer-client](http://github.com/jp
 ### Memory limits
 
 Each worker uses **ImageMagick** memory usage limit feature.
-By default it will use up to 256MiB of RAM and up to 1GiB of disk backed virtual memory.
-To change this defaults use `--limit-memory` option for RAM limit, `--limit-disk` and `--limit-map` to control disk and memory mapping limits in bytes.
+By default it will use up to 128MiB of RAM and up to 1GiB of disk backed virtual memory.
+To change this defaults use `--limit-memory` option for RAM limit, `--limit-disk` to control disk memory mapping limits in MiB.
 When setting `--limit-map` limit make sure that you set `--limit-disk` for at least the amount of `--limit-map` for it to take full effect.
 
 ## Contributing to httpthumbnailer

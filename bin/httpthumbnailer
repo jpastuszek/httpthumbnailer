@@ -57,16 +57,12 @@ settings = CLI.new do
 		default: 60
 	option :limit_memory,
 		cast: Integer,
-		description: 'image cache heap memory size limit in bytes',
-		default: 128*1024**2
-	option :limit_map,
-		cast: Integer,
-		description: 'image cache memory mapped file size limit in bytes - used when heap memory limit is used up',
-		default: 1024*1024**2
+		description: 'image cache heap memory size limit in MiB',
+		default: 128
 	option :limit_disk,
 		cast: Integer,
-		description: 'image cache temporary file size limit in bytes - this is total disk usage limit including memory mapped file size',
-		default: 1024*1024**2
+		description: 'image cache temporary file size limit in MiB',
+		default: 1024
 	switch :no_optimization,
 		description: 'disable load time size hinting and prescaling optimizations'
 	switch :verbose,
@@ -74,7 +70,7 @@ settings = CLI.new do
 		description: 'enable verbose logging (INFO)'
 	switch :debug,
 		short: :d,
-		description: 'enable debug logging (DEBUG)'
+		description: 'enable verbose and debug logging (DEBUG)'
 	version (Pathname.new(__FILE__).dirname + '..' + 'VERSION').read
 end.parse!
 
@@ -114,9 +110,9 @@ end
 Controler.root_logger = root_logger
 
 Controler.settings[:optimization] = (not settings.no_optimization)
-Controler.settings[:limit_memory] = settings.limit_memory
-Controler.settings[:limit_map] = settings.limit_map
-Controler.settings[:limit_disk] = settings.limit_disk
+Controler.settings[:limit_memory] = settings.limit_memory * 1024**2
+Controler.settings[:limit_map] = settings.limit_disk * 1024**2
+Controler.settings[:limit_disk] = settings.limit_disk * 1024**2
 Controler.settings[:listeners] = ["#{settings.bind}:#{settings.port}"]
 Controler.settings[:access_log_file] = settings.access_log_file
 
