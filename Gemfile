@@ -16,7 +16,6 @@ group :development do
   gem "rspec-mocks", "~> 2.13"
   gem "cucumber", ">= 0"
   gem "capybara", "~> 1.1"
-  gem "bundler", "~> 1.2.0"
   gem "jeweler", "~> 1.6.4"
   gem "httpclient", "~> 2.2"
   gem "rdoc", "~> 3.9"

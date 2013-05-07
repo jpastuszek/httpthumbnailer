@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = "httpthumbnailer"
-  s.version = "0.3.1"
+  s.version = "1.0.0"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Jakub Pastuszek"]
-  s.date = "2012-02-07"
+  s.date = "2013-05-07"
   s.description = "Provides HTTP API for thumbnailing images"
   s.email = "jpastuszek@gmail.com"
   s.executables = ["httpthumbnailer"]
@@ -30,30 +30,48 @@ Gem::Specification.new do |s|
     "features/httpthumbnailer.feature",
     "features/step_definitions/httpthumbnailer_steps.rb",
     "features/support/env.rb",
+    "features/support/multipart_response.rb",
     "features/support/test-large.jpg",
     "features/support/test-transparent.png",
     "features/support/test.jpg",
     "features/support/test.png",
     "features/support/test.txt",
+    "features/thumbnail.feature",
+    "features/thumbnails.feature",
     "httpthumbnailer.gemspec",
-    "lib/httpthumbnailer/multipart_response.rb",
+    "lib/httpthumbnailer/error_reporter.rb",
+    "lib/httpthumbnailer/plugin/error_matcher.rb",
+    "lib/httpthumbnailer/plugin/logging.rb",
+    "lib/httpthumbnailer/plugin/response_helpers.rb",
+    "lib/httpthumbnailer/plugin/thumbnailer.rb",
+    "lib/httpthumbnailer/rack/error_handling.rb",
+    "lib/httpthumbnailer/rack/unhandled_request.rb",
+    "lib/httpthumbnailer/root_logger.rb",
+    "lib/httpthumbnailer/stats.rb",
+    "lib/httpthumbnailer/stats_reporter.rb",
     "lib/httpthumbnailer/thumbnail_specs.rb",
     "lib/httpthumbnailer/thumbnailer.rb",
     "load_test/extralarge.jpg",
     "load_test/large.jpg",
     "load_test/large.png",
+    "load_test/load_test-cd9679c.csv",
+    "load_test/load_test-v0.3.1.csv",
     "load_test/load_test.jmx",
     "load_test/medium.jpg",
     "load_test/small.jpg",
+    "load_test/soak_test-cd9679c.csv",
+    "load_test/soak_test-f98334a-tatoos.csv",
+    "load_test/soak_test.jmx",
     "load_test/tiny.jpg",
     "load_test/v0.0.13-loading.csv",
     "load_test/v0.0.13.csv",
     "load_test/v0.0.14-no-optimization.csv",
     "load_test/v0.0.14.csv",
+    "spec/image_processing.rb",
     "spec/multipart_response_spec.rb",
+    "spec/root_logger_spec.rb",
     "spec/spec_helper.rb",
-    "spec/thumbnail_specs_spec.rb",
-    "spec/thumbnailer_spec.rb"
+    "spec/thumbnail_specs_spec.rb"
   ]
   s.homepage = "http://github.com/jpastuszek/httpthumbnailer"
   s.licenses = ["MIT"]
@@ -65,49 +83,52 @@ Gem::Specification.new do |s|
     s.specification_version = 3
 
     if Gem::Version.new(Gem::VERSION) >= Gem::Version.new('1.2.0') then
-      s.add_runtime_dependency(%q<sinatra>, [">= 1.2.6"])
-      s.add_runtime_dependency(%q<mongrel>, [">= 1.2.0.pre2"])
+      s.add_runtime_dependency(%q<cuba>, ["~> 3.0"])
+      s.add_runtime_dependency(%q<unicorn>, [">= 4.6.2"])
+      s.add_runtime_dependency(%q<raindrops>, ["~> 0.11"])
       s.add_runtime_dependency(%q<rmagick>, ["~> 2"])
-      s.add_runtime_dependency(%q<haml>, ["~> 3"])
       s.add_runtime_dependency(%q<ruby-ip>, ["~> 0.9"])
       s.add_runtime_dependency(%q<cli>, ["~> 1.1.0"])
-      s.add_development_dependency(%q<rspec>, ["~> 2.3.0"])
+      s.add_runtime_dependency(%q<facter>, ["~> 1.6.11"])
+      s.add_runtime_dependency(%q<daemon>, ["~> 1"])
+      s.add_development_dependency(%q<rspec>, ["~> 2.13"])
+      s.add_development_dependency(%q<rspec-mocks>, ["~> 2.13"])
       s.add_development_dependency(%q<cucumber>, [">= 0"])
-      s.add_development_dependency(%q<bundler>, ["~> 1.0.0"])
+      s.add_development_dependency(%q<capybara>, ["~> 1.1"])
       s.add_development_dependency(%q<jeweler>, ["~> 1.6.4"])
-      s.add_development_dependency(%q<rcov>, [">= 0"])
-      s.add_development_dependency(%q<daemon>, ["~> 1"])
       s.add_development_dependency(%q<httpclient>, ["~> 2.2"])
       s.add_development_dependency(%q<rdoc>, ["~> 3.9"])
     else
-      s.add_dependency(%q<sinatra>, [">= 1.2.6"])
-      s.add_dependency(%q<mongrel>, [">= 1.2.0.pre2"])
+      s.add_dependency(%q<cuba>, ["~> 3.0"])
+      s.add_dependency(%q<unicorn>, [">= 4.6.2"])
+      s.add_dependency(%q<raindrops>, ["~> 0.11"])
       s.add_dependency(%q<rmagick>, ["~> 2"])
-      s.add_dependency(%q<haml>, ["~> 3"])
       s.add_dependency(%q<ruby-ip>, ["~> 0.9"])
       s.add_dependency(%q<cli>, ["~> 1.1.0"])
-      s.add_dependency(%q<rspec>, ["~> 2.3.0"])
-      s.add_dependency(%q<cucumber>, [">= 0"])
-      s.add_dependency(%q<bundler>, ["~> 1.0.0"])
-      s.add_dependency(%q<jeweler>, ["~> 1.6.4"])
-      s.add_dependency(%q<rcov>, [">= 0"])
+      s.add_dependency(%q<facter>, ["~> 1.6.11"])
       s.add_dependency(%q<daemon>, ["~> 1"])
+      s.add_dependency(%q<rspec>, ["~> 2.13"])
+      s.add_dependency(%q<rspec-mocks>, ["~> 2.13"])
+      s.add_dependency(%q<cucumber>, [">= 0"])
+      s.add_dependency(%q<capybara>, ["~> 1.1"])
+      s.add_dependency(%q<jeweler>, ["~> 1.6.4"])
       s.add_dependency(%q<httpclient>, ["~> 2.2"])
       s.add_dependency(%q<rdoc>, ["~> 3.9"])
     end
   else
-    s.add_dependency(%q<sinatra>, [">= 1.2.6"])
-    s.add_dependency(%q<mongrel>, [">= 1.2.0.pre2"])
+    s.add_dependency(%q<cuba>, ["~> 3.0"])
+    s.add_dependency(%q<unicorn>, [">= 4.6.2"])
+    s.add_dependency(%q<raindrops>, ["~> 0.11"])
     s.add_dependency(%q<rmagick>, ["~> 2"])
-    s.add_dependency(%q<haml>, ["~> 3"])
     s.add_dependency(%q<ruby-ip>, ["~> 0.9"])
     s.add_dependency(%q<cli>, ["~> 1.1.0"])
-    s.add_dependency(%q<rspec>, ["~> 2.3.0"])
-    s.add_dependency(%q<cucumber>, [">= 0"])
-    s.add_dependency(%q<bundler>, ["~> 1.0.0"])
-    s.add_dependency(%q<jeweler>, ["~> 1.6.4"])
-    s.add_dependency(%q<rcov>, [">= 0"])
+    s.add_dependency(%q<facter>, ["~> 1.6.11"])
     s.add_dependency(%q<daemon>, ["~> 1"])
+    s.add_dependency(%q<rspec>, ["~> 2.13"])
+    s.add_dependency(%q<rspec-mocks>, ["~> 2.13"])
+    s.add_dependency(%q<cucumber>, [">= 0"])
+    s.add_dependency(%q<capybara>, ["~> 1.1"])
+    s.add_dependency(%q<jeweler>, ["~> 1.6.4"])
     s.add_dependency(%q<httpclient>, ["~> 2.2"])
     s.add_dependency(%q<rdoc>, ["~> 3.9"])
   end
