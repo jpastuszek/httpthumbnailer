@@ -6,6 +6,7 @@ require 'unicorn'
 require 'raindrops'
 require 'facter'
 require 'daemon'
+require 'pathname'
 
 $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
 
