@@ -15,8 +15,9 @@ class ErrorReporter < Controler
 		end
 
 		on error(
-				ThumbnailSpec::BadThubnailSpecError,
-				Plugin::Thumbnailer::ZeroSizedImageError
+			ThumbnailSpec::BadThubnailSpecError,
+			Plugin::Thumbnailer::ZeroSizedImageError,
+			Plugin::Thumbnailer::UnsupportedMethodError
 		) do
 			write_error 400, env['app.error']
 		end

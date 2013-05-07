@@ -106,8 +106,19 @@ Feature: Generating single thumbnail with PUT request
 		"""
 
 	@error_handling
+	Scenario: Reporitng of bad thumbanil spec format - bad operatin value
+		Given test.jpg file content as request body
+		When I do PUT request http://localhost:3100/thumbnail/blah,128,128,png
+		Then response status should be 400
+		And response content type should be text/plain
+		And response body should be CRLF endend lines
+		"""
+		Error: thumbnail method 'blah' is not supported
+		"""
+
+	@error_handling
 	Scenario: Reporitng of bad thumbanil spec format - bad dimmension value
-		Given test.txt file content as request body
+		Given test.jpg file content as request body
 		When I do PUT request http://localhost:3100/thumbnail/crop,128,bogous,png
 		Then response status should be 400
 		And response content type should be text/plain
@@ -118,7 +129,7 @@ Feature: Generating single thumbnail with PUT request
 
 	@error_handling
 	Scenario: Reporitng of bad thumbanil spec format - missing param
-		Given test.txt file content as request body
+		Given test.jpg file content as request body
 		When I do PUT request http://localhost:3100/thumbnail/crop,128,png
 		Then response status should be 400
 		And response content type should be text/plain
@@ -129,7 +140,7 @@ Feature: Generating single thumbnail with PUT request
 
 	@error_handling
 	Scenario: Reporitng of bad thumbanil spec format - bad options format
-		Given test.txt file content as request body
+		Given test.jpg file content as request body
 		When I do PUT request http://localhost:3100/thumbnail/crop,128,128,png,fas-fda
 		Then response status should be 400
 		And response content type should be text/plain
