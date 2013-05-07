@@ -120,6 +120,6 @@ To change this defaults use `--limit-memory` option for RAM limit and `--limit-d
 
 ## Copyright
 
-Copyright (c) 2012 Jakub Pastuszek. See LICENSE.txt for
+Copyright (c) 2013 Jakub Pastuszek. See LICENSE.txt for
 further details.
 
