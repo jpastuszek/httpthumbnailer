@@ -60,7 +60,7 @@ module Plugin
 		end
 
 		def write_epilogue
-			res.write "--#{@boundary}\r\n"
+			res.write "--#{@boundary}--\r\n"
 		end
 	end
 end

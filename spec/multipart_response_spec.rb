@@ -47,7 +47,7 @@ part 1
 			mr.preamble.should be_nil
 		end
 
-		it "should privide nil epilogue if no epilogue sent" do
+		it "should privide empty epilogue if no epilogue sent" do
 			content_type_header = 'multipart/mixed; boundary="cut here"'
 			body = 
 """--cut here
@@ -55,10 +55,10 @@ part 1
 --cut here--""".gsub!("\n", "\r\n")
 			
 			mr = MultipartResponse.new(content_type_header, body)
-			mr.epilogue.should be_nil
+			mr.epilogue.should be_empty
 		end
 
-		it "should provide default mime type of text/plain if no Content-Type header specified" do
+		it "should provide nil mime type if no Content-Type header specified" do
 			content_type_header = 'multipart/mixed; boundary="cut here"'
 			body = 
 """--cut here
@@ -66,13 +66,25 @@ part 1
 --cut here--""".gsub!("\n", "\r\n")
 			
 			mr = MultipartResponse.new(content_type_header, body)
-			mr.part[0].header['Content-Type'].should == 'text/plain'
+			mr.part[0].header['Content-Type'].should be_nil
 		end
 
 		it "should fail with MultipartResponse::NoBoundaryFoundInContentTypeError if no boundary specified in content type header" do
 			lambda {
 				MultipartResponse.new("fas", "")
 			}.should raise_error MultipartResponse::NoBoundaryFoundInContentTypeError
+		end
+
+		it "should fail with MultipartResponse::MissingEpilogueError if no epilogue was found" do
+			content_type_header = 'multipart/mixed; boundary="cut here"'
+			body = 
+"""--cut here
+part 1
+--cut here""".gsub!("\n", "\r\n")
+
+			lambda {
+				MultipartResponse.new(content_type_header, body)
+			}.should raise_error MultipartResponse::MissingEpilogueError
 		end
 	end
 	

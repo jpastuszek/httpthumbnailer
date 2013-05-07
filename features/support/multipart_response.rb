@@ -5,14 +5,20 @@ class MultipartResponse
 		end
 	end
 
+	class MissingEpilogueError < ArgumentError
+		def initialize
+			super("no epilogue was found in the response")
+		end
+	end
+
 	class Part
 		def initialize(data)
 			if data.include?("\r\n\r\n")
-				headers, *body = *data.split("\r\n\r\n")
+				headers, *body = *data.split("\r\n\r\n", 2)
 				@headers = Hash[headers.split("\r\n").map{|h| h.split(/: ?/)}]
-				@body = body.join("\r\n\r\n")
+				@body = body.last
 			else
-				@headers = {'Content-Type' => 'text/plain'}
+				@headers = {}
 				@body = data
 			end
 		end
@@ -28,13 +34,14 @@ class MultipartResponse
 			raise NoBoundaryFoundInContentTypeError.new(content_type_header, e)
 		end
 
-		body, epilogue = *body.split("--#{@boundary}--")
+		body, epilogue = *body.split("--#{@boundary}--", 2)
 		preamble, *parts = *body.split("--#{@boundary}")
 		
 		@preamble = preamble.sub(/\r\n$/m, '')
 		@preamble = nil if @preamble.empty?
 
-		@epilogue = epilogue.sub(/^\r\n/m, '') if epilogue
+		raise MissingEpilogueError unless epilogue
+		@epilogue = epilogue.sub(/^\r\n/m, '')
 
 		@parts = parts.map{|p| p.sub(/^\r\n/m, '').sub(/\r\n$/m, '')}.map{|p| Part.new(p)}
 	end
