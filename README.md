@@ -22,6 +22,27 @@ Then you can install the gem as usual:
 
 ## Usage
 
+### Getting started
+
+```bash
+# install httpthumbnailer (see above)
+# install httpthumbnailer-client
+gem install httpthumbnailer-client
+
+# start thumbnailing server (to stop: kill `cat httpthumbnailer.pid`)
+httpthumbnailer
+
+# thumbnail to standard output
+cat ~/Pictures/compute.jpg | httpthumbnailer-client -t crop,100,200,png > thumbnail.png
+
+# generate multiple thumbnails
+cat ~/Pictures/compute.jpg | httpthumbnailer-client -t crop,100,200,jpeg,quality:100 -t pad,200,200,png thumbnail1.jpg thumbnail2.png
+```
+
+In this example we use [httpthumbnailer-client](http://github.com/jpastuszek/httpthumbnailer-client) gem CLI tool that will use HTTP API of the server to generate thumbnails.
+
+### Running the server
+
 httpthumbnailer uses worker based server model (thanks to **unicorn** gem).
 
 To start the thumbnailer use `httpthumbnailer` command.
@@ -98,9 +119,9 @@ httpthumbnailer will generate 3 thumbnails:
 
 For detailed information about the API see [cucumber features](http://github.com/jpastuszek/httpthumbnailer/blob/master/features/thumbnails.feature).
 
-### API client
+### Ruby API client
 
-To make it easy to use this server [httpthumbnailer-client](http://github.com/jpastuszek/httpthumbnailer-client) gem is provided.
+To make it easier to use this server [httpthumbnailer-client](http://github.com/jpastuszek/httpthumbnailer-client) gem provides useful class.
 
 ### Memory limits
 
