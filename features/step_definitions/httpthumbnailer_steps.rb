@@ -23,7 +23,27 @@ end
 
 Then /I should get multipart response/ do
 	@response.header['Content-Type'].first.should match /^multipart/
-	@response_multipart = MultipartResponse.new(@response.header['Content-Type'].last, @response.body)
+	parser = MultipartParser::Reader.new(MultipartParser::Reader.extract_boundary_value(@response.header['Content-Type'].last))
+	@response_multipart = []
+
+	parser.on_part do |part|
+		part_struct = OpenStruct.new
+		part_struct.headers = part.headers
+
+		part_struct.body = ''
+		part.on_data do |data|
+			part_struct.body << data
+		end
+
+		part.on_end do
+			@response_multipart << part_struct
+		end
+	end
+
+	parser.write @response.body
+
+	parser.ended?.should be_true
+	@response_multipart.should_not be_empty
 end
 
 Then /response body should be CRLF endend lines like/ do |body|	
@@ -50,19 +70,19 @@ Then /response mime type should be (.*)/ do |mime_type|
 end
 
 Then /(.*) part mime type should be (.*)/ do |part, mime|
-	@response_multipart.part[part_no(part)].header['Content-Type'].should == mime
+	@response_multipart[part_no(part)].headers['content-type'].should == mime
 end
 
 Then /(.*) part content type should be (.*)/ do |part, content_type|
-	@response_multipart.part[part_no(part)].header['Content-Type'].should == content_type
+	@response_multipart[part_no(part)].headers['content-type'].should == content_type
 end
 
 Then /(.*) part body should be CRLF endend lines$/ do |part, body|	
-	@response_multipart.part[part_no(part)].body.should == body.gsub("\n", "\r\n")
+	@response_multipart[part_no(part)].body.should == body.gsub("\n", "\r\n")
 end
 
 Then /(.*) part body should be CRLF endend lines like$/ do |part, body|	
-	pbody = @response_multipart.part[part_no(part)].body
+	pbody = @response_multipart[part_no(part)].body
 	pbody.should match(body)
 end
 
@@ -81,9 +101,11 @@ end
 
 
 Then /(.*) part should contain (.*) image of size (.*)x(.*)/ do |part, format, width, height|
-	mime = @response_multipart.part[part_no(part)].header['Content-Type']
-	data = @response_multipart.part[part_no(part)].body
-	fail("expecte image got #{mime}: #{data}") unless mime =~ /^image\//
+	mime = @response_multipart[part_no(part)].headers['content-type']
+	data = @response_multipart[part_no(part)].body
+
+	mime.should match /^image\//
+	data.should_not be_empty
 
 	@image.destroy! if @image
 	@image = Magick::Image.from_blob(data).first
@@ -103,7 +125,7 @@ And /response will be saved as (.*) for human inspection/ do |file|
 end
 
 And /(.*) part body will be saved as (.*) for human inspection/ do |part, file|
-	data = @response_multipart.part[part_no(part)].body
+	data = @response_multipart[part_no(part)].body
 	(support_dir + file).open('w'){|f| f.write(data)}
 end
 

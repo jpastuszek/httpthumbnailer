@@ -19,5 +19,6 @@ group :development do
   gem "jeweler", "~> 1.6.4"
   gem "httpclient", "~> 2.2"
   gem "rdoc", "~> 3.9"
+  gem "multipart-parser", "~> 0.1.1"
 end
 

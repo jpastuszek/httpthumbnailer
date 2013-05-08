@@ -9,15 +9,13 @@ end
 
 
 require 'rspec/expectations'
+require 'multipart_parser/reader'
 require 'daemon'
 require 'timeout'
 require 'httpclient'
 require "open3"
 require "thread"
 require 'RMagick'
-
-$LOAD_PATH.unshift(File.dirname(__FILE__))
-require 'multipart_response'
 
 def gem_dir
 		Pathname.new(__FILE__).dirname + '..' + '..'
