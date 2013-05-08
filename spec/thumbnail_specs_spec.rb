@@ -2,7 +2,7 @@ require File.expand_path(File.dirname(__FILE__) + '/spec_helper')
 require 'httpthumbnailer/thumbnail_specs'
 
 describe ThumbnailSpecs do
-	it "can be crated from URI" do
+	it "can be created from URI" do
 		ts = ThumbnailSpecs.from_uri('test,128,256,jpeg,magick:64,number:8/pad,128,128,png,background:0xFF00FF/crop,32,32,gif')
 
 		ts[0].method.should == 'test'

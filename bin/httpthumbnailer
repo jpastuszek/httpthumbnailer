@@ -1,190 +1,93 @@
 #!/usr/bin/env ruby
-require 'cli'
-require 'ip'
-require 'cuba'
-require 'unicorn'
-require 'raindrops'
-require 'facter'
-require 'daemon'
-require 'pathname'
+require 'unicorn-cuba-base'
 
 $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
 
-settings = CLI.new do
-	description 'Image thumbnailing HTTP server'
-	option :log_file,
-		short: :l,
-		cast: Pathname,
-		description: 'log file location',
-		default: 'httpthumbnailer.log'
-	option :access_log_file,
-		short: :a,
-		cast: Pathname,
-		description: 'NCSA access log file location',
-		default: 'httpthumbnailer_access.log'
-	option :pid_file,
-		short: :p,
-		cast: Pathname,
-		description: 'PID file location',
-		default: 'httpthumbnailer.pid'
-	switch :foreground,
-		short: :f,
-		description: 'stay in foreground'
-	switch :formats,
-		short: :F,
-		description: 'print backend versions and supported formats'
-	option :bind,
-		short: :b,
-		cast: IP,
-		description: 'HTTP server bind address - use 0.0.0.0 to bind to all interfaces',
-		default: IP.new('127.0.0.1')
-	option :port,
-		short: :P,
-		cast: Integer,
-		description: 'HTTP server TCP listen port',
-		default: 3100
-	option :user,
-		short: :u,
-		description: 'run worker processes as given user'
-	option :worker_processes,
-		short: :w,
-		cast: Integer,
-		description: 'start given number of worker processes',
-		default: Facter.processorcount.to_i + 1
-	option :worker_timeout,
-		short: :t,
-		cast: Integer,
-		description: 'workers handling the request taking longer than this time period will be forcibly killed',
-		default: 60
-	option :limit_memory,
-		cast: Integer,
-		description: 'image cache heap memory size limit in MiB',
-		default: 128
-	option :limit_disk,
-		cast: Integer,
-		description: 'image cache temporary file size limit in MiB',
-		default: 1024
-	switch :no_optimization,
-		description: 'disable load time size hinting and prescaling optimizations'
-	switch :verbose,
-		short: :v,
-		description: 'enable verbose logging (INFO)'
-	switch :debug,
-		short: :d,
-		description: 'enable verbose and debug logging (DEBUG)'
-	version (Pathname.new(__FILE__).dirname + '..' + 'VERSION').read
-end.parse!
-
-if settings.formats
-	require 'httpthumbnailer/plugin/thumbnailer'
-	puts "Versions:"
-	puts "\t#{Plugin::Thumbnailer::Service.rmagick_version}"
-	puts "\t#{Plugin::Thumbnailer::Service.magick_version}"
-	puts
-	puts "Input formats:"
-	puts "\t#{Plugin::Thumbnailer::Service.input_formats.join(' ')}"
-	puts
-	puts "Output formats:"
-	puts "\t#{Plugin::Thumbnailer::Service.output_formats.join(' ')}"
-	exit 0
-end
-
-require 'httpthumbnailer/root_logger'
-
-root_logger = RootLogger.new(STDERR)
-root_logger.level = RootLogger::WARN
-root_logger.level = RootLogger::INFO if settings.verbose
-root_logger.level = RootLogger::DEBUG if settings.debug
-
-Daemon.daemonize(settings.pid_file, settings.log_file) unless settings.foreground
-
-class Controler < Cuba
-	def self.root_logger=(root_logger)
-		@@root_logger = root_logger
+Application.new do
+	cli do
+		description 'Image thumbnailing HTTP server'
+		switch :formats,
+			short: :F,
+			description: 'print backend versions and supported formats'
+		option :limit_memory,
+			cast: Integer,
+			description: 'image cache heap memory size limit in MiB',
+			default: 128
+		option :limit_disk,
+			cast: Integer,
+			description: 'image cache temporary file size limit in MiB',
+			default: 1024
+		switch :no_optimization,
+			description: 'disable load time size hinting and prescaling optimizations'
+		version (Pathname.new(__FILE__).dirname + '..' + 'VERSION').read
 	end
 
-	def self.logger_for(class_obj)
-		@@root_logger.logger_for(class_obj)
+	settings do |settings|
+		if settings.formats
+			require 'httpthumbnailer/plugin/thumbnailer'
+			puts "Versions:"
+			puts "\t#{Plugin::Thumbnailer::Service.rmagick_version}"
+			puts "\t#{Plugin::Thumbnailer::Service.magick_version}"
+			puts
+			puts "Input formats:"
+			puts "\t#{Plugin::Thumbnailer::Service.input_formats.join(' ')}"
+			puts
+			puts "Output formats:"
+			puts "\t#{Plugin::Thumbnailer::Service.output_formats.join(' ')}"
+			exit 0
+		end
+
+		Controler.settings[:optimization] = (not settings.no_optimization)
+		Controler.settings[:limit_memory] = settings.limit_memory * 1024**2
+		Controler.settings[:limit_map] = settings.limit_disk * 1024**2
+		Controler.settings[:limit_disk] = settings.limit_disk * 1024**2
+	end
+
+	main do |settings|
+		require 'httpthumbnailer/error_reporter'
+		require 'httpthumbnailer/thumbnailer'
+
+		class HTTPThumbniler < Controler
+			extend Stats
+			def_stats(
+				:total_requests, 
+				:total_errors 
+			)
+
+			raindrops_stats = Raindrops::Middleware::Stats.new
+			self.use Raindrops::Middleware, stats: raindrops_stats
+
+			StatsReporter << HTTPThumbniler.stats
+			StatsReporter << raindrops_stats
+			StatsReporter << Plugin::Thumbnailer::Service.stats
+			StatsReporter << Plugin::ResponseHelpers.stats
+
+			self.define do
+				HTTPThumbniler.stats.incr_total_requests
+				on error? do
+					HTTPThumbniler.stats.incr_total_errors
+					run ErrorReporter
+				end
+				
+				on 'stats' do
+					run StatsReporter
+				end
+
+				on 'health_check' do
+					write_plain 200, 'OK'
+				end
+
+				on root do
+					write_plain 200, 'HTTP Thumbnailer'
+				end
+
+				on true do
+					run Thumbnailer
+				end
+			end
+		end
+
+		HTTPThumbniler
 	end
 end
-
-Controler.root_logger = root_logger
-
-Controler.settings[:optimization] = (not settings.no_optimization)
-Controler.settings[:limit_memory] = settings.limit_memory * 1024**2
-Controler.settings[:limit_map] = settings.limit_disk * 1024**2
-Controler.settings[:limit_disk] = settings.limit_disk * 1024**2
-Controler.settings[:listeners] = ["#{settings.bind}:#{settings.port}"]
-Controler.settings[:access_log_file] = settings.access_log_file
-
-require 'httpthumbnailer/stats'
-require 'httpthumbnailer/plugin/error_matcher'
-require 'httpthumbnailer/plugin/logging'
-require 'httpthumbnailer/plugin/response_helpers'
-require 'httpthumbnailer/rack/error_handling'
-require 'httpthumbnailer/rack/unhandled_request'
-
-require 'httpthumbnailer/error_reporter'
-require 'httpthumbnailer/stats_reporter'
-require 'httpthumbnailer/thumbnailer'
-
-Controler.plugin Plugin::ErrorMatcher
-Controler.plugin Plugin::Logging
-Controler.plugin Plugin::ResponseHelpers
-
-class HTTPThumbniler < Controler
-	extend Stats
-	def_stats(
-		:total_requests, 
-		:total_errors 
-	)
-
-	access_log_file = settings[:access_log_file].open('a+')
-	access_log_file.sync = true
-	self.use Rack::CommonLogger, access_log_file
-
-	raindrops_stats = Raindrops::Middleware::Stats.new
-	self.use Raindrops::Middleware, stats: raindrops_stats
-
-	self.use Rack::ErrorHandling
-	self.use Rack::UnhandledRequest
-
-	StatsReporter << HTTPThumbniler.stats
-	StatsReporter << raindrops_stats
-	StatsReporter << Plugin::Thumbnailer::Service.stats
-	StatsReporter << Plugin::ResponseHelpers.stats
-
-	self.define do
-		HTTPThumbniler.stats.incr_total_requests
-		on error? do
-			HTTPThumbniler.stats.incr_total_errors
-			run ErrorReporter
-		end
-		
-		on 'stats' do
-			run StatsReporter
-		end
-
-		on 'health_check' do
-			write_plain 200, 'OK'
-		end
-
-		on root do
-			write_plain 200, 'HTTP Thumbnailer'
-		end
-
-		on true do
-			run Thumbnailer
-		end
-	end
-end
-
-unicorn_settings = {}
-unicorn_settings[:logger] = root_logger.logger_for(Unicorn::HttpServer)
-unicorn_settings[:worker_processes] = settings.worker_processes
-unicorn_settings[:timeout] = settings.worker_timeout
-unicorn_settings[:listeners] = ["#{settings.bind}:#{settings.port}"]
-unicorn_settings[:user] = settings.user if settings.user
-
-Unicorn::HttpServer.new(HTTPThumbniler, unicorn_settings).start.join
 

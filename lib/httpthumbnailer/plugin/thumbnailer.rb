@@ -1,8 +1,5 @@
 require 'RMagick'
-require 'raindrops'
 require 'forwardable'
-require 'httpthumbnailer/root_logger'
-require 'httpthumbnailer/stats'
 
 module Plugin
 	module Thumbnailer

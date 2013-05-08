@@ -1,6 +1,4 @@
 class ErrorReporter < Controler
-	self.plugin Plugin::ResponseHelpers
-
 	self.define do
 		on error Rack::UnhandledRequest::UnhandledRequestError do
 			write_error 404, env['app.error']
