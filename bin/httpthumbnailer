@@ -3,7 +3,7 @@ require 'unicorn-cuba-base'
 
 $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
 
-Application.new do
+Application.new('httpthumbnailer', port: 3100) do
 	cli do
 		description 'Image thumbnailing HTTP server'
 		switch :formats,
