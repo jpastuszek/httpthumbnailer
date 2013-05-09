@@ -102,18 +102,7 @@ Feature: Generating single thumbnail with PUT request
 		And response content type should be text/plain
 		And response body should be CRLF endend lines like
 		"""
-		Error: unsupported media type: no decode delegate for this image format
-		"""
-
-	@error_handling
-	Scenario: Reporitng of bad thumbanil spec format - bad operatin value
-		Given test.jpg file content as request body
-		When I do PUT request http://localhost:3100/thumbnail/blah,128,128,png
-		Then response status should be 400
-		And response content type should be text/plain
-		And response body should be CRLF endend lines
-		"""
-		Error: thumbnail method 'blah' is not supported
+		unsupported media type: no decode delegate for this image format
 		"""
 
 	@error_handling
@@ -124,7 +113,7 @@ Feature: Generating single thumbnail with PUT request
 		And response content type should be text/plain
 		And response body should be CRLF endend lines
 		"""
-		Error: bad dimmension value: bogous
+		bad dimmension value: bogous
 		"""
 
 	@error_handling
@@ -135,7 +124,7 @@ Feature: Generating single thumbnail with PUT request
 		And response content type should be text/plain
 		And response body should be CRLF endend lines
 		"""
-		Error: missing argument in: crop,128,png
+		missing argument in: crop,128,png
 		"""
 
 	@error_handling
@@ -146,7 +135,18 @@ Feature: Generating single thumbnail with PUT request
 		And response content type should be text/plain
 		And response body should be CRLF endend lines
 		"""
-		Error: missing option key or value in: fas-fda
+		missing option key or value in: fas-fda
+		"""
+
+	@error_handling
+	Scenario: Reporitng of bad operation value
+		Given test.jpg file content as request body
+		When I do PUT request http://localhost:3100/thumbnail/blah,128,128,png
+		Then response status should be 400
+		And response content type should be text/plain
+		And response body should be CRLF endend lines
+		"""
+		thumbnail method 'blah' is not supported
 		"""
 
 	@error_handling
@@ -157,7 +157,7 @@ Feature: Generating single thumbnail with PUT request
 		And response content type should be text/plain
 		And response body should be CRLF endend lines
 		"""
-		Error: at least one image dimension is zero: 0x0
+		at least one image dimension is zero: 0x0
 		"""
 
 	@optimization
@@ -175,7 +175,7 @@ Feature: Generating single thumbnail with PUT request
 		And response content type should be text/plain
 		And response body should be CRLF endend lines like
 		"""
-		Error: image too large: cache resources exhausted
+		image too large: cache resources exhausted
 		"""
 
 	@resources
@@ -186,7 +186,7 @@ Feature: Generating single thumbnail with PUT request
 		And response content type should be text/plain
 		And response body should be CRLF endend lines like
 		"""
-		Error: image too large: cache resources exhausted
+		image too large: cache resources exhausted
 		"""
 
 	@quality

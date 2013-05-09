@@ -36,11 +36,8 @@ Feature: Generating set of thumbnails with single PUT request
 		Then response status should be 200
 		And I should get multipart response
 		Then first part should contain JPEG image of size 509x16
-		And first part mime type should be image/jpeg
 		Then second part should contain PNG image of size 4x719
-		And second part mime type should be image/png
 		Then third part should contain PNG image of size 509x719
-		And third part mime type should be image/png
 
 	@leaking
 	Scenario: Image leaking on error
@@ -53,15 +50,50 @@ Feature: Generating set of thumbnails with single PUT request
 		And third part content type should be text/plain
 
 	@error_handling
-	Scenario: Reporitng of bad thumbanil spec format problems
-		Given test.txt file content as request body
-		When I do PUT request http://localhost:3100/thumbnails/crop,2,2,png/crop,128,bogous,png
+	Scenario: Reporitng of bad thumbanil spec format - bad dimmension value
+		Given test.jpg file content as request body
+		When I do PUT request http://localhost:3100/thumbnails/crop,4,4,png/crop,128,bogous,png
 		Then response status should be 400
 		And response content type should be text/plain
 		And response body should be CRLF endend lines
 		"""
-		Error: bad dimmension value: bogous
+		bad dimmension value: bogous
 		"""
+
+	@error_handling
+	Scenario: Reporitng of bad thumbanil spec format - missing param
+		Given test.jpg file content as request body
+		When I do PUT request http://localhost:3100/thumbnails/crop,4,4,png/crop,128,png
+		Then response status should be 400
+		And response content type should be text/plain
+		And response body should be CRLF endend lines
+		"""
+		missing argument in: crop,128,png
+		"""
+
+	@error_handling
+	Scenario: Reporitng of bad thumbanil spec format - bad options format
+		Given test.jpg file content as request body
+		When I do PUT request http://localhost:3100/thumbnails/crop,4,4,png/crop,128,128,png,fas-fda
+		Then response status should be 400
+		And response content type should be text/plain
+		And response body should be CRLF endend lines
+		"""
+		missing option key or value in: fas-fda
+		"""
+
+	@error_handling
+	Scenario: Reporitng of bad operation value
+		Given test.jpg file content as request body
+		When I do PUT request http://localhost:3100/thumbnails/crop,4,4,png/blah,128,128,png
+		Then response status should be 200
+		And I should get multipart response
+		And second part content type should be text/plain
+		And second part body should be CRLF endend lines
+		"""
+		thumbnail method 'blah' is not supported
+		"""
+		And second part status should be 400
 
 	@error_handling
 	Scenario: Reporitng of image thumbnailing errors
@@ -74,8 +106,9 @@ Feature: Generating set of thumbnails with single PUT request
 		And second part content type should be text/plain
 		And second part body should be CRLF endend lines
 		"""
-		Error: at least one image dimension is zero: 0x0
+		at least one image dimension is zero: 0x0
 		"""
+		And second part status should be 400
 		Then third part should contain JPEG image of size 16x32
 		And third part mime type should be image/jpeg
 
@@ -90,8 +123,9 @@ Feature: Generating set of thumbnails with single PUT request
 		And second part content type should be text/plain
 		And second part body should be CRLF endend lines like
 		"""
-		Error: image too large: cache resources exhausted
+		image too large: cache resources exhausted
 		"""
+		And second part status should be 413
 		Then third part should contain JPEG image of size 16x32
 		And third part mime type should be image/jpeg
 

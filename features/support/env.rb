@@ -46,17 +46,21 @@ def get(url)
 	HTTPClient.new.get_content(url)
 end
 
+@@running_cmd = {}
 def start_server(cmd, pid_file, log_file, test_url)
-	pid_file = Pathname.new(pid_file)
-	return if pid_file.exist?
+	if @@running_cmd[pid_file]
+		return if @@running_cmd[pid_file] == cmd
+		stop_server(pid_file) 
+	end
 
-	log_file = Pathname.new(log_file)
-	log_file.truncate(0) if log_file.exist?
 	fork do
 		Daemon.daemonize(pid_file, log_file)
+		log_file = Pathname.new(log_file)
+		log_file.truncate(0) if log_file.exist?
 		exec(cmd)
 	end
-	Process.wait
+
+	@@running_cmd[pid_file] = cmd
 
 	ppid = Process.pid
 	at_exit do

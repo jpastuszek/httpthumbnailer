@@ -1,6 +1,6 @@
 Given /httpthumbnailer server is running at (.*)/ do |url|
 	log = support_dir + 'server.log'
-	cmd = "bundle exec #{script('httpthumbnailer')} -f -v -d -l #{log}"
+	cmd = "bundle exec #{script('httpthumbnailer')} -f -d -l #{log}"
 	start_server(cmd, '/tmp/httpthumbnailer.pid', log, url)
 end
 
@@ -75,6 +75,10 @@ end
 
 Then /(.*) part content type should be (.*)/ do |part, content_type|
 	@response_multipart[part_no(part)].headers['content-type'].should == content_type
+end
+
+Then /(.*) part status should be (.*)/ do |part, status|
+	@response_multipart[part_no(part)].headers['status'].should == status
 end
 
 Then /(.*) part body should be CRLF endend lines$/ do |part, body|	

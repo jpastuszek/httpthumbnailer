@@ -10,7 +10,7 @@ Feature: HTTP server
 		And response content type should be text/plain
 		And response body should be CRLF endend lines
 		"""
-		Error: request for URI '/blah' was not handled by the server
+		request for URI '/blah' was not handled by the server
 		"""
 
 	Scenario: Reporitng of missing resource for PUT
@@ -19,6 +19,6 @@ Feature: HTTP server
 		And response content type should be text/plain
 		And response body should be CRLF endend lines
 		"""
-		Error: request for URI '/blah/thumbnails/crop,0,0,PNG/fit,0,0,JPG/pad,0,0,JPEG' was not handled by the server
+		request for URI '/blah/thumbnails/crop,0,0,PNG/fit,0,0,JPG/pad,0,0,JPEG' was not handled by the server
 		"""
 

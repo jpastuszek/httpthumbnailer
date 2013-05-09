@@ -11,7 +11,7 @@ group :development do
   gem "cucumber", ">= 0"
   gem "capybara", "~> 1.1"
   gem "jeweler", "~> 1.8.4"
-  gem "httpclient", "~> 2.2"
+  gem "httpclient", "~> 2.3"
   gem "rdoc", "~> 3.9"
   gem "multipart-parser", "~> 0.1.1"
 end
