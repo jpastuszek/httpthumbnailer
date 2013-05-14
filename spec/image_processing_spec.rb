@@ -1,4 +1,5 @@
 require_relative 'spec_helper'
+require 'unicorn-cuba-base'
 require 'httpthumbnailer/plugin/thumbnailer'
 
 class TestImage
