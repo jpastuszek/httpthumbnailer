@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Jakub Pastuszek"]
-  s.date = "2013-05-08"
+  s.date = "2013-05-16"
   s.description = "Provides HTTP API for thumbnailing images"
   s.email = "jpastuszek@gmail.com"
   s.executables = ["httpthumbnailer"]
@@ -58,7 +58,7 @@ Gem::Specification.new do |s|
     "load_test/v0.0.13.csv",
     "load_test/v0.0.14-no-optimization.csv",
     "load_test/v0.0.14.csv",
-    "spec/image_processing.rb",
+    "spec/image_processing_spec.rb",
     "spec/spec_helper.rb",
     "spec/thumbnail_specs_spec.rb"
   ]
@@ -79,7 +79,7 @@ Gem::Specification.new do |s|
       s.add_development_dependency(%q<cucumber>, [">= 0"])
       s.add_development_dependency(%q<capybara>, ["~> 1.1"])
       s.add_development_dependency(%q<jeweler>, ["~> 1.8.4"])
-      s.add_development_dependency(%q<httpclient>, ["~> 2.2"])
+      s.add_development_dependency(%q<httpclient>, ["~> 2.3"])
       s.add_development_dependency(%q<rdoc>, ["~> 3.9"])
       s.add_development_dependency(%q<multipart-parser>, ["~> 0.1.1"])
     else
@@ -90,7 +90,7 @@ Gem::Specification.new do |s|
       s.add_dependency(%q<cucumber>, [">= 0"])
       s.add_dependency(%q<capybara>, ["~> 1.1"])
       s.add_dependency(%q<jeweler>, ["~> 1.8.4"])
-      s.add_dependency(%q<httpclient>, ["~> 2.2"])
+      s.add_dependency(%q<httpclient>, ["~> 2.3"])
       s.add_dependency(%q<rdoc>, ["~> 3.9"])
       s.add_dependency(%q<multipart-parser>, ["~> 0.1.1"])
     end
@@ -102,7 +102,7 @@ Gem::Specification.new do |s|
     s.add_dependency(%q<cucumber>, [">= 0"])
     s.add_dependency(%q<capybara>, ["~> 1.1"])
     s.add_dependency(%q<jeweler>, ["~> 1.8.4"])
-    s.add_dependency(%q<httpclient>, ["~> 2.2"])
+    s.add_dependency(%q<httpclient>, ["~> 2.3"])
     s.add_dependency(%q<rdoc>, ["~> 3.9"])
     s.add_dependency(%q<multipart-parser>, ["~> 0.1.1"])
   end
