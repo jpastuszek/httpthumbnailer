@@ -1,6 +1,6 @@
 Given /httpthumbnailer server is running at (.*)/ do |url|
 	log = support_dir + 'server.log'
-	cmd = "bundle exec #{script('httpthumbnailer')} -f -d -l #{log}"
+	cmd = "bundle exec #{script('httpthumbnailer')} -f -d -l #{log} -w 1"
 	start_server(cmd, '/tmp/httpthumbnailer.pid', log, url)
 end
 
@@ -9,7 +9,7 @@ Given /(.*) file content as request body/ do |file|
 end
 
 When /I do (.*) request (.*)/ do |method, url|
-	@response = HTTPClient.new.request(method, url, nil, @request_body)
+	@response = http_client.request(method, url, nil, @request_body)
 end
 
 When /I save response body/ do
@@ -143,10 +143,10 @@ end
 
 
 And /there should be no leaked images/ do
-	Integer(HTTPClient.new.get_content("http://localhost:3100/stats/images_loaded").strip).should == 0
+	Integer(http_client.get_content("http://localhost:3100/stats/images_loaded").strip).should == 0
 end
 
 And /there should be maximum (.*) images loaded during single request/ do |max|
-	Integer(HTTPClient.new.get_content("http://localhost:3100/stats/max_images_loaded").strip).should <= max.to_i
+	Integer(http_client.get_content("http://localhost:3100/stats/max_images_loaded").strip).should <= max.to_i
 end
 

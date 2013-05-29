@@ -42,8 +42,10 @@ def part_no(part)
 	end
 end
 
-def get(url)
-	HTTPClient.new.get_content(url)
+def http_client
+	client = HTTPClient.new
+	#client.debug_dev = STDOUT
+	client
 end
 
 @@running_cmd = {}
@@ -69,7 +71,7 @@ def start_server(cmd, pid_file, log_file, test_url)
 
 	Timeout.timeout(6) do
 		begin
-			get test_url
+			http_client.get_content test_url
 		rescue Errno::ECONNREFUSED
 			sleep 0.1
 			retry
@@ -81,7 +83,7 @@ def stop_server(pid_file)
 	pid_file = Pathname.new(pid_file)
 	return unless pid_file.exist?
 
-	STDERR.puts HTTPClient.new.get_content("http://localhost:3100/stats")
+	STDERR.puts http_client.get_content("http://localhost:3100/stats")
 	pid = pid_file.read.strip.to_i
 
 	Timeout.timeout(20) do

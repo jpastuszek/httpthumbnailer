@@ -130,12 +130,12 @@ Feature: Generating single thumbnail with PUT request
 	@error_handling
 	Scenario: Reporitng of bad thumbanil spec format - bad options format
 		Given test.jpg file content as request body
-		When I do PUT request http://localhost:3100/thumbnail/crop,128,128,png,fas-fda
+		When I do PUT request http://localhost:3100/thumbnail/crop,128,128,png,fas-xyz
 		Then response status should be 400
 		And response content type should be text/plain
 		And response body should be CRLF endend lines
 		"""
-		missing option key or value in: fas-fda
+		missing option key or value in: fas-xyz
 		"""
 
 	@error_handling
