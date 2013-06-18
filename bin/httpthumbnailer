@@ -9,10 +9,6 @@ Application.new('httpthumbnailer', port: 3100) do
 		switch :formats,
 			short: :F,
 			description: 'print backend versions and supported formats'
-		option :limit_memory,
-			cast: Integer,
-			description: 'image cache heap memory size limit in MiB',
-			default: 128
 		option :limit_disk,
 			cast: Integer,
 			description: 'image cache temporary file size limit in MiB',

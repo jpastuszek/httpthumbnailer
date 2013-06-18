@@ -254,6 +254,14 @@ module Plugin
 
 				begin
 					blob = io.read
+
+					old_memory_limit = nil
+					borrowed_memory_limit = nil
+					if options.member?(:limit_memory)
+						borrowed_memory_limit = options[:limit_memory].borrow(options[:limit_memory].limit)
+						old_memory_limit = set_limit(:memory, borrowed_memory_limit)
+					end
+
 					images = Magick::Image.from_blob(blob) do |info|
 						if mw and mh
 							define('jpeg', 'size', "#{mw*2}x#{mh*2}")
@@ -292,6 +300,11 @@ module Plugin
 				rescue Magick::ImageMagickError => error
 					raise ImageTooLargeError, error if error.message =~ /cache resources exhausted/
 					raise UnsupportedMediaTypeError, error
+				ensure
+					if old_memory_limit
+						set_limit(:memory, old_memory_limit)
+						options[:limit_memory].return(borrowed_memory_limit)
+					end
 				end
 			end
 
@@ -302,6 +315,7 @@ module Plugin
 			def set_limit(limit, value)
 				old = Magick.limit_resource(limit, value)
 				log.info "changed #{limit} limit from #{old} to #{value} bytes"
+				old
 			end
 		end
 

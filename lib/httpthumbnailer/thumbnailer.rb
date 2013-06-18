@@ -14,6 +14,7 @@ class Thumbnailer < Controler
 				opts['max-width'] = spec.width if spec.width.is_a? Integer
 				opts['max-height'] = spec.height if spec.height.is_a? Integer
 			end
+			opts[:limit_memory] = memory_limit
 
 			thumbnailer.load(req.body, opts).use do |input_image|
 				log.info "original image loaded: #{input_image.mime_type}"
@@ -35,6 +36,7 @@ class Thumbnailer < Controler
 					opts['max-width'] = thumbnail_specs.max_width
 					opts['max-height'] = thumbnail_specs.max_height
 			end
+			opts[:limit_memory] = memory_limit
 
 			thumbnailer.load(req.body, opts).use do |input_image|
 				log.info "original image loaded: #{input_image.mime_type}"
