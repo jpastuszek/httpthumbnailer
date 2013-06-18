@@ -8,7 +8,10 @@ class ErrorReporter < Controler
 			write_error 415, env['app.error']
 		end
 
-		on error Plugin::Thumbnailer::ImageTooLargeError do
+		on error(
+			Plugin::Thumbnailer::ImageTooLargeError,
+			MemoryLimit::MemoryLimitedExceededError
+		)	do
 			write_error 413, env['app.error']
 		end
 
