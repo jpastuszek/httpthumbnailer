@@ -143,6 +143,75 @@ Each worker uses [ImageMagick](http://www.imagemagick.org) memory usage limit fe
 By default it will use up to 128MiB of RAM and up to 1GiB of disk backed virtual memory.
 To change this defaults use `--limit-memory` option for RAM limit and `--limit-disk` to control file backed memory mapping limit in MiB.
 
+## Status codes
+
+HTTP Thumbnailer will respond with different status codes on different situations.
+If all goes well 200 OK will be returned otherwise:
+
+### 400
+
+* requested thumbnail method is not supported
+* at least one image dimension is zero in thumbnail spec
+* missing option key or value in thumbnail spec
+* missing argument in in thumbnail spec
+* bad argument value
+
+### 413
+
+* request body is too long
+* input image is too big to fit in memory
+* memory or pixel cache limit has been exceeded
+
+### 415
+
+* unsupported media type - see **Supported formats** section
+
+### 500
+
+* unexpected error has occurred - see the log file
+
+### Multipart API
+
+In multipart API when error relates to single thumbnail `Content-Type: plain/text` header will be used for that part.
+In addition `Status` header will be set for failing part with number corresponding to above status codes.
+The body will contain description of the error.
+
+## Statistics API
+
+HTTP Thumbnailer comes with statistics API that shows various runtime collected statistics.
+It is set up under `/stats` URL. You can also request single stat with `/stats/<stat name>` request.
+
+Example:
+
+```bash
+$ curl 127.0.0.1:3100/stats
+total_requests: 119
+total_errors: 1
+calling: 1
+writing: 0
+total_images_loaded: 115
+total_images_prescaled: 30
+total_thumbnails_created: 147
+images_loaded: 0
+max_images_loaded: 3
+max_images_loaded_worker: 3
+total_images_created: 312
+total_images_destroyed: 312
+total_images_created_from_blob: 115
+total_images_created_initialize: 53
+total_images_created_resize: 101
+total_images_created_crop: 13
+total_images_created_sample: 30
+total_write_multipart: 16
+total_write: 101
+total_write_part: 48
+total_write_error: 1
+total_write_error_part: 0
+
+$ curl 127.0.0.1:3100/stats/total_write_multipart
+16
+```
+
 ## See also
 
 [HTTP Image Store](https://github.com/jpastuszek/httpimagestore) service is configurable image storage and processing HTTP API server that uses this service as thumbnailing backend. 
