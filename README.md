@@ -1,24 +1,38 @@
-# httpthumbnailer
+# HTTP Thumbnailer
 
 HTTP API server for image thumbnailing and format conversion.
 
-It is using **ImageMagick** or **GraphicsMagick** via **RMagick** gem as the image processing library.
+It is using [ImageMagick](http://www.imagemagick.org) or [GraphicsMagick](http://www.graphicsmagick.org) via [RMagick](http://rmagick.rubyforge.org) gem as the image processing library.
+
+## Features
+
+* thumbnailing images with different aspect keeping methods
+* support of many input and output formats
+* efficient API for generating multiple thumbnails from single input image with just one request
+* many image scaling and loading performance optimizations
+* efficient memory usage
+* memory limits and disk offloading support
+* based on [Unicorn HTTP server](http://unicorn.bogomips.org) with UNIX socket communication support
 
 ## Installing
 
 You will need the following system packages installed: `imagemagick`, `pkg-config` and `make`.
-For PNG support install `libpng`. You may want to consult **ImageMagick** installation guide for more information on supported formats and required libraries.
+For PNG support install `libpng`. You may want to consult [ImageMagick](http://www.imagemagick.org) installation guide for more information on supported formats and required libraries.
 
 For Arch Linux you can use this commands:
 
-    pacman -S imagemagick
-    pacman -S libpng
-    pacman -S pkg-config
-    pacman -S make
+```bash
+pacman -S imagemagick
+pacman -S libpng
+pacman -S pkg-config
+pacman -S make
+```
 
 Then you can install the gem as usual:
 
-    gem install httpthumbnailer
+```bash
+gem install httpthumbnailer
+```
 
 ## Usage
 
@@ -43,7 +57,7 @@ In this example we use [httpthumbnailer-client](http://github.com/jpastuszek/htt
 
 ### Running the server
 
-httpthumbnailer uses worker based server model (thanks to **unicorn** gem).
+HTTP Thumbnail uses worker based server model thanks to [Unicorn HTTP server](http://unicorn.bogomips.org) gem.
 
 To start the thumbnailer use `httpthumbnailer` command.
 By default it will start in background and will spawn CPU core number + 1 number of worker processes.
@@ -112,7 +126,7 @@ For example the URI may look like this:
 
     /thumbnails/crop,16,16,png/crop,4,8,jpg/pad,16,32,jpeg
 
-httpthumbnailer will generate 3 thumbnails: 
+HTTP Thumbnailer will generate 3 thumbnails: 
  1. 16x16 cropped PNG
  2. 4x8 cropped JPEG
  3. 16x32 colour padded JPEG
@@ -125,11 +139,15 @@ To make it easier to use this server [httpthumbnailer-client](http://github.com/
 
 ### Memory limits
 
-Each worker uses **ImageMagick** memory usage limit feature.
+Each worker uses [ImageMagick](http://www.imagemagick.org) memory usage limit feature.
 By default it will use up to 128MiB of RAM and up to 1GiB of disk backed virtual memory.
 To change this defaults use `--limit-memory` option for RAM limit and `--limit-disk` to control file backed memory mapping limit in MiB.
 
-## Contributing to httpthumbnailer
+## See also
+
+[HTTP Image Store](https://github.com/jpastuszek/httpimagestore) service is configurable image storage and processing HTTP API server that uses this service as thumbnailing backend. 
+
+## Contributing to HTTP Thumbnailer
  
 * Check out the latest master to make sure the feature hasn't been implemented or the bug hasn't been fixed yet
 * Check out the issue tracker to make sure someone already hasn't requested it and/or contributed it
