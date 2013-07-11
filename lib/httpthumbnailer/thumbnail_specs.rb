@@ -36,17 +36,17 @@ class ThumbnailSpec
 			end
 		end
 
-		class BadDimmensionValueError < BadThubnailSpecError
+		class BadDimensionValueError < BadThubnailSpecError
 			def initialize(value)
-				super "bad dimmension value: #{value}"
+				super "bad dimension value: #{value}"
 			end
 		end
 	end
 
 	def initialize(method, width, height, format, options = {})
 		@method = method
-		@width = cast_dimmension(width)
-		@height = cast_dimmension(height)
+		@width = cast_dimension(width)
+		@height = cast_dimension(height)
 		@format = (format == 'input' ? :input : format.upcase)
 		@options = options
 	end
@@ -74,9 +74,9 @@ class ThumbnailSpec
 
 	private
 
-	def cast_dimmension(string)
+	def cast_dimension(string)
 		return :input if string == 'input'
-		raise BadThubnailSpecError::BadDimmensionValueError.new(string) unless string =~ /^\d+$/
+		raise BadThubnailSpecError::BadDimensionValueError.new(string) unless string =~ /^\d+$/
 		string.to_i
 	end
 end
