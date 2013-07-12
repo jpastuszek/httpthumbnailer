@@ -6,12 +6,12 @@ It is using [ImageMagick](http://www.imagemagick.org) or [GraphicsMagick](http:/
 
 ## Features
 
-* thumbnailing images with different aspect keeping methods
+* thumbnailing images with different aspect ratio keeping methods
 * support of many input and output formats
 * efficient API for generating multiple thumbnails from single input image with just one request
 * many image scaling and loading performance optimizations
 * efficient memory usage
-* memory limits and disk offloading support
+* memory limits and disk memory offloading support
 * based on [Unicorn HTTP server](http://unicorn.bogomips.org) with UNIX socket communication support
 
 ## Installing
@@ -34,6 +34,12 @@ Then you can install the gem as usual:
 gem install httpthumbnailer
 ```
 
+Optionally install Ruby client library and tool:
+
+```bash
+gem install httpthumbnailer-client
+```
+
 ## Usage
 
 ### Getting started
@@ -43,10 +49,10 @@ gem install httpthumbnailer
 # install httpthumbnailer-client
 gem install httpthumbnailer-client
 
-# start thumbnailing server (to stop: kill `cat httpthumbnailer.pid`)
-httpthumbnailer
+# start thumbnailing server in foreground (to stop hit Ctlr-C)
+httpthumbnailer --foreground --verbose
 
-# thumbnail to standard output
+# in another console thumbnail to standard output
 cat ~/Pictures/compute.jpg | httpthumbnailer-client -t crop,100,200,png > thumbnail.png
 
 # generate multiple thumbnails
@@ -57,7 +63,7 @@ In this example we use [httpthumbnailer-client](http://github.com/jpastuszek/htt
 
 ### Running the server
 
-HTTP Thumbnail uses worker based server model thanks to [Unicorn HTTP server](http://unicorn.bogomips.org) gem.
+HTTP Thumbnailer uses worker based server model thanks to [Unicorn HTTP server](http://unicorn.bogomips.org) gem.
 
 To start the thumbnailer use `httpthumbnailer` command.
 By default it will start in background and will spawn CPU core number + 1 number of worker processes.
@@ -72,7 +78,8 @@ If running as root you can use `--user` option to specify user with whose privil
 ### Logging
 
 `httpthumbnailer` logs to `httpthumbnailer.log` file in current directory by default. You can change log file location with `--log-file` option and verbosity with `--verbose` or `--debug` switch.
-Additionally `httpthumbnailer` will log requests in common NCSA format to `httpthumbnailer_access.log` file. Use `--access-log-file` option to change location of access log.
+
+Additionally `httpthumbnailer` will log requests in [common NCSA format](http://en.wikipedia.org/wiki/Common_Log_Format) to `httpthumbnailer_access.log` file. Use `--access-log-file` option to change location of access log.
 
 ### Supported operations
 
@@ -179,7 +186,7 @@ The body will contain description of the error.
 ## Statistics API
 
 HTTP Thumbnailer comes with statistics API that shows various runtime collected statistics.
-It is set up under `/stats` URL. You can also request single stat with `/stats/<stat name>` request.
+It is set up under `/stats` URI. You can also request single stat with `/stats/<stat name>` request.
 
 Example:
 
