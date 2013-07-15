@@ -46,9 +46,11 @@ Application.new('httpthumbnailer', port: 3100) do
 		class HTTPThumbniler < Controler
 			extend Stats
 			def_stats(
+				:workers,
 				:total_requests, 
 				:total_errors 
 			)
+			HTTPThumbniler.stats.incr_workers
 
 			raindrops_stats = Raindrops::Middleware::Stats.new
 			self.use Raindrops::Middleware, stats: raindrops_stats
