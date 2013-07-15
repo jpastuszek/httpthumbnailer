@@ -50,7 +50,6 @@ Application.new('httpthumbnailer', port: 3100) do
 				:total_requests, 
 				:total_errors 
 			)
-			HTTPThumbniler.stats.incr_workers
 
 			raindrops_stats = Raindrops::Middleware::Stats.new
 			self.use Raindrops::Middleware, stats: raindrops_stats
@@ -86,6 +85,10 @@ Application.new('httpthumbnailer', port: 3100) do
 		end
 
 		HTTPThumbniler
+	end
+
+	after_fork do |server, worker|
+		HTTPThumbniler.stats.incr_workers
 	end
 end
 
