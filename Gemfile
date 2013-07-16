@@ -1,4 +1,5 @@
 source "http://rubygems.org"
+ruby "1.9.3"
 
 gem "unicorn-cuba-base", "~> 1.0"
 gem "rmagick", "~> 2"
@@ -14,5 +15,6 @@ group :development do
   gem "httpclient", "~> 2.3"
   gem "rdoc", "~> 3.9"
   gem "multipart-parser", "~> 0.1.1"
+  gem "daemon", "~> 1.1"
 end
 
