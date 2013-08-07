@@ -231,11 +231,19 @@ Feature: Generating single thumbnail with PUT request
 	@hint
 	Scenario: Hint on input image mime type
 		Given test.jpg file content as request body
-		When I do PUT request http://localhost:3100/thumbnails/crop,16,16,png
+		When I do PUT request http://localhost:3100/thumbnail/crop,16,16,png
 		Then response status should be 200
 		And X-Input-Image-Content-Type header should be image/jpeg
 		Given test.png file content as request body
-		When I do PUT request http://localhost:3100/thumbnails/crop,16,16,png
+		When I do PUT request http://localhost:3100/thumbnail/crop,16,16,png
 		Then response status should be 200
 		And X-Input-Image-Content-Type header should be image/png
+
+	@hint
+	Scenario: Hint on input image size
+		Given test-large.jpg file content as request body
+		When I do PUT request http://localhost:3100/thumbnail/crop,16,16,png
+		Then response status should be 200
+		And X-Input-Image-Width header should be 9911
+		And X-Input-Image-Height header should be 14000
 

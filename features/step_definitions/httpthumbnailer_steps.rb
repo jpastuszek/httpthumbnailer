@@ -141,12 +141,23 @@ And /that image should be (.*) bit image/ do |bits|
 	@image.depth.should == bits.to_i
 end
 
-
 And /there should be no leaked images/ do
 	Integer(http_client.get_content("http://localhost:3100/stats/images_loaded").strip).should == 0
 end
 
 And /there should be maximum (.*) images loaded during single request/ do |max|
 	Integer(http_client.get_content("http://localhost:3100/stats/max_images_loaded").strip).should <= max.to_i
+end
+
+And /response body should be JSON encoded/ do
+	@json = JSON.load(@response.body)
+end
+
+And /response JSON should contain key (.*) of value (.*)/ do |key, value|
+	@json[key].should == value
+end
+
+And /response JSON should contain key (.*) of integer value (.*)/ do |key, value|
+	@json[key].should == value.to_i
 end
 

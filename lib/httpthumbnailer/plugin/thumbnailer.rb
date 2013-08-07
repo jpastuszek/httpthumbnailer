@@ -105,7 +105,7 @@ module Plugin
 				end
 			end
 
-			def_delegators :@image, :destroy!, :destroyed?, :mime_type
+			def_delegators :@image, :destroy!, :destroyed?, :mime_type, :base_columns, :base_rows
 
 			# needs to be seen as @image when returned in replace block
 			def equal?(image)
@@ -162,7 +162,8 @@ module Plugin
 			extend Stats
 			def_stats(
 				:total_images_loaded, 
-				:total_images_prescaled, 
+				:total_images_reloaded, 
+				:total_images_downscaled, 
 				:total_thumbnails_created, 
 				:images_loaded, 
 				:max_images_loaded, 
@@ -244,8 +245,8 @@ module Plugin
 			end
 
 			def load(io, options = {})
-				mw = options['max-width']
-				mh = options['max-height']
+				mw = options[:max_width]
+				mh = options[:max_height]
 				if mw and mh
 					mw = mw.to_i
 					mh = mh.to_i
@@ -270,12 +271,13 @@ module Plugin
 					end
 
 					image = images.first
-					if image.columns > image.base_columns or image.rows > image.base_rows
+					if image.columns > image.base_columns or image.rows > image.base_rows and not options[:no_reload]
 						log.warn "input image got upscaled from: #{image.base_columns}x#{image.base_rows} to #{image.columns}x#{image.rows}: reloading without max size hint!"
 						images.each do |other|
 							other.destroy!
 						end
 						images = Magick::Image.from_blob(blob)
+						Service.stats.incr_total_images_reloaded
 					end
 					blob = nil
 
@@ -287,12 +289,12 @@ module Plugin
 						Service.stats.incr_total_images_loaded
 						image.strip!
 					end.replace do |image|
-						if mw and mh
-							f = image.find_prescale_factor(mw, mh)
+						if mw and mh and not options[:no_downscale]
+							f = image.find_downscale_factor(mw, mh)
 							if f > 1
-								image = image.prescale(f)
-								log.info "prescaled image by factor of #{f}: #{image.inspect}"
-								Service.stats.incr_total_images_prescaled
+								image = image.downscale(f)
+								log.info "downscaled image by factor of #{f}: #{image.inspect}"
+								Service.stats.incr_total_images_downscaled
 							end
 						end
 						InputImage.new(image, @processing_methods)
@@ -380,14 +382,14 @@ class Magick::Image
 		end
 	end
 
-	def prescale(f)
+	def downscale(f)
 		sample(columns / f, rows / f)
 	end
 
-	def find_prescale_factor(max_width, max_height, factor = 1)
+	def find_downscale_factor(max_width, max_height, factor = 1)
 		new_factor = factor * 2
 		if columns / new_factor > max_width * 2 and rows / new_factor > max_height * 2
-			find_prescale_factor(max_width, max_height, factor * 2)
+			find_downscale_factor(max_width, max_height, factor * 2)
 		else
 			factor
 		end
