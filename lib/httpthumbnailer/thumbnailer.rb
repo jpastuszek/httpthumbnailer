@@ -23,7 +23,7 @@ class Thumbnailer < Controler
 				log.info "generating thumbnail: #{spec}"
 				input_image.thumbnail(spec) do |image|
 					write 200, image.mime_type, image.data, 
-						"X-Input-Image-Content-Type" => input_image.mime_type,
+						"X-Input-Image-Mime-Type" => input_image.mime_type,
 						"X-Input-Image-Width" => input_image.base_columns,
 						"X-Input-Image-Height" => input_image.base_rows
 				end
@@ -42,7 +42,7 @@ class Thumbnailer < Controler
 			thumbnailer.load(req.body, opts).use do |input_image|
 				log.info "original image loaded: #{input_image.mime_type}"
 				write_preamble 200, 
-					"X-Input-Image-Content-Type" => input_image.mime_type,
+					"X-Input-Image-Mime-Type" => input_image.mime_type,
 					"X-Input-Image-Width" => input_image.base_columns,
 					"X-Input-Image-Height" => input_image.base_rows
 
@@ -86,7 +86,7 @@ class Thumbnailer < Controler
 			thumbnailer.load(req.body, opts).use do |input_image|
 				log.info "image loaded and identified as: #{input_image.mime_type}"
 				write_json 200, {
-					'contentType' => input_image.mime_type,
+					'mimeType' => input_image.mime_type,
 					'width' => input_image.base_columns,
 					'height' => input_image.base_rows
 				}
