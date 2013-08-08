@@ -259,7 +259,7 @@ module Plugin
 					old_memory_limit = nil
 					borrowed_memory_limit = nil
 					if options.member?(:limit_memory)
-						borrowed_memory_limit = options[:limit_memory].borrow(options[:limit_memory].limit)
+						borrowed_memory_limit = options[:limit_memory].borrow(options[:limit_memory].limit, 'image magick')
 						old_memory_limit = set_limit(:memory, borrowed_memory_limit)
 					end
 
@@ -305,7 +305,7 @@ module Plugin
 				ensure
 					if old_memory_limit
 						set_limit(:memory, old_memory_limit)
-						options[:limit_memory].return(borrowed_memory_limit)
+						options[:limit_memory].return(borrowed_memory_limit, 'image magick')
 					end
 				end
 			end
