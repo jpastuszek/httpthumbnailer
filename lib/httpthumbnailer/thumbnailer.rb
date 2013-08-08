@@ -84,9 +84,10 @@ class Thumbnailer < Controler
 
 			# RMagick of v2.13.2 does not use ImageMagick's PingBlob so we have to actually load the image
 			thumbnailer.load(req.body, opts).use do |input_image|
-				log.info "image loaded and identified as: #{input_image.mime_type}"
+				mime_type = input_image.mime_type
+				log.info "image loaded and identified as: #{mime_type}"
 				write_json 200, {
-					'mimeType' => input_image.mime_type,
+					'mimeType' => mime_type,
 					'width' => input_image.base_columns,
 					'height' => input_image.base_rows
 				}

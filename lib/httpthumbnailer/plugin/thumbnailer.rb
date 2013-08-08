@@ -1,6 +1,21 @@
 require 'RMagick'
 require 'forwardable'
 
+# ImageMagick Image.mime_type is absolutely bunkers! It goes over file system to look for some strange files WTF?!
+# Also it cannot be used for thumbnails since they are not yet rendered to desired format
+# Here is stupid implementaiton
+module MimeType
+	def mime_type
+		#TODO: how do I do it better?
+		format = @format || @image.format
+		mime = case format
+			when 'JPG' then 'jpeg'
+			else format.downcase
+		end
+		"image/#{mime}"
+	end
+end
+
 module Plugin
 	module Thumbnailer
 		class UnsupportedMethodError < ArgumentError
@@ -105,7 +120,9 @@ module Plugin
 				end
 			end
 
-			def_delegators :@image, :destroy!, :destroyed?, :mime_type, :base_columns, :base_rows
+			def_delegators :@image, :destroy!, :destroyed?, :base_columns, :base_rows
+
+			include MimeType
 
 			# needs to be seen as @image when returned in replace block
 			def equal?(image)
@@ -132,15 +149,7 @@ module Plugin
 					end
 			end
 
-			def mime_type
-				#@image.mime_type cannot be used since it is raw crated image
-				#TODO: how do I do it better?
-				mime = case @format
-					when 'JPG' then 'jpeg'
-					else @format.downcase
-				end
-				"image/#{mime}"
-			end
+			include MimeType
 
 			private
 
