@@ -7,6 +7,7 @@ It is using [ImageMagick](http://www.imagemagick.org) or [GraphicsMagick](http:/
 ## Features
 
 * thumbnailing images with different aspect ratio keeping methods
+* identification of image foramt and size
 * support of many input and output formats
 * efficient API for generating multiple thumbnails from single input image with just one request
 * many image scaling and loading performance optimizations
@@ -140,6 +141,18 @@ HTTP Thumbnailer will generate 3 thumbnails:
 
 For detailed information about the API see [cucumber features](http://github.com/jpastuszek/httpthumbnailer/blob/master/features/thumbnails.feature).
 
+#### Identification API
+
+You can identify image mime type, width and height with **PUT** request to URI in format:
+
+    /identify
+
+Server will respond with **JSON** containing **contentType**, **width** and **height** fields:
+
+    {"contentType":"image/jpeg","width":1239,"height":1750}
+
+For detailed information about the API see [cucumber features](http://github.com/jpastuszek/httpthumbnailer/blob/master/features/identify.feature).
+
 ### Ruby API client
 
 To make it easier to use this server [httpthumbnailer-client](http://github.com/jpastuszek/httpthumbnailer-client) gem provides useful class.
@@ -197,7 +210,8 @@ total_errors: 1
 calling: 1
 writing: 0
 total_images_loaded: 115
-total_images_prescaled: 30
+total_images_reloaded: 30
+total_images_downscaled: 30
 total_thumbnails_created: 147
 images_loaded: 0
 max_images_loaded: 3
@@ -222,6 +236,10 @@ $ curl 127.0.0.1:3100/stats/total_write_multipart
 ## See also
 
 [HTTP Image Store](https://github.com/jpastuszek/httpimagestore) service is configurable image storage and processing HTTP API server that uses this service as thumbnailing backend. 
+
+## Known Issues
+
+* When 413 error is reported due to memory limit exhaustion the disk offloading won't work any more and only requests that can fit in the memory can be processed without getting 413 - this is due to a bug in ImageMagick v6.8.6-8 (2013-08-06 6.8.6-8) or less
 
 ## Contributing to HTTP Thumbnailer
  
