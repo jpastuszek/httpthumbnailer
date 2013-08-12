@@ -23,9 +23,11 @@ class Thumbnailer < Controler
 				log.info "generating thumbnail: #{spec}"
 				input_image.thumbnail(spec) do |image|
 					write 200, image.mime_type, image.data, 
+						"X-Image-Width" => image.width,
+						"X-Image-Height" => image.height,
 						"X-Input-Image-Mime-Type" => input_image.mime_type,
-						"X-Input-Image-Width" => input_image.base_columns,
-						"X-Input-Image-Height" => input_image.base_rows
+						"X-Input-Image-Width" => input_image.width,
+						"X-Input-Image-Height" => input_image.height
 				end
 			end
 		end
@@ -43,14 +45,16 @@ class Thumbnailer < Controler
 				log.info "original image loaded: #{input_image.mime_type}"
 				write_preamble 200, 
 					"X-Input-Image-Mime-Type" => input_image.mime_type,
-					"X-Input-Image-Width" => input_image.base_columns,
-					"X-Input-Image-Height" => input_image.base_rows
+					"X-Input-Image-Width" => input_image.width,
+					"X-Input-Image-Height" => input_image.height
 
 				thumbnail_specs.each do |spec|
 					log.info "generating thumbnail: #{spec}"
 					begin
 						input_image.thumbnail(spec) do |image|
-							write_part image.mime_type, image.data
+							write_part image.mime_type, image.data,
+								"X-Image-Width" => image.width,
+								"X-Image-Height" => image.height
 						end
 					rescue => error
 						case error
@@ -88,8 +92,8 @@ class Thumbnailer < Controler
 				log.info "image loaded and identified as: #{mime_type}"
 				write_json 200, {
 					'mimeType' => mime_type,
-					'width' => input_image.base_columns,
-					'height' => input_image.base_rows
+					'width' => input_image.width,
+					'height' => input_image.height
 				}
 			end
 		end

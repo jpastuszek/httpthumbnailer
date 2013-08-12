@@ -4,7 +4,15 @@ require 'forwardable'
 # ImageMagick Image.mime_type is absolutely bunkers! It goes over file system to look for some strange files WTF?!
 # Also it cannot be used for thumbnails since they are not yet rendered to desired format
 # Here is stupid implementaiton
-module MimeType
+module MetaData
+	def width
+		@image.columns
+	end
+
+	def height
+		@image.rows
+	end
+
 	def mime_type
 		#TODO: how do I do it better?
 		format = @format || @image.format
@@ -120,9 +128,18 @@ module Plugin
 				end
 			end
 
-			def_delegators :@image, :destroy!, :destroyed?, :base_columns, :base_rows
+			def_delegators :@image, :destroy!, :destroyed?
 
-			include MimeType
+			include MetaData
+
+			# We use base values since it might have been loaded with size hint and prescaled
+			def width
+				@image.base_columns
+			end
+
+			def height
+				@image.base_rows
+			end
 
 			# needs to be seen as @image when returned in replace block
 			def equal?(image)
@@ -149,7 +166,7 @@ module Plugin
 					end
 			end
 
-			include MimeType
+			include MetaData
 
 			private
 

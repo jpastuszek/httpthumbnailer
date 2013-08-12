@@ -9,11 +9,20 @@ Feature: Generating single thumbnail with PUT request
 	@test
 	Scenario: Single thumbnail
 		Given test.jpg file content as request body
-		When I do PUT request http://localhost:3100/thumbnail/crop,16,16,png
+		When I do PUT request http://localhost:3100/thumbnail/crop,16,24,png
 		Then response status should be 200
-		Then response should contain PNG image of size 16x16
+		Then response should contain PNG image of size 16x24
 		And that image should be 8 bit image
-		And response mime type should be image/png
+		And Content-Type header should be image/png
+		And X-Image-Width header should be 16
+		And X-Image-Height header should be 24
+		When I do PUT request http://localhost:3100/thumbnail/crop,16,24,jpeg
+		Then response status should be 200
+		Then response should contain JPEG image of size 16x24
+		And that image should be 8 bit image
+		And Content-Type header should be image/jpeg
+		And X-Image-Width header should be 16
+		And X-Image-Height header should be 24
 
 	@transparent
 	Scenario: Transparent image to JPEG handling - default background color white
@@ -228,7 +237,7 @@ Feature: Generating single thumbnail with PUT request
 		Then saved response body will be smaller than response body
 		Then response mime type should be image/png
 
-	@hint
+	@hint @input
 	Scenario: Hint on input image mime type
 		Given test.jpg file content as request body
 		When I do PUT request http://localhost:3100/thumbnail/crop,16,16,png
@@ -239,7 +248,7 @@ Feature: Generating single thumbnail with PUT request
 		Then response status should be 200
 		And X-Input-Image-Mime-Type header should be image/png
 
-	@hint
+	@hint @input
 	Scenario: Hint on input image size
 		Given test-large.jpg file content as request body
 		When I do PUT request http://localhost:3100/thumbnail/crop,16,16,png

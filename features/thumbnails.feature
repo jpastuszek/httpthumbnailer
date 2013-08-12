@@ -9,12 +9,14 @@ Feature: Generating set of thumbnails with single PUT request
 	@multipart
 	Scenario: Single thumbnail
 		Given test.jpg file content as request body
-		When I do PUT request http://localhost:3100/thumbnails/crop,16,16,png
+		When I do PUT request http://localhost:3100/thumbnails/crop,16,24,png
 		Then response status should be 200
 		And I should get multipart response
-		Then first part should contain PNG image of size 16x16
+		Then first part should contain PNG image of size 16x24
 		And that image should be 8 bit image
-		And first part mime type should be image/png
+		And first part Content-Type header should be image/png
+		And first part X-Image-Width header should be 16
+		And first part X-Image-Height header should be 24
 
 	@multipart
 	Scenario: Multiple thumbnails
@@ -23,11 +25,17 @@ Feature: Generating set of thumbnails with single PUT request
 		Then response status should be 200
 		And I should get multipart response
 		Then first part should contain PNG image of size 16x16
-		And first part mime type should be image/png
+		And first part Content-Type header should be image/png
+		And first part X-Image-Width header should be 16
+		And first part X-Image-Height header should be 16
 		Then second part should contain JPEG image of size 4x8
-		And second part mime type should be image/jpeg
+		And second part Content-Type header should be image/jpeg
+		And second part X-Image-Width header should be 4
+		And second part X-Image-Height header should be 8
 		Then third part should contain JPEG image of size 16x32
-		And third part mime type should be image/jpeg
+		And third part Content-Type header should be image/jpeg
+		And third part X-Image-Width header should be 16
+		And third part X-Image-Height header should be 32
 
 	@input_size
 	Scenario: Thumbnails of width or height input should have input image width or height
@@ -45,9 +53,9 @@ Feature: Generating set of thumbnails with single PUT request
 		When I do PUT request http://localhost:3100/thumbnails/crop,0,0,png/fit,0,0,jpeg/pad,0,0,jpeg
 		Then response status should be 200
 		And I should get multipart response
-		And first part content type should be text/plain
-		And second part content type should be text/plain
-		And third part content type should be text/plain
+		And first part Content-Type header should be text/plain
+		And second part Content-Type header should be text/plain
+		And third part Content-Type header should be text/plain
 
 	@error_handling
 	Scenario: Reporitng of bad thumbanil spec format - bad dimension value
@@ -88,12 +96,12 @@ Feature: Generating set of thumbnails with single PUT request
 		When I do PUT request http://localhost:3100/thumbnails/crop,4,4,png/blah,128,128,png
 		Then response status should be 200
 		And I should get multipart response
-		And second part content type should be text/plain
+		And second part Content-Type header should be text/plain
 		And second part body should be CRLF endend lines
 		"""
 		thumbnail method 'blah' is not supported
 		"""
-		And second part status should be 400
+		And second part Status header should be 400
 
 	@error_handling
 	Scenario: Reporitng of image thumbnailing errors
@@ -102,15 +110,15 @@ Feature: Generating set of thumbnails with single PUT request
 		Then response status should be 200
 		And I should get multipart response
 		Then first part should contain PNG image of size 16x16
-		And first part mime type should be image/png
-		And second part content type should be text/plain
+		And first part Content-Type header should be image/png
+		And second part Content-Type header should be text/plain
 		And second part body should be CRLF endend lines
 		"""
 		at least one image dimension is zero: 0x0
 		"""
-		And second part status should be 400
+		And second part Status header should be 400
 		Then third part should contain JPEG image of size 16x32
-		And third part mime type should be image/jpeg
+		And third part Content-Type header should be image/jpeg
 
 	@resources
 	Scenario: Memory limits exhausted while thumbnailing
@@ -119,17 +127,17 @@ Feature: Generating set of thumbnails with single PUT request
 		Then response status should be 200
 		And I should get multipart response
 		Then first part should contain PNG image of size 16x16
-		And first part mime type should be image/png
-		And second part content type should be text/plain
+		And first part Content-Type header should be image/png
+		And second part Content-Type header should be text/plain
 		And second part body should be CRLF endend lines like
 		"""
 		image too large: cache resources exhausted
 		"""
-		And second part status should be 413
+		And second part Status header should be 413
 		Then third part should contain JPEG image of size 16x32
-		And third part mime type should be image/jpeg
+		And third part Content-Type header should be image/jpeg
 
-	@hint
+	@hint @input
 	Scenario: Hint on input image mime type
 		Given test.jpg file content as request body
 		When I do PUT request http://localhost:3100/thumbnails/crop,16,16,png
@@ -140,7 +148,7 @@ Feature: Generating set of thumbnails with single PUT request
 		Then response status should be 200
 		And X-Input-Image-Mime-Type header should be image/png
 
-	@hint
+	@hint @input
 	Scenario: Hint on input image size
 		Given test-large.jpg file content as request body
 		When I do PUT request http://localhost:3100/thumbnails/crop,16,16,png

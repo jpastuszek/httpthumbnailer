@@ -16,7 +16,7 @@ When /I save response body/ do
 	@saved_response_body = @response.body
 end
 
-Then /(.*) header should be (.*)/ do |header, value|
+Then /^([^ ]+) header should be (.*)/ do |header, value|
 	@response.header[header].should_not be_empty
 	@response.header[header].first.should == value
 end
@@ -69,23 +69,15 @@ Then /response mime type should be (.*)/ do |mime_type|
 	step "response content type should be #{mime_type}"
 end
 
-Then /(.*) part mime type should be (.*)/ do |part, mime|
-	@response_multipart[part_no(part)].headers['content-type'].should == mime
+Then /^([^ ]+) part (.*) header should be (.*)/ do |part, header, value|
+	@response_multipart[part_no(part)].headers[header.downcase].should == value
 end
 
-Then /(.*) part content type should be (.*)/ do |part, content_type|
-	@response_multipart[part_no(part)].headers['content-type'].should == content_type
-end
-
-Then /(.*) part status should be (.*)/ do |part, status|
-	@response_multipart[part_no(part)].headers['status'].should == status
-end
-
-Then /(.*) part body should be CRLF endend lines$/ do |part, body|	
+Then /^([^ ]+) part body should be CRLF endend lines$/ do |part, body|	
 	@response_multipart[part_no(part)].body.should == body.gsub("\n", "\r\n")
 end
 
-Then /(.*) part body should be CRLF endend lines like$/ do |part, body|	
+Then /^([^ ]+) part body should be CRLF endend lines like$/ do |part, body|	
 	pbody = @response_multipart[part_no(part)].body
 	pbody.should match(body)
 end
