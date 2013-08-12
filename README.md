@@ -15,6 +15,16 @@ It is using [ImageMagick](http://www.imagemagick.org) or [GraphicsMagick](http:/
 * memory limits and disk memory offloading support
 * based on [Unicorn HTTP server](http://unicorn.bogomips.org) with UNIX socket communication support
 
+## Changelog
+
+### 1.1.0
+
+* added identification API for image mime type and size identification
+* stripping user meta data from input image further reducing output image size
+* providing image size headers for input image and all generated thumbnails
+* X-Input-Image-Content-Type header is now deprecated in favour of X-Input-Image-Content-Type
+* not using [ImageMagick](http://www.imagemagick.org) for input image mime type resolution since it is accessing disk and behaves very inefficiently
+
 ## Installing
 
 You will need the following system packages installed: `imagemagick`, `pkg-config` and `make`.
@@ -240,6 +250,7 @@ $ curl 127.0.0.1:3100/stats/total_write_multipart
 ## Known Issues
 
 * When 413 error is reported due to memory limit exhaustion the disk offloading won't work any more and only requests that can fit in the memory can be processed without getting 413 - this is due to a bug in ImageMagick v6.8.6-8 (2013-08-06 6.8.6-8) or less
+* Mime type generated for images may not be the official mime type assigned for given format; please let me know of any inconsistencies or send a patch to get better output in efficient way
 
 ## Contributing to HTTP Thumbnailer
  
