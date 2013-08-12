@@ -158,12 +158,12 @@ module Plugin
 			end
 
 			def data
-					format = @format
-					quality = @quality
-					@image.to_blob do
-						self.format = format
-						self.quality = quality if quality
-					end
+				format = @format
+				quality = @quality
+				@image.to_blob do
+					self.format = format
+					self.quality = quality if quality
+				end
 			end
 
 			include MetaData
@@ -313,7 +313,15 @@ module Plugin
 						end
 						log.info "loaded image: #{image.inspect}"
 						Service.stats.incr_total_images_loaded
+
+						# clean up the image
 						image.strip!
+						image.properties do |key, value|
+							log.debug "deleting user propertie '#{key}'"
+							image[key] = nil
+						end
+
+						image
 					end.replace do |image|
 						if mw and mh and not options[:no_downscale]
 							f = image.find_downscale_factor(mw, mh)
