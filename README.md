@@ -159,7 +159,7 @@ You can identify image mime type, width and height with **PUT** request to URI i
 
 Server will respond with **JSON** containing **contentType**, **width** and **height** fields:
 
-    {"contentType":"image/jpeg","width":1239,"height":1750}
+    {"mimeType":"image/jpeg","width":1239,"height":1750}
 
 For detailed information about the API see [cucumber features](http://github.com/jpastuszek/httpthumbnailer/blob/master/features/identify.feature).
 
