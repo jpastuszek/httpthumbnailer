@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Jakub Pastuszek"]
-  s.date = "2013-09-11"
+  s.date = "2013-10-07"
   s.description = "Provides HTTP API for thumbnailing images"
   s.email = "jpastuszek@gmail.com"
   s.executables = ["httpthumbnailer"]
@@ -76,7 +76,7 @@ Gem::Specification.new do |s|
     s.specification_version = 3
 
     if Gem::Version.new(Gem::VERSION) >= Gem::Version.new('1.2.0') then
-      s.add_runtime_dependency(%q<unicorn-cuba-base>, ["~> 1.1"])
+      s.add_runtime_dependency(%q<unicorn-cuba-base>, ["~> 1.1.1"])
       s.add_runtime_dependency(%q<rmagick>, ["~> 2"])
       s.add_development_dependency(%q<rspec>, ["~> 2.13"])
       s.add_development_dependency(%q<rspec-mocks>, ["~> 2.13"])
@@ -88,7 +88,7 @@ Gem::Specification.new do |s|
       s.add_development_dependency(%q<multipart-parser>, ["~> 0.1.1"])
       s.add_development_dependency(%q<daemon>, ["~> 1.1"])
     else
-      s.add_dependency(%q<unicorn-cuba-base>, ["~> 1.1"])
+      s.add_dependency(%q<unicorn-cuba-base>, ["~> 1.1.1"])
       s.add_dependency(%q<rmagick>, ["~> 2"])
       s.add_dependency(%q<rspec>, ["~> 2.13"])
       s.add_dependency(%q<rspec-mocks>, ["~> 2.13"])
@@ -101,7 +101,7 @@ Gem::Specification.new do |s|
       s.add_dependency(%q<daemon>, ["~> 1.1"])
     end
   else
-    s.add_dependency(%q<unicorn-cuba-base>, ["~> 1.1"])
+    s.add_dependency(%q<unicorn-cuba-base>, ["~> 1.1.1"])
     s.add_dependency(%q<rmagick>, ["~> 2"])
     s.add_dependency(%q<rspec>, ["~> 2.13"])
     s.add_dependency(%q<rspec-mocks>, ["~> 2.13"])
