@@ -71,7 +71,7 @@ Application.new('httpthumbnailer', port: 3100) do
 				end
 
 				on 'health_check' do
-					write_plain 200, 'OK'
+					write_plain 200, 'HTTP Thumbnailer OK'
 				end
 
 				on root do
