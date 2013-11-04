@@ -46,14 +46,14 @@ Then /I should get multipart response/ do
 	@response_multipart.should_not be_empty
 end
 
-Then /response body should be CRLF endend lines like/ do |body|	
+Then /response body should be CRLF endend lines like/ do |body|
 	@response.body.should match(body)
 	@response.body.each_line do |line|
 		line[-2,2].should == "\r\n"
 	end
 end
 
-Then /response body should be CRLF endend lines$/ do |body|	
+Then /response body should be CRLF endend lines$/ do |body|
 	@response.body.should == body.gsub("\n", "\r\n") + "\r\n"
 end
 
@@ -73,11 +73,11 @@ Then /^([^ ]+) part (.*) header should be (.*)/ do |part, header, value|
 	@response_multipart[part_no(part)].headers[header.downcase].should == value
 end
 
-Then /^([^ ]+) part body should be CRLF endend lines$/ do |part, body|	
+Then /^([^ ]+) part body should be CRLF endend lines$/ do |part, body|
 	@response_multipart[part_no(part)].body.should == body.gsub("\n", "\r\n")
 end
 
-Then /^([^ ]+) part body should be CRLF endend lines like$/ do |part, body|	
+Then /^([^ ]+) part body should be CRLF endend lines like$/ do |part, body|
 	pbody = @response_multipart[part_no(part)].body
 	pbody.should match(body)
 end
@@ -130,7 +130,11 @@ And /that image pixel at (.*)x(.*) should be of color (.*)/ do |x, y, color|
 end
 
 And /that image should be (.*) bit image/ do |bits|
-	@image.depth.should == bits.to_i
+	if @image.depth < 8
+		(@image.depth * 8).should == bits.to_i # newer versions return 1 for 8 bit?!
+	else
+		@image.depth.should == bits.to_i
+	end
 end
 
 And /there should be no leaked images/ do
