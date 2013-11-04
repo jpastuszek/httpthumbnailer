@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = "httpthumbnailer"
-  s.version = "1.1.1"
+  s.version = "1.1.2"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Jakub Pastuszek"]
-  s.date = "2013-10-07"
+  s.date = "2013-11-04"
   s.description = "Provides HTTP API for thumbnailing images"
   s.email = "jpastuszek@gmail.com"
   s.executables = ["httpthumbnailer"]
@@ -19,6 +19,12 @@ Gem::Specification.new do |s|
   ]
   s.files = [
     ".document",
+    ".idea/encodings.xml",
+    ".idea/httpthumbnailer.iml",
+    ".idea/misc.xml",
+    ".idea/modules.xml",
+    ".idea/scopes/scope_settings.xml",
+    ".idea/vcs.xml",
     ".rspec",
     "Gemfile",
     "Gemfile.lock",
@@ -82,7 +88,7 @@ Gem::Specification.new do |s|
       s.add_development_dependency(%q<rspec-mocks>, ["~> 2.13"])
       s.add_development_dependency(%q<cucumber>, [">= 0"])
       s.add_development_dependency(%q<capybara>, ["~> 1.1"])
-      s.add_development_dependency(%q<jeweler>, ["~> 1.8.4"])
+      s.add_development_dependency(%q<jeweler>, ["~> 1.8.8"])
       s.add_development_dependency(%q<httpclient>, ["~> 2.3"])
       s.add_development_dependency(%q<rdoc>, ["~> 3.9"])
       s.add_development_dependency(%q<multipart-parser>, ["~> 0.1.1"])
@@ -94,7 +100,7 @@ Gem::Specification.new do |s|
       s.add_dependency(%q<rspec-mocks>, ["~> 2.13"])
       s.add_dependency(%q<cucumber>, [">= 0"])
       s.add_dependency(%q<capybara>, ["~> 1.1"])
-      s.add_dependency(%q<jeweler>, ["~> 1.8.4"])
+      s.add_dependency(%q<jeweler>, ["~> 1.8.8"])
       s.add_dependency(%q<httpclient>, ["~> 2.3"])
       s.add_dependency(%q<rdoc>, ["~> 3.9"])
       s.add_dependency(%q<multipart-parser>, ["~> 0.1.1"])
@@ -107,7 +113,7 @@ Gem::Specification.new do |s|
     s.add_dependency(%q<rspec-mocks>, ["~> 2.13"])
     s.add_dependency(%q<cucumber>, [">= 0"])
     s.add_dependency(%q<capybara>, ["~> 1.1"])
-    s.add_dependency(%q<jeweler>, ["~> 1.8.4"])
+    s.add_dependency(%q<jeweler>, ["~> 1.8.8"])
     s.add_dependency(%q<httpclient>, ["~> 2.3"])
     s.add_dependency(%q<rdoc>, ["~> 3.9"])
     s.add_dependency(%q<multipart-parser>, ["~> 0.1.1"])
