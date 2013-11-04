@@ -169,6 +169,17 @@ Feature: Generating single thumbnail with PUT request
 		at least one image dimension is zero: 0x0
 		"""
 
+	@error_handling
+	Scenario: Reporitng of bad color value
+		Given test.jpg file content as request body
+		When I do PUT request http://localhost:3100/thumbnail/pad,240,200,input,background-color:ff11
+		Then response status should be 400
+		And response content type should be text/plain
+		And response body should be CRLF endend lines
+		"""
+		invalid color name: ff11
+		"""
+
 	@optimization
 	Scenario: Handing of large image data - possible thanks to loading size optimization
 		Given test-large.jpg file content as request body

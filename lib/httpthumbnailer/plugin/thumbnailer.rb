@@ -50,6 +50,12 @@ module Plugin
 			end
 		end
 
+		class InvalidColorNameError < ArgumentError
+			def initialize(color)
+				super("invalid color name: #{color}")
+			end
+		end
+
 		module ImageProcessing
 			def replace
 				@use_count ||= 0
@@ -187,13 +193,13 @@ module Plugin
 
 			extend Stats
 			def_stats(
-				:total_images_loaded, 
-				:total_images_reloaded, 
-				:total_images_downscaled, 
-				:total_thumbnails_created, 
-				:images_loaded, 
-				:max_images_loaded, 
-				:max_images_loaded_worker, 
+				:total_images_loaded,
+				:total_images_reloaded,
+				:total_images_downscaled,
+				:total_thumbnails_created,
+				:images_loaded,
+				:max_images_loaded,
+				:max_images_loaded_worker,
 				:total_images_created,
 				:total_images_destroyed,
 				:total_images_created_from_blob,
@@ -396,7 +402,11 @@ class Magick::Image
 
 	def render_on_background(background_color, width = nil, height = nil)
 		Magick::Image.new(width || self.columns, height || self.rows) {
-			self.background_color = background_color
+			begin
+				self.background_color = background_color
+			rescue ArgumentError
+				raise Plugin::Thumbnailer::InvalidColorNameError.new(background_color)
+			end
 			self.depth = 8
 		}.replace do |background|
 			background.composite!(self, Magick::CenterGravity, Magick::OverCompositeOp)
