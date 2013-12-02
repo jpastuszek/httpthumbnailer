@@ -252,6 +252,11 @@ $ curl 127.0.0.1:3100/stats/total_write_multipart
 * When 413 error is reported due to memory limit exhaustion the disk offloading won't work any more and only requests that can fit in the memory can be processed without getting 413 - this is due to a bug in ImageMagick v6.8.6-8 (2013-08-06 6.8.6-8) or less
 * Mime type generated for images may not be the official mime type assigned for given format; please let me know of any inconsistencies or send a patch to get better output in efficient way
 
+## TODO
+
+* Save input image data for images that has failed processing to allow further investigation
+* Allow for specifying different quality values for different image types, e.g.: quality[jpeg]:97,quality[png]:85
+
 ## Contributing to HTTP Thumbnailer
  
 * Check out the latest master to make sure the feature hasn't been implemented or the bug hasn't been fixed yet
