@@ -28,7 +28,7 @@ describe Plugin::Thumbnailer::Service do
 		service
 	end
 
-	let :square_odd do
+	def square_odd
 		subject.load(TestImage.io('square_odd.png'))
 	end
 
@@ -77,6 +77,26 @@ describe Plugin::Thumbnailer::Service do
 				end
 				diff_stat(:total_images_created_resize).should == 1
 				diff_stat(:total_images_created_crop).should == 1
+			end
+
+			it 'should crop to even and odd proportions' do
+				square_odd.thumbnail(ThumbnailSpec.from_uri('crop,33,33,png')) do |thumbnail|
+					thumbnail.format.should == 'PNG'
+					thumbnail.width.should == 33
+					thumbnail.height.should == 33
+				end
+
+				square_odd.thumbnail(ThumbnailSpec.from_uri('crop,91,91,png')) do |thumbnail|
+					thumbnail.format.should == 'PNG'
+					thumbnail.width.should == 91
+					thumbnail.height.should == 91
+				end
+
+				square_odd.thumbnail(ThumbnailSpec.from_uri('crop,33,50,png')) do |thumbnail|
+					thumbnail.format.should == 'PNG'
+					thumbnail.width.should == 33
+					thumbnail.height.should == 50
+				end
 			end
 		end
 	end
