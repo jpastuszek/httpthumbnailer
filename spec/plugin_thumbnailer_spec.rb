@@ -6,30 +6,16 @@ require 'httpthumbnailer/thumbnail_specs'
 describe Plugin::Thumbnailer::Service do
 	subject do
 		service = Plugin::Thumbnailer::Service.new
-
-		service.processing_method('crop') do |image, width, height, options|
-			image.resize_to_fill(width, height) if image.columns != width or image.rows != height
-		end
-
-		service.processing_method('fit') do |image, width, height, options|
-			image.resize_to_fit(width, height) if image.columns != width or image.rows != height
-		end
-
-		service.processing_method('pad') do |image, width, height, options|
-			image.resize_to_fit(width, height).replace do |resize|
-				resize.render_on_background(options['background-color'], width, height)
-			end if image.columns != width or image.rows != height
-		end
-
-		service.processing_method('limit') do |image, width, height, options|
-			image.resize_to_fit(width, height) if image.columns > width or image.rows > height
-		end
-
+		service.setup_default_methods
 		service
 	end
 
 	def square_odd
 		subject.load(TestImage.io('square_odd.png'))
+	end
+
+	def square_even
+		subject.load(TestImage.io('square_even.png'))
 	end
 
 	before :each do
@@ -96,6 +82,121 @@ describe Plugin::Thumbnailer::Service do
 					thumbnail.format.should == 'PNG'
 					thumbnail.width.should == 33
 					thumbnail.height.should == 50
+				end
+			end
+
+			it 'should crop with upwards scaling' do
+				square_odd.thumbnail(ThumbnailSpec.from_uri('crop,198,99,png')) do |thumbnail|
+					thumbnail.format.should == 'PNG'
+					thumbnail.width.should == 198
+					thumbnail.height.should == 99
+					#show_blob thumbnail.data
+				end
+			end
+
+			describe 'floating' do
+				it 'should crop with floating horizontally' do
+					square_even.thumbnail(ThumbnailSpec.from_uri('crop,100,200,png')) do |thumbnail|
+						thumbnail.format.should == 'PNG'
+						thumbnail.width.should == 100
+						thumbnail.height.should == 200
+						#show_blob thumbnail.data
+					end
+
+					square_even.thumbnail(ThumbnailSpec.from_uri('crop,100,200,png,float-x:1.0')) do |thumbnail|
+						thumbnail.format.should == 'PNG'
+						thumbnail.width.should == 100
+						thumbnail.height.should == 200
+						#show_blob thumbnail.data
+					end
+
+					square_even.thumbnail(ThumbnailSpec.from_uri('crop,100,200,png,float-x:0.0')) do |thumbnail|
+						thumbnail.format.should == 'PNG'
+						thumbnail.width.should == 100
+						thumbnail.height.should == 200
+						#show_blob thumbnail.data
+					end
+
+					square_even.thumbnail(ThumbnailSpec.from_uri('crop,100,200,png,float-x:0.8')) do |thumbnail|
+						thumbnail.format.should == 'PNG'
+						thumbnail.width.should == 100
+						thumbnail.height.should == 200
+						#show_blob thumbnail.data
+					end
+
+					square_even.thumbnail(ThumbnailSpec.from_uri('crop,100,200,png,float-x:-9.8')) do |thumbnail|
+						thumbnail.format.should == 'PNG'
+						thumbnail.width.should == 100
+						thumbnail.height.should == 200
+						#show_blob thumbnail.data
+					end
+
+					square_even.thumbnail(ThumbnailSpec.from_uri('crop,100,200,png,float-x:3')) do |thumbnail|
+						thumbnail.format.should == 'PNG'
+						thumbnail.width.should == 100
+						thumbnail.height.should == 200
+						#show_blob thumbnail.data
+					end
+				end
+
+				it 'should crop with floating vertically' do
+					square_even.thumbnail(ThumbnailSpec.from_uri('crop,200,100,png')) do |thumbnail|
+						thumbnail.format.should == 'PNG'
+						thumbnail.width.should == 200
+						thumbnail.height.should == 100
+						#show_blob thumbnail.data
+					end
+
+					square_even.thumbnail(ThumbnailSpec.from_uri('crop,200,100,png,float-y:1.0')) do |thumbnail|
+						thumbnail.format.should == 'PNG'
+						thumbnail.width.should == 200
+						thumbnail.height.should == 100
+						#show_blob thumbnail.data
+					end
+
+					square_even.thumbnail(ThumbnailSpec.from_uri('crop,200,100,png,float-y:0.0')) do |thumbnail|
+						thumbnail.format.should == 'PNG'
+						thumbnail.width.should == 200
+						thumbnail.height.should == 100
+						#show_blob thumbnail.data
+					end
+
+					square_even.thumbnail(ThumbnailSpec.from_uri('crop,200,100,png,float-y:0.8')) do |thumbnail|
+						thumbnail.format.should == 'PNG'
+						thumbnail.width.should == 200
+						thumbnail.height.should == 100
+						#show_blob thumbnail.data
+					end
+
+					square_even.thumbnail(ThumbnailSpec.from_uri('crop,200,100,png,float-y:-9.8')) do |thumbnail|
+						thumbnail.format.should == 'PNG'
+						thumbnail.width.should == 200
+						thumbnail.height.should == 100
+						#show_blob thumbnail.data
+					end
+
+					square_even.thumbnail(ThumbnailSpec.from_uri('crop,200,100,png,float-y:3')) do |thumbnail|
+						thumbnail.format.should == 'PNG'
+						thumbnail.width.should == 200
+						thumbnail.height.should == 100
+						#show_blob thumbnail.data
+					end
+				end
+
+				it 'should crop with floating horizontally and vertically' do
+					square_even.thumbnail(ThumbnailSpec.from_uri('crop,100,200,png,float-x:0.25,float-y:0.25')) do |thumbnail|
+						thumbnail.format.should == 'PNG'
+						thumbnail.width.should == 100
+						thumbnail.height.should == 200
+						#show_blob thumbnail.data
+					end
+
+					square_even.thumbnail(ThumbnailSpec.from_uri('crop,200,100,png,float-x:0.25,float-y:0.25')) do |thumbnail|
+						thumbnail.format.should == 'PNG'
+						thumbnail.width.should == 200
+						thumbnail.height.should == 100
+						#show_blob thumbnail.data
+					end
 				end
 			end
 		end

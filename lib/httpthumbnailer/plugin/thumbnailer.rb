@@ -362,6 +362,26 @@ module Plugin
 				log.info "changed #{limit} limit from #{old} to #{value} bytes"
 				old
 			end
+
+			def setup_default_methods
+				processing_method('crop') do |image, width, height, options|
+					image.resize_to_fill(width, height, options['float-x'], options['float-y']) if image.columns != width or image.rows != height
+				end
+
+				processing_method('fit') do |image, width, height, options|
+					image.resize_to_fit(width, height) if image.columns != width or image.rows != height
+				end
+
+				processing_method('pad') do |image, width, height, options|
+					image.resize_to_fit(width, height).replace do |resize|
+						resize.render_on_background(options['background-color'], width, height)
+					end if image.columns != width or image.rows != height
+				end
+
+				processing_method('limit') do |image, width, height, options|
+					image.resize_to_fit(width, height) if image.columns > width or image.rows > height
+				end
+			end
 		end
 
 		def self.setup(app)
@@ -375,23 +395,7 @@ module Plugin
 				limit_disk: app.settings[:limit_disk]
 			)
 
-			@@service.processing_method('crop') do |image, width, height, options|
-				image.resize_to_fill(width, height) if image.columns != width or image.rows != height
-			end
-
-			@@service.processing_method('fit') do |image, width, height, options|
-				image.resize_to_fit(width, height) if image.columns != width or image.rows != height
-			end
-
-			@@service.processing_method('pad') do |image, width, height, options|
-				image.resize_to_fit(width, height).replace do |resize|
-					resize.render_on_background(options['background-color'], width, height)
-				end if image.columns != width or image.rows != height
-			end
-
-			@@service.processing_method('limit') do |image, width, height, options|
-				image.resize_to_fit(width, height) if image.columns > width or image.rows > height
-			end
+			@@service.setup_default_methods
 		end
 
 		def thumbnailer
@@ -417,15 +421,34 @@ class Magick::Image
 	end
 
 	# non coping version
-	def resize_to_fill(ncols, nrows = nil, gravity = Magick::CenterGravity)
+	def resize_to_fill(ncols, nrows = nil, float_x = nil, float_y = nil)
+		# default to square
 		nrows ||= ncols
+
+		# center by default
+		float_x ||= 0.5
+		float_y ||= 0.5
+
+		float_x = float_x.to_f
+		float_y = float_y.to_f
+
 		return if ncols == columns and nrows == rows
 
 		scale = [ncols / columns.to_f, nrows / rows.to_f].max
 
 		resize((scale * columns).ceil, (scale * rows).ceil).replace do |image|
 			next if ncols == image.columns and nrows == image.rows
-			image.crop(gravity, ncols, nrows, true)
+
+			x = ((image.columns - ncols) * float_x).ceil
+			y = ((image.rows - nrows) * float_y).ceil
+
+			x = 0 if x < 0
+			x = ncols - 1 if x >= ncols
+
+			y = 0 if y < 0
+			y = nrows - 1 if y >= nrows
+
+			image.crop(x, y, ncols, nrows, true)
 		end
 	end
 
