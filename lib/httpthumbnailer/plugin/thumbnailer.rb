@@ -1,9 +1,6 @@
 require 'RMagick'
 require 'forwardable'
 
-# ImageMagick Image.mime_type is absolutely bunkers! It goes over file system to look for some strange files WTF?!
-# Also it cannot be used for thumbnails since they are not yet rendered to desired format
-# Here is stupid implementaiton
 module MetaData
 	def width
 		@image.columns
@@ -13,6 +10,9 @@ module MetaData
 		@image.rows
 	end
 
+	# ImageMagick Image.mime_type is absolutely bunkers! It goes over file system to look for some strange files WTF?!
+	# Also it cannot be used for thumbnails since they are not yet rendered to desired format
+	# Here is stupid implementation
 	def mime_type
 		#TODO: how do I do it better?
 		format = @format || @image.format
@@ -94,7 +94,7 @@ module Plugin
 
 			def thumbnail(spec)
 				spec = spec.dup
-				# default backgraud is white
+				# default background is white
 				spec.options['background-color'] = spec.options.fetch('background-color', 'white').sub(/^0x/, '#')
 
 				width = spec.width == :input ? @image.columns : spec.width
@@ -134,7 +134,7 @@ module Plugin
 				end
 			end
 
-			def_delegators :@image, :destroy!, :destroyed?
+			def_delegators :@image, :destroy!, :destroyed?, :format
 
 			include MetaData
 
@@ -155,6 +155,7 @@ module Plugin
 
 		class Thumbnail
 			include ClassLogging
+			extend Forwardable
 
 			def initialize(image, format, options = {})
 				@image = image
@@ -162,6 +163,8 @@ module Plugin
 				@quality = (options['quality'] or default_quality(format))
 				@quality &&= @quality.to_i
 			end
+
+			def_delegators :@image, :format
 
 			def data
 				format = @format
@@ -416,13 +419,13 @@ class Magick::Image
 	# non coping version
 	def resize_to_fill(ncols, nrows = nil, gravity = Magick::CenterGravity)
 		nrows ||= ncols
-		if ncols != columns or nrows != rows
-			scale = [ncols / columns.to_f, nrows / rows.to_f].max
-			resize(scale * columns + 0.5, scale * rows + 0.5).replace do |image|
-				image.crop(gravity, ncols, nrows, true) if ncols != columns or nrows != rows
-			end
-		else
-			crop(gravity, ncols, nrows, true) if ncols != columns or nrows != rows
+		return if ncols == columns and nrows == rows
+
+		scale = [ncols / columns.to_f, nrows / rows.to_f].max
+
+		resize((scale * columns).ceil, (scale * rows).ceil).replace do |image|
+			next if ncols == image.columns and nrows == image.rows
+			image.crop(gravity, ncols, nrows, true)
 		end
 	end
 
