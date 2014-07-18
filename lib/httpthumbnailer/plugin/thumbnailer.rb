@@ -160,18 +160,27 @@ module Plugin
 			def initialize(image, format, options = {})
 				@image = image
 				@format = format
+
 				@quality = (options['quality'] or default_quality(format))
 				@quality &&= @quality.to_i
+
+				@interlace = (options['interlace'] or 'NoInterlace')
+				fail "unsupported interlace: #{@interlace}" unless Magick::InterlaceType.values.map(&:to_s).include? @interlace
+				@interlace = Magick.const_get @interlace.to_sym
 			end
 
 			def_delegators :@image, :format
 
 			def data
+				# export class variables to local scope
 				format = @format
 				quality = @quality
+				interlace = @interlace
+
 				@image.to_blob do
 					self.format = format
 					self.quality = quality if quality
+					self.interlace = interlace
 				end
 			end
 
