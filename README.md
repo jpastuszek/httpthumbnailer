@@ -120,7 +120,7 @@ Following options can be used with thumbnail specification:
 * `quality` - set output image quality; this is format specific: for JPEG 0 is maximum compression and 100 is maximum quality, for PNG first digit is zlib compression level and second one is filter level
 * `background-color` - color in HTML notation or textual description ('red', 'green' etc.) used for background when processing transparent images or padding; by default white background is used
 * `float-x` and `float-y` - value between 0.0 and 1.0; can be used with `crop` operation to move cropping view left to right or top to bottom (0.0 to 1.0) within the resized image; both default to 0.5 centering the cropping view
-* `interlace` - one of `UndefinedInterlace`, `NoInterlace`, `LineInterlace`, `PlaneInterlace`, `PartitionInterlace`, `GIFInterlace`, `JPEGInterlace`, `PNGInterlace`; some formats support interlace output format; use `JPEGInterlace` or `LineInterlace` or `PlaneInterlace` with `jpeg` format to produce progressive JPEG; defaults to `NoInterlace`
+* `interlace` - one of `UndefinedInterlace`, `NoInterlace`, `LineInterlace`, `PlaneInterlace`, `PartitionInterlace`, `GIFInterlace`, `JPEGInterlace`, `PNGInterlace`; some formats support interlaced output format; use `JPEGInterlace` or `LineInterlace` or `PlaneInterlace` with `jpeg` format to produce progressive JPEG; defaults to `NoInterlace`
 
 ### API
 
