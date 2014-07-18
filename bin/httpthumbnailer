@@ -47,8 +47,8 @@ Application.new('httpthumbnailer', port: 3100) do
 			extend Stats
 			def_stats(
 				:workers,
-				:total_requests, 
-				:total_errors 
+				:total_requests,
+				:total_errors
 			)
 
 			raindrops_stats = Raindrops::Middleware::Stats.new
@@ -65,7 +65,7 @@ Application.new('httpthumbnailer', port: 3100) do
 					HTTPThumbniler.stats.incr_total_errors
 					run ErrorReporter
 				end
-				
+
 				on 'stats' do
 					run StatsReporter
 				end
