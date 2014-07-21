@@ -33,17 +33,17 @@ Application.new('httpthumbnailer', port: 3100) do
 			exit 0
 		end
 
-		Controler.settings[:optimization] = (not settings.no_optimization)
-		Controler.settings[:limit_memory] = settings.limit_memory * 1024**2
-		Controler.settings[:limit_map] = settings.limit_disk * 1024**2
-		Controler.settings[:limit_disk] = settings.limit_disk * 1024**2
+		Controller.settings[:optimization] = (not settings.no_optimization)
+		Controller.settings[:limit_memory] = settings.limit_memory * 1024**2
+		Controller.settings[:limit_map] = settings.limit_disk * 1024**2
+		Controller.settings[:limit_disk] = settings.limit_disk * 1024**2
 	end
 
 	main do |settings|
 		require 'httpthumbnailer/error_reporter'
 		require 'httpthumbnailer/thumbnailer'
 
-		class HTTPThumbniler < Controler
+		class HTTPThumbniler < Controller
 			extend Stats
 			def_stats(
 				:workers,

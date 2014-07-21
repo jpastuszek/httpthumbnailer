@@ -1,7 +1,7 @@
 require 'httpthumbnailer/plugin/thumbnailer'
 require 'httpthumbnailer/thumbnail_specs'
 
-class Thumbnailer < Controler
+class Thumbnailer < Controller
 	self.plugin Plugin::Thumbnailer
 
 	self.define do
@@ -22,7 +22,7 @@ class Thumbnailer < Controler
 
 				log.info "generating thumbnail: #{spec}"
 				input_image.thumbnail(spec) do |image|
-					write 200, image.mime_type, image.data, 
+					write 200, image.mime_type, image.data,
 						"X-Image-Width" => image.width,
 						"X-Image-Height" => image.height,
 						"X-Input-Image-Mime-Type" => input_image.mime_type,
@@ -43,7 +43,7 @@ class Thumbnailer < Controler
 
 			thumbnailer.load(req.body, opts).use do |input_image|
 				log.info "original image loaded: #{input_image.mime_type}"
-				write_preamble 200, 
+				write_preamble 200,
 					"X-Input-Image-Mime-Type" => input_image.mime_type,
 					"X-Input-Image-Width" => input_image.width,
 					"X-Input-Image-Height" => input_image.height

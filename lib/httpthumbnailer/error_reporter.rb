@@ -1,4 +1,4 @@
-class ErrorReporter < Controler
+class ErrorReporter < Controller
 	self.define do
 		on error Plugin::Thumbnailer::UnsupportedMediaTypeError do |error|
 			write_error 415, error
