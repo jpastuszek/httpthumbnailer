@@ -452,10 +452,10 @@ class Magick::Image
 			y = ((image.rows - nrows) * float_y).ceil
 
 			x = 0 if x < 0
-			x = ncols - 1 if x >= ncols
+			x = (image.columns - ncols) if x > (image.columns - ncols)
 
 			y = 0 if y < 0
-			y = nrows - 1 if y >= nrows
+			y = (image.rows - nrows) if y >= (image.rows - nrows)
 
 			image.crop(x, y, ncols, nrows, true)
 		end
