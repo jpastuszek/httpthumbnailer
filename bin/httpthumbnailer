@@ -30,6 +30,9 @@ Application.new('httpthumbnailer', port: 3100) do
 			puts
 			puts "Output formats:"
 			puts "\t#{Plugin::Thumbnailer::Service.output_formats.join(' ')}"
+			puts
+			puts "Supported Interlace:"
+			puts "\t#{Magick::InterlaceType.values.map(&:to_s).join(' ')}"
 			exit 0
 		end
 
