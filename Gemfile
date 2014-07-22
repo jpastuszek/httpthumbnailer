@@ -1,7 +1,8 @@
 source "http://rubygems.org"
 ruby "1.9.3"
 
-gem "unicorn-cuba-base", "~> 1.1.1"
+gem "unicorn-cuba-base", "~> 1.2.0"
+#gem "unicorn-cuba-base", path: "../unicorn-cuba-base"
 gem "rmagick", "~> 2"
 
 # Add dependencies to develop your gem here.
