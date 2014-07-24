@@ -20,6 +20,8 @@ It is using [ImageMagick](http://www.imagemagick.org) or [GraphicsMagick](http:/
 ### 1.2.0
 * added `float-x` and `float-y` option support
 * added `interlace` option support
+* syslog logging
+* transaction ID tracking
 
 ### 1.1.0
 
