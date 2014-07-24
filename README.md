@@ -96,6 +96,11 @@ If running as root you can use `--user` option to specify user with whose privil
 
 Additionally `httpthumbnailer` will log requests in [common NCSA format](http://en.wikipedia.org/wiki/Common_Log_Format) to `httpthumbnailer_access.log` file. Use `--access-log-file` option to change location of access log.
 
+Syslog logging can be enabled with `--syslog-facility` option followed by name of syslog facility to use. When enabled log files are not created and both application logs and access logs are sent to syslog. 
+Access logs will gain meta information that will include `type="http-access"` that can be used to filter access log entries out from application log entries.
+
+With `--xid-header` option name of HTTP request header can be specified. Value of this header will be logged in meta information tag `xid` along side all request related log entries.
+
 ### Supported operations
 
 As operation type you can select one of the following options:
@@ -119,7 +124,7 @@ Width and height values are interpreted depending on operation.
 Following options can be used with thumbnail specification:
 * `quality` - set output image quality; this is format specific: for JPEG 0 is maximum compression and 100 is maximum quality, for PNG first digit is zlib compression level and second one is filter level
 * `background-color` - color in HTML notation or textual description ('red', 'green' etc.) used for background when processing transparent images or padding; by default white background is used
-* `float-x` and `float-y` - value between 0.0 and 1.0; can be used with `crop` operation to move cropping view left to right or top to bottom (0.0 to 1.0) within the resized image; both default to 0.5 centering the cropping view
+* `float-x` and `float-y` - value between 0.0 and 1.0; can be used with `crop` and `pad` operations to move cropping view or image over background left to right or top to bottom (0.0 to 1.0); both default to 0.5 centering the view or image
 * `interlace` - one of `UndefinedInterlace`, `NoInterlace`, `LineInterlace`, `PlaneInterlace`, `PartitionInterlace`, `GIFInterlace`, `JPEGInterlace`, `PNGInterlace`; some formats support interlaced output format; use `JPEGInterlace` or `LineInterlace` or `PlaneInterlace` with `jpeg` format to produce progressive JPEG; defaults to `NoInterlace`
 
 ### API
