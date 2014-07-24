@@ -374,7 +374,7 @@ module Plugin
 
 			def setup_default_methods
 				processing_method('crop') do |image, width, height, options|
-					image.resize_to_fill(width, height, options['float-x'], options['float-y']) if image.columns != width or image.rows != height
+					image.resize_to_fill(width, height, (Float(options['float-x']) rescue 0.5), (Float(options['float-y']) rescue 0.5)) if image.columns != width or image.rows != height
 				end
 
 				processing_method('fit') do |image, width, height, options|
@@ -383,7 +383,7 @@ module Plugin
 
 				processing_method('pad') do |image, width, height, options|
 					image.resize_to_fit(width, height).replace do |resize|
-						resize.render_on_background(options['background-color'], width, height)
+						resize.render_on_background(options['background-color'], width, height, (Float(options['float-x']) rescue 0.5), (Float(options['float-y']) rescue 0.5))
 					end if image.columns != width or image.rows != height
 				end
 
@@ -416,8 +416,16 @@ end
 class Magick::Image
 	include Plugin::Thumbnailer::ImageProcessing
 
-	def render_on_background(background_color, width = nil, height = nil)
-		Magick::Image.new(width || self.columns, height || self.rows) {
+	def render_on_background(background_color, width = nil, height = nil, float_x = 0.5, float_y = 0.5)
+		# default to image size
+		width ||= self.columns
+		height ||= self.rows
+
+		# make sure we have enough background to fit image on top of it
+		width = self.columns if width < self.columns
+		height = self.rows if height < self.rows
+
+		Magick::Image.new(width, height) {
 			begin
 				self.background_color = background_color
 			rescue ArgumentError
@@ -425,39 +433,22 @@ class Magick::Image
 			end
 			self.depth = 8
 		}.replace do |background|
-			background.composite!(self, Magick::CenterGravity, Magick::OverCompositeOp)
+			background.composite!(self, *background.float_to_offset(self.columns, self.rows, float_x, float_y), Magick::OverCompositeOp)
 		end
 	end
 
 	# non coping version
-	def resize_to_fill(ncols, nrows = nil, float_x = nil, float_y = nil)
+	def resize_to_fill(width, height = nil, float_x = 0.5, float_y = 0.5)
 		# default to square
-		nrows ||= ncols
+		height ||= width
 
-		# center by default
-		float_x ||= 0.5
-		float_y ||= 0.5
+		return if width == columns and height == rows
 
-		float_x = float_x.to_f
-		float_y = float_y.to_f
-
-		return if ncols == columns and nrows == rows
-
-		scale = [ncols / columns.to_f, nrows / rows.to_f].max
+		scale = [width / columns.to_f, height / rows.to_f].max
 
 		resize((scale * columns).ceil, (scale * rows).ceil).replace do |image|
-			next if ncols == image.columns and nrows == image.rows
-
-			x = ((image.columns - ncols) * float_x).ceil
-			y = ((image.rows - nrows) * float_y).ceil
-
-			x = 0 if x < 0
-			x = (image.columns - ncols) if x > (image.columns - ncols)
-
-			y = 0 if y < 0
-			y = (image.rows - nrows) if y >= (image.rows - nrows)
-
-			image.crop(x, y, ncols, nrows, true)
+			next if width == image.columns and height == image.rows
+			image.crop(*image.float_to_offset(width, height, float_x, float_y), width, height, true)
 		end
 	end
 
@@ -472,6 +463,22 @@ class Magick::Image
 		else
 			factor
 		end
+	end
+
+	def float_to_offset(float_width, float_height, float_x = 0.5, float_y = 0.5)
+		base_width = self.columns
+		base_height = self.rows
+
+		x = ((base_width - float_width) * float_x).ceil
+		y = ((base_height - float_height) * float_y).ceil
+
+		x = 0 if x < 0
+		x = (base_width - float_width) if x > (base_width - float_width)
+
+		y = 0 if y < 0
+		y = (base_height - float_height) if y > (base_height - float_height)
+
+		[x, y]
 	end
 end
 

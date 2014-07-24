@@ -222,6 +222,96 @@ describe Plugin::Thumbnailer::Service do
 						#show_blob thumbnail.data
 					end
 				end
+
+				it 'should pad with floating horizontaly' do
+					square_even.thumbnail(ThumbnailSpec.from_uri('pad,200,100,png')) do |thumbnail|
+						thumbnail.width.should == 200
+						thumbnail.height.should == 100
+						#show_blob thumbnail.data
+					end
+
+					square_even.thumbnail(ThumbnailSpec.from_uri('pad,200,100,png,float-x:1.0')) do |thumbnail|
+						thumbnail.width.should == 200
+						thumbnail.height.should == 100
+						#show_blob thumbnail.data
+					end
+
+					square_even.thumbnail(ThumbnailSpec.from_uri('pad,200,100,png,float-x:0.0')) do |thumbnail|
+						thumbnail.width.should == 200
+						thumbnail.height.should == 100
+						#show_blob thumbnail.data
+					end
+
+					square_even.thumbnail(ThumbnailSpec.from_uri('pad,200,100,png,float-x:0.8')) do |thumbnail|
+						thumbnail.width.should == 200
+						thumbnail.height.should == 100
+						#show_blob thumbnail.data
+					end
+
+					square_even.thumbnail(ThumbnailSpec.from_uri('pad,200,100,png,float-x:-9.8')) do |thumbnail|
+						thumbnail.width.should == 200
+						thumbnail.height.should == 100
+						#show_blob thumbnail.data
+					end
+
+					square_even.thumbnail(ThumbnailSpec.from_uri('pad,200,100,png,float-x:3')) do |thumbnail|
+						thumbnail.width.should == 200
+						thumbnail.height.should == 100
+						#show_blob thumbnail.data
+					end
+				end
+
+				it 'should pad with floating verticaly' do
+					square_even.thumbnail(ThumbnailSpec.from_uri('pad,100,200,png')) do |thumbnail|
+						thumbnail.width.should == 100
+						thumbnail.height.should == 200
+						#show_blob thumbnail.data
+					end
+
+					square_even.thumbnail(ThumbnailSpec.from_uri('pad,100,200,png,float-y:1.0')) do |thumbnail|
+						thumbnail.width.should == 100
+						thumbnail.height.should == 200
+						#show_blob thumbnail.data
+					end
+
+					square_even.thumbnail(ThumbnailSpec.from_uri('pad,100,200,png,float-y:0.0')) do |thumbnail|
+						thumbnail.width.should == 100
+						thumbnail.height.should == 200
+						#show_blob thumbnail.data
+					end
+
+					square_even.thumbnail(ThumbnailSpec.from_uri('pad,100,200,png,float-y:0.8')) do |thumbnail|
+						thumbnail.width.should == 100
+						thumbnail.height.should == 200
+						#show_blob thumbnail.data
+					end
+
+					square_even.thumbnail(ThumbnailSpec.from_uri('pad,100,200,png,float-y:-9.8')) do |thumbnail|
+						thumbnail.width.should == 100
+						thumbnail.height.should == 200
+						#show_blob thumbnail.data
+					end
+
+					square_even.thumbnail(ThumbnailSpec.from_uri('pad,100,200,png,float-y:3')) do |thumbnail|
+						thumbnail.width.should == 100
+						thumbnail.height.should == 200
+						#show_blob thumbnail.data
+					end
+				end
+
+				it 'should pad with floating horizontally and vertically' do
+					square_even.thumbnail(ThumbnailSpec.from_uri('pad,100,200,png,float-x:0.25,float-y:0.25')) do |thumbnail|
+						thumbnail.width.should == 100
+						thumbnail.height.should == 200
+						#show_blob thumbnail.data
+					end
+
+					square_even.thumbnail(ThumbnailSpec.from_uri('pad,200,100,png,float-x:0.25,float-y:0.25')) do |thumbnail|
+						thumbnail.width.should == 200
+						thumbnail.height.should == 100
+						#show_blob thumbnail.data
+					end
+				end
 			end
 		end
 	end
