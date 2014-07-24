@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = "httpthumbnailer"
-  s.version = "1.1.2"
+  s.version = "1.2.0"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Jakub Pastuszek"]
-  s.date = "2013-11-04"
+  s.date = "2014-07-24"
   s.description = "Provides HTTP API for thumbnailing images"
   s.email = "jpastuszek@gmail.com"
   s.executables = ["httpthumbnailer"]
@@ -69,20 +69,22 @@ Gem::Specification.new do |s|
     "load_test/v0.0.14-no-optimization.csv",
     "load_test/v0.0.14.csv",
     "spec/image_processing_spec.rb",
+    "spec/plugin_thumbnailer_spec.rb",
     "spec/spec_helper.rb",
+    "spec/support/test_image.rb",
     "spec/thumbnail_specs_spec.rb"
   ]
   s.homepage = "http://github.com/jpastuszek/httpthumbnailer"
   s.licenses = ["MIT"]
   s.require_paths = ["lib"]
-  s.rubygems_version = "1.8.25"
+  s.rubygems_version = "1.8.23"
   s.summary = "HTTP thumbnailing server"
 
   if s.respond_to? :specification_version then
     s.specification_version = 3
 
     if Gem::Version.new(Gem::VERSION) >= Gem::Version.new('1.2.0') then
-      s.add_runtime_dependency(%q<unicorn-cuba-base>, ["~> 1.1.1"])
+      s.add_runtime_dependency(%q<unicorn-cuba-base>, ["~> 1.2.0"])
       s.add_runtime_dependency(%q<rmagick>, ["~> 2"])
       s.add_development_dependency(%q<rspec>, ["~> 2.13"])
       s.add_development_dependency(%q<rspec-mocks>, ["~> 2.13"])
@@ -94,7 +96,7 @@ Gem::Specification.new do |s|
       s.add_development_dependency(%q<multipart-parser>, ["~> 0.1.1"])
       s.add_development_dependency(%q<daemon>, ["~> 1.1"])
     else
-      s.add_dependency(%q<unicorn-cuba-base>, ["~> 1.1.1"])
+      s.add_dependency(%q<unicorn-cuba-base>, ["~> 1.2.0"])
       s.add_dependency(%q<rmagick>, ["~> 2"])
       s.add_dependency(%q<rspec>, ["~> 2.13"])
       s.add_dependency(%q<rspec-mocks>, ["~> 2.13"])
@@ -107,7 +109,7 @@ Gem::Specification.new do |s|
       s.add_dependency(%q<daemon>, ["~> 1.1"])
     end
   else
-    s.add_dependency(%q<unicorn-cuba-base>, ["~> 1.1.1"])
+    s.add_dependency(%q<unicorn-cuba-base>, ["~> 1.2.0"])
     s.add_dependency(%q<rmagick>, ["~> 2"])
     s.add_dependency(%q<rspec>, ["~> 2.13"])
     s.add_dependency(%q<rspec-mocks>, ["~> 2.13"])
