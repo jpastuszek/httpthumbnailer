@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Jakub Pastuszek"]
-  s.date = "2014-07-24"
+  s.date = "2014-07-28"
   s.description = "Provides HTTP API for thumbnailing images"
   s.email = "jpastuszek@gmail.com"
   s.executables = ["httpthumbnailer"]
@@ -65,6 +65,8 @@ Gem::Specification.new do |s|
     "spec/image_processing_spec.rb",
     "spec/plugin_thumbnailer_spec.rb",
     "spec/spec_helper.rb",
+    "spec/support/square_even.png",
+    "spec/support/square_odd.png",
     "spec/support/test_image.rb",
     "spec/thumbnail_specs_spec.rb"
   ]
