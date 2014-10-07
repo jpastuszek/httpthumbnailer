@@ -122,4 +122,4 @@ DEPENDENCIES
   rmagick (~> 2)
   rspec (~> 2.13)
   rspec-mocks (~> 2.13)
-  unicorn-cuba-base (~> 1.2.0)
+  unicorn-cuba-base (~> 1.2)
