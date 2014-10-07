@@ -1,7 +1,7 @@
 source "http://rubygems.org"
 ruby "1.9.3"
 
-gem "unicorn-cuba-base", "~> 1.2.0"
+gem "unicorn-cuba-base", "~> 1.2"
 #gem "unicorn-cuba-base", path: "../unicorn-cuba-base"
 gem "rmagick", "~> 2"
 
@@ -16,6 +16,7 @@ group :development do
   gem "httpclient", "~> 2.3"
   gem "rdoc", "~> 3.9"
   gem "multipart-parser", "~> 0.1.1"
-  gem "daemon", "~> 1.1"
+  #gem "daemon", "~> 1.1"
+  gem "daemon", path: '../daemon'
 end
 
