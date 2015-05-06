@@ -363,6 +363,7 @@ module Plugin
 			end
 
 			def processing_method(method, &impl)
+				log.info "adding processing method: #{method}"
 				@processing_methods[method] = impl
 			end
 
@@ -405,6 +406,12 @@ module Plugin
 			)
 
 			@@service.setup_default_methods
+		end
+
+		def self.setup_plugins(plugins)
+			plugins.map(&:processing_methods).flatten(1).each do |name, block|
+				@@service.processing_method(name, &block)
+			end
 		end
 
 		def thumbnailer

@@ -13,6 +13,10 @@ Application.new('httpthumbnailer', port: 3100) do
 			cast: Integer,
 			description: 'image cache temporary file size limit in MiB',
 			default: 1024
+		options :plugins,
+			cast: Pathname,
+			description: 'path to directory from which plugins will be loaded',
+			default: '/usr/share/httpthumbnailer/plugins'
 		switch :no_optimization,
 			description: 'disable load time size hinting and prescaling optimizations'
 		version (Pathname.new(__FILE__).dirname + '..' + 'VERSION').read
@@ -43,10 +47,29 @@ Application.new('httpthumbnailer', port: 3100) do
 	end
 
 	main do |settings|
+		require 'httpthumbnailer/plugin'
+		plugin_contexts = settings.plugins.map do |dir|
+			begin
+				dir.realpath
+			rescue Errno::ENOENT => error
+				log.warn "plugin directory '#{dir}' is not accessible: #{error}"
+				nil
+			end
+		end.compact.map do |dir|
+			Pathname::glob(dir + '*.plugin')
+		end.map do |plugin_files|
+			plugin_files.sort.map do |plugin_file|
+				log.info("loading plugin from: #{plugin_file}")
+				PluginContext.new(plugin_file)
+			end
+		end.flatten
+
 		require 'httpthumbnailer/error_reporter'
 		require 'httpthumbnailer/thumbnailer'
 
-		class HTTPThumbniler < Controller
+		Plugin::Thumbnailer.setup_plugins(plugin_contexts)
+
+		class HTTPThumbnailer < Controller
 			extend Stats
 			def_stats(
 				:workers,
@@ -57,15 +80,15 @@ Application.new('httpthumbnailer', port: 3100) do
 			raindrops_stats = Raindrops::Middleware::Stats.new
 			self.use Raindrops::Middleware, stats: raindrops_stats
 
-			StatsReporter << HTTPThumbniler.stats
+			StatsReporter << HTTPThumbnailer.stats
 			StatsReporter << raindrops_stats
 			StatsReporter << Plugin::Thumbnailer::Service.stats
 			StatsReporter << Plugin::ResponseHelpers.stats
 
 			self.define do
-				HTTPThumbniler.stats.incr_total_requests
+				HTTPThumbnailer.stats.incr_total_requests
 				on error? do
-					HTTPThumbniler.stats.incr_total_errors
+					HTTPThumbnailer.stats.incr_total_errors
 					run ErrorReporter
 				end
 
@@ -87,11 +110,11 @@ Application.new('httpthumbnailer', port: 3100) do
 			end
 		end
 
-		HTTPThumbniler
+		HTTPThumbnailer
 	end
 
 	after_fork do |server, worker|
-		HTTPThumbniler.stats.incr_workers
+		HTTPThumbnailer.stats.incr_workers
 	end
 end
 
