@@ -121,8 +121,8 @@ describe 'image processing module' do
 		StubImage.alive.should == 0
 	end
 
-	it '#use should return image to be used for multiple processing and destroy it at the end' do
-		image = StubImage.new.use do |image|
+	it '#borrow should return image to be used for multiple processing and destroy it at the end' do
+		image = StubImage.new.borrow do |image|
 			i1 = image.replace do |image|
 				image.copy.final!
 			end

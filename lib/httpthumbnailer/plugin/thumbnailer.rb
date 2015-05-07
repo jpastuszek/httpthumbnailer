@@ -58,27 +58,27 @@ module Plugin
 
 		module ImageProcessing
 			def replace
-				@use_count ||= 0
+				@ref_count ||= 0
 				processed = nil
 				begin
 					processed = yield self
 					processed = self unless processed
 					fail 'got destroyed image' if processed.destroyed?
 				ensure
-					self.destroy! if @use_count <= 0 unless processed.equal? self
+					self.destroy! if @ref_count <= 0 unless processed.equal? self
 				end
 				processed
 			end
 
-			def use
-				@use_count ||= 0
-				@use_count += 1
+			def borrow
+				@ref_count ||= 0
+				@ref_count += 1
 				begin
 					yield self
 					self
 				ensure
-					@use_count -=1
-					self.destroy! if @use_count <= 0
+					@ref_count -=1
+					self.destroy! if @ref_count <= 0
 				end
 			end
 		end
@@ -108,7 +108,7 @@ module Plugin
 							log.info 'thumbnail has alpha, rendering on background'
 							image.render_on_background(spec.options['background-color'])
 						end
-					end.use do |image|
+					end.borrow do |image|
 						Service.stats.incr_total_thumbnails_created
 						image_format = spec.format == :input ? @image.format : spec.format
 
@@ -128,8 +128,8 @@ module Plugin
 			end
 
 			# behave as @image in processing
-			def use
-				@image.use do |image|
+			def borrow
+				@image.borrow do |image|
 					yield self
 				end
 			end
