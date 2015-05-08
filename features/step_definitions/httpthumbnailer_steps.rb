@@ -1,6 +1,12 @@
+Given /httpthumbnailer plugins dir (.*)/ do |plugins|
+	@args ||= []
+	@args << ['--plugins', plugins]
+end
+
 Given /httpthumbnailer server is running at (.*)/ do |url|
+	@args ||= []
 	log = support_dir + 'server.log'
-	cmd = "bundle exec #{script('httpthumbnailer')} -f -d -l #{log} -w 1"
+	cmd = "bundle exec #{script('httpthumbnailer')} -f -d -l '#{log}' -w 1 #{@args.join(' ')}"
 	start_server(cmd, '/tmp/httpthumbnailer.pid', log, url)
 end
 

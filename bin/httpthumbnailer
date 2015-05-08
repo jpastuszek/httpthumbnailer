@@ -15,7 +15,7 @@ Application.new('httpthumbnailer', port: 3100) do
 			default: 1024
 		options :plugins,
 			cast: Pathname,
-			description: 'path to directory from which plugins will be loaded',
+			description: 'path to directory from which plugins will be loaded (files with .rb extension)',
 			default: '/usr/share/httpthumbnailer/plugins'
 		switch :no_optimization,
 			description: 'disable load time size hinting and prescaling optimizations'
@@ -56,7 +56,7 @@ Application.new('httpthumbnailer', port: 3100) do
 				nil
 			end
 		end.compact.map do |dir|
-			Pathname::glob(dir + '*.plugin')
+			Pathname::glob(dir + '**/*.rb')
 		end.map do |plugin_files|
 			plugin_files.sort.map do |plugin_file|
 				log.info("loading plugin from: #{plugin_file}")
