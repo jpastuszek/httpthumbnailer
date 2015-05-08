@@ -1,4 +1,4 @@
-processing_method('cut')  do |image, width, height, options|
+thumbnailing_method('cut')  do |image, width, height, options|
 	cut_x = Float(options['box-x']) rescue 0.25
 	cut_y = Float(options['box-y']) rescue 0.25
 	cut_w = Float(options['box-w']) rescue 0.5
@@ -9,7 +9,7 @@ processing_method('cut')  do |image, width, height, options|
 	end
 end
 
-processing_method('blur')  do |image, width, height, options|
+thumbnailing_method('blur')  do |image, width, height, options|
 	radious = Float(options['radious']) rescue 0.0 # auto
 	sigma = Float(options['sigma']) rescue 2.5
 

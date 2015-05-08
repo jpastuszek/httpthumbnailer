@@ -87,9 +87,9 @@ module Plugin
 			include ClassLogging
 			extend Forwardable
 
-			def initialize(image, processing_methods, options = {})
+			def initialize(image, thumbnailing_methods, options = {})
 				@image = image
-				@processing_methods = processing_methods
+				@thumbnailing_methods = thumbnailing_methods
 			end
 
 			def thumbnail(spec)
@@ -122,7 +122,7 @@ module Plugin
 
 			def process_image(method, width, height, options)
 				@image.replace do |image|
-					impl = @processing_methods[method] or raise UnsupportedMethodError, method
+					impl = @thumbnailing_methods[method] or raise UnsupportedMethodError, method
 					impl.call(image, width, height, options)
 				end
 			end
@@ -244,7 +244,7 @@ module Plugin
 			end
 
 			def initialize(options = {})
-				@processing_methods = {}
+				@thumbnailing_methods = {}
 				@options = options
 				@images_loaded = 0
 
@@ -355,7 +355,7 @@ module Plugin
 								Service.stats.incr_total_images_downscaled
 							end
 						end
-						InputImage.new(image, @processing_methods)
+						InputImage.new(image, @thumbnailing_methods)
 					end
 				rescue Magick::ImageMagickError => error
 					raise ImageTooLargeError, error if error.message =~ /cache resources exhausted/
@@ -368,9 +368,9 @@ module Plugin
 				end
 			end
 
-			def processing_method(method, &impl)
-				log.info "adding processing method: #{method}"
-				@processing_methods[method] = impl
+			def thumbnailing_method(method, &impl)
+				log.info "adding thumbnailing method: #{method}"
+				@thumbnailing_methods[method] = impl
 			end
 
 			def set_limit(limit, value)
@@ -380,21 +380,21 @@ module Plugin
 			end
 
 			def setup_default_methods
-				processing_method('crop') do |image, width, height, options|
+				thumbnailing_method('crop') do |image, width, height, options|
 					image.resize_to_fill(width, height, (Float(options['float-x']) rescue 0.5), (Float(options['float-y']) rescue 0.5)) if image.columns != width or image.rows != height
 				end
 
-				processing_method('fit') do |image, width, height, options|
+				thumbnailing_method('fit') do |image, width, height, options|
 					image.resize_to_fit(width, height) if image.columns != width or image.rows != height
 				end
 
-				processing_method('pad') do |image, width, height, options|
+				thumbnailing_method('pad') do |image, width, height, options|
 					image.resize_to_fit(width, height).replace do |resize|
 						resize.render_on_background(options['background-color'], width, height, (Float(options['float-x']) rescue 0.5), (Float(options['float-y']) rescue 0.5))
 					end if image.columns != width or image.rows != height
 				end
 
-				processing_method('limit') do |image, width, height, options|
+				thumbnailing_method('limit') do |image, width, height, options|
 					image.resize_to_fit(width, height) if image.columns > width or image.rows > height
 				end
 			end
@@ -415,8 +415,8 @@ module Plugin
 		end
 
 		def self.setup_plugins(plugins)
-			plugins.map(&:processing_methods).flatten(1).each do |name, block|
-				@@service.processing_method(name, &block)
+			plugins.map(&:thumbnailing_methods).flatten(1).each do |name, block|
+				@@service.thumbnailing_method(name, &block)
 			end
 		end
 
