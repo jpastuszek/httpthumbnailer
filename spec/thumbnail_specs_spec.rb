@@ -39,5 +39,24 @@ describe ThumbnailSpecs do
 		ts[2].height.should == 32
 		ts[2].format.should == :input
 	end
+
+	it 'should provide editing specs' do
+		ts = ThumbnailSpecs.from_uri('test,input,256,jpeg,magick:64,number:8!blur,1,2,abc:x,xyz:2!cut,1,2,3,4/pad,128,input,png,background:0xFF00FF!blur,2,2,abc:x,xyz:2!cut,2,2,3,4/crop,32,32,input!blur,3,2,abc:x,xyz:2!cut,3,2,3,4')
+
+		ts[0].edits[0].name.should == 'blur'
+		ts[0].edits[0].args.should == ['1', '2', {'abc' => 'x', 'xyz' => '2'}]
+		ts[0].edits[1].name.should == 'cut'
+		ts[0].edits[1].args.should == ['1', '2', '3', '4']
+
+		ts[1].edits[0].name.should == 'blur'
+		ts[1].edits[0].args.should == ['2', '2', {'abc' => 'x', 'xyz' => '2'}]
+		ts[1].edits[1].name.should == 'cut'
+		ts[1].edits[1].args.should == ['2', '2', '3', '4']
+
+		ts[2].edits[0].name.should == 'blur'
+		ts[2].edits[0].args.should == ['3', '2', {'abc' => 'x', 'xyz' => '2'}]
+		ts[2].edits[1].name.should == 'cut'
+		ts[2].edits[1].args.should == ['3', '2', '3', '4']
+	end
 end
 

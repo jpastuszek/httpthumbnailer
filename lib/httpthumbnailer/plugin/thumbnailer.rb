@@ -103,7 +103,12 @@ module Plugin
 				raise ZeroSizedImageError.new(width, height) if width == 0 or height == 0
 
 				begin
-					process_image(spec.method, width, height, spec.options).replace do |image|
+					spec.edits.each do |edit|
+						p edit
+						edit_image(edit.name, *edit.args)
+					end
+
+					thumbnail_image(spec.method, width, height, spec.options).replace do |image|
 						if image.alpha?
 							log.info 'thumbnail has alpha, rendering on background'
 							image.render_on_background(spec.options['background-color'])
@@ -120,7 +125,12 @@ module Plugin
 				end
 			end
 
-			def process_image(method, width, height, options)
+			def edit_image(name, *args)
+				p name
+				p args
+			end
+
+			def thumbnail_image(method, width, height, options)
 				@image.replace do |image|
 					impl = @thumbnailing_methods[method] or raise UnsupportedMethodError, method
 					impl.call(image, width, height, options)

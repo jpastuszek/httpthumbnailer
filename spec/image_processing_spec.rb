@@ -92,7 +92,7 @@ describe 'image processing module' do
 
 	it '#replace will destroy created images on exception' do
 		lambda {
-			image = StubImage.new.replace do |image|
+			StubImage.new.replace do |image|
 				image.copy.replace do |image|
 					image.copy.replace do |image|
 						image.copy.replace do |image|
@@ -106,7 +106,7 @@ describe 'image processing module' do
 		StubImage.alive.should == 0
 
 		lambda {
-			image = StubImage.new.replace do |image|
+			StubImage.new.replace do |image|
 				image.copy.replace do |image|
 					image.copy.replace do |image|
 						image.copy

@@ -43,15 +43,30 @@ class ThumbnailSpec
 		end
 	end
 
-	def initialize(method, width, height, format, options = {})
+	class Edit
+		attr_reader :name, :args
+
+		def initialize(name, *args)
+			@name = name
+			@args = args
+		end
+
+		def to_s
+			"#{name}(#{args.join(',')})"
+		end
+	end
+
+	def initialize(method, width, height, format, options = {}, edits = [])
 		@method = method
 		@width = cast_dimension(width)
 		@height = cast_dimension(height)
 		@format = (format == 'input' ? :input : format.upcase)
 		@options = options
+		@edits = edits
 	end
 
 	def self.from_uri(spec)
+		spec, *edits = *spec.split('!')
 		method, width, height, format, *options = *spec.split(',')
 		raise BadThubnailSpecError::MissingArgumentError.new(spec) unless method and width and height and format
 
@@ -62,14 +77,30 @@ class ThumbnailSpec
 			opts[key] = value
 		end
 
-		ThumbnailSpec.new(method, width, height, format, opts)
+		edits = edits.map do |edit|
+			name, *args = *edit.split(',')
+			args, *edit_options = *args.slice_before{|a| a =~ /.+:.+/}.to_a
+			edit_options.flatten!
+
+			edit_opts = {}
+			edit_options.each do |option|
+				key, value = option.split(':')
+				raise BadThubnailSpecError::MissingOptionKeyOrValueError.new(option) unless key and value
+				edit_opts[key] = value
+			end
+
+			args << edit_opts unless edit_opts.empty?
+			Edit.new(name, *args)
+		end
+
+		ThumbnailSpec.new(method, width, height, format, opts, edits)
 	end
 
 
-	attr_reader :method, :width, :height, :format, :options
+	attr_reader :method, :width, :height, :format, :options, :edits
 
 	def to_s
-		"#{method} #{width}x#{height} (#{format.downcase}) #{options.inspect}"
+		"#{method} #{width}x#{height} (#{format.downcase}) #{options.inspect} [#{edits.join(' ')}]"
 	end
 
 	private
