@@ -13,18 +13,17 @@ processing_method('blur')  do |image, width, height, options|
 	radious = Float(options['radious']) rescue 0.0 # auto
 	sigma = Float(options['sigma']) rescue 2.5
 
-	cut_x = Float(options['box-x']) rescue 0.25
-	cut_y = Float(options['box-y']) rescue 0.25
-	cut_w = Float(options['box-w']) rescue 0.5
-	cut_h = Float(options['box-h']) rescue 0.5
+	box_x = Float(options['box-x']) rescue 0.25
+	box_y = Float(options['box-y']) rescue 0.25
+	box_w = Float(options['box-w']) rescue 0.5
+	box_h = Float(options['box-h']) rescue 0.5
 
-	image.replace do |orig|
-		orig.crop(cut_x * image.columns, cut_y * image.rows, cut_w * image.columns, cut_h * image.rows, true).replace do |image|
-			image.blur_image(radious, sigma)
-		end.replace do |blur|
-			orig.composite(blur, cut_x * image.columns, cut_y * image.rows, Magick::OverCompositeOp)
-		end
+	image.blur_region(
+		*image.rel_to_px(box_x, box_y),
+		*image.rel_to_px(box_w, box_h),
+		radious, sigma
+	).replace do |image|
+		image.resize_to_fit(width, height) if image.columns != width or image.rows != height
 	end
-	#image.resize_to_fit(width, height) if image.columns != width or image.rows != height
 end
 

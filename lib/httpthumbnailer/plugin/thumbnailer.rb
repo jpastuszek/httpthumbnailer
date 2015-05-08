@@ -58,27 +58,27 @@ module Plugin
 
 		module ImageProcessing
 			def replace
-				@ref_count ||= 0
+				@use_count ||= 0
 				processed = nil
 				begin
 					processed = yield self
 					processed = self unless processed
 					fail 'got destroyed image' if processed.destroyed?
 				ensure
-					self.destroy! if @ref_count <= 0 unless processed.equal? self
+					self.destroy! if @use_count <= 0 unless processed.equal? self
 				end
 				processed
 			end
 
 			def borrow
-				@ref_count ||= 0
-				@ref_count += 1
+				@use_count ||= 0
+				@use_count += 1
 				begin
 					yield self
 					self
 				ensure
-					@ref_count -=1
-					self.destroy! if @ref_count <= 0
+					@use_count -=1
+					self.destroy! if @use_count <= 0
 				end
 			end
 		end
@@ -218,7 +218,9 @@ module Plugin
 				:total_images_created_initialize,
 				:total_images_created_resize,
 				:total_images_created_crop,
-				:total_images_created_sample
+				:total_images_created_sample,
+				:total_images_created_blur_image,
+				:total_images_created_composite
 			)
 
 			def self.input_formats
@@ -276,6 +278,10 @@ module Plugin
 							Service.stats.incr_total_images_created_crop
 						when :sample
 							Service.stats.incr_total_images_created_sample
+						when :blur_image
+							Service.stats.incr_total_images_created_blur_image
+						when :composite
+							Service.stats.incr_total_images_created_composite
 						else
 							log.warn "uncounted image creation method: #{method}"
 						end
@@ -459,6 +465,14 @@ class Magick::Image
 		end
 	end
 
+	# make rotate not to change image.page to avoid WTF moments
+	alias :rotate_orig :rotate
+	def rotate(*args)
+		out = rotate_orig(*args)
+		out.page = Magick::Rectangle.new(out.columns, out.rows, 0, 0)
+		out
+	end
+
 	def downscale(f)
 		sample(columns / f, rows / f)
 	end
@@ -486,6 +500,24 @@ class Magick::Image
 		y = (base_height - float_height) if y > (base_height - float_height)
 
 		[x, y]
+	end
+
+	def blur_region(x, y, h, w, radious, sigma)
+		replace do |orig|
+			orig.blur_image(radious, sigma).replace do |blur|
+				blur.crop(x, y, h, w, true)
+			end.replace do |blur|
+				orig.composite(blur, x, y, Magick::OverCompositeOp)
+			end
+		end
+	end
+
+	def rel_to_px(x, y)
+		[x * columns, y * rows]
+	end
+
+	def px_to_rel(x, y)
+		[x / columns, y / rows]
 	end
 end
 

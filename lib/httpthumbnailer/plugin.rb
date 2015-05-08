@@ -12,5 +12,15 @@ class PluginContext
 		block.kind_of? Proc or fail "processing method '#{name}' needs to provide an implementation; got: #{name.class.name}"
 		@processing_methods << [name, block]
 	end
+
+	# static helpers
+
+	def offset_to_center(x, y, w, h)
+		[x + w / 2, y + h / 2]
+	end
+
+	def center_to_offset(center_x, center_y, w, h)
+		[center_x - w / 2, center_y - h / 2]
+	end
 end
 
