@@ -32,6 +32,12 @@ module Plugin
 			end
 		end
 
+		class UnsupportedEditError < ArgumentError
+			def initialize(name)
+				super("no edit with name '#{name}' is supported")
+			end
+		end
+
 		class UnsupportedMediaTypeError < ArgumentError
 			def initialize(error)
 				super("unsupported media type: #{error}")
@@ -87,9 +93,10 @@ module Plugin
 			include ClassLogging
 			extend Forwardable
 
-			def initialize(image, thumbnailing_methods, options = {})
+			def initialize(image, thumbnailing_methods, edits, options = {})
 				@image = image
 				@thumbnailing_methods = thumbnailing_methods
+				@edits = edits
 			end
 
 			def thumbnail(spec)
@@ -103,12 +110,14 @@ module Plugin
 				raise ZeroSizedImageError.new(width, height) if width == 0 or height == 0
 
 				begin
+					image = @image
+
 					spec.edits.each do |edit|
-						p edit
-						edit_image(edit.name, *edit.args)
+						log.debug "applying edit: #{edit}"
+						image = edit_image(image, edit.name, *edit.args)
 					end
 
-					thumbnail_image(spec.method, width, height, spec.options).replace do |image|
+					thumbnail_image(image, spec.method, width, height, spec.options).replace do |image|
 						if image.alpha?
 							log.info 'thumbnail has alpha, rendering on background'
 							image.render_on_background(spec.options['background-color'])
@@ -125,13 +134,17 @@ module Plugin
 				end
 			end
 
-			def edit_image(name, *args)
-				p name
-				p args
+			def edit_image(image, name, *args)
+				image.replace do |image|
+					impl = @edits[name] or raise UnsupportedEditError, name
+					image = impl.call(image, *args)
+					fail "edit '#{name}' returned '#{image.calls.name}' - expecting nil or Magick::Image" unless image.nil? or image.kind_of? Magick::Image
+					image
+				end
 			end
 
-			def thumbnail_image(method, width, height, options)
-				@image.replace do |image|
+			def thumbnail_image(image, method, width, height, options)
+				image.replace do |image|
 					impl = @thumbnailing_methods[method] or raise UnsupportedMethodError, method
 					impl.call(image, width, height, options)
 				end
@@ -255,6 +268,7 @@ module Plugin
 
 			def initialize(options = {})
 				@thumbnailing_methods = {}
+				@edits = {}
 				@options = options
 				@images_loaded = 0
 
@@ -365,7 +379,7 @@ module Plugin
 								Service.stats.incr_total_images_downscaled
 							end
 						end
-						InputImage.new(image, @thumbnailing_methods)
+						InputImage.new(image, @thumbnailing_methods, @edits)
 					end
 				rescue Magick::ImageMagickError => error
 					raise ImageTooLargeError, error if error.message =~ /cache resources exhausted/
@@ -381,6 +395,11 @@ module Plugin
 			def thumbnailing_method(method, &impl)
 				log.info "adding thumbnailing method: #{method}"
 				@thumbnailing_methods[method] = impl
+			end
+
+			def edit(name, &impl)
+				log.info "adding edit: #{name}(#{impl.parameters.drop(1).map{|p| p.last.to_s}.join(', ')})"
+				@edits[name] = impl
 			end
 
 			def set_limit(limit, value)
@@ -408,6 +427,22 @@ module Plugin
 					image.resize_to_fit(width, height) if image.columns > width or image.rows > height
 				end
 			end
+
+			def setup_default_edits
+				edit('cut') do |image, x, y, width, height|
+					x = x.to_f
+					y = y.to_f
+					width = width.to_f
+					height = height.to_f
+
+					x ||= 0.25
+					y ||= 0.25
+					width ||= 0.5
+					height ||= 0.5
+
+					image.crop(x * image.columns, y * image.rows, width * image.columns, height * image.rows, true) if image.columns != width or image.rows != height
+				end
+			end
 		end
 
 		def self.setup(app)
@@ -422,6 +457,7 @@ module Plugin
 			)
 
 			@@service.setup_default_methods
+			@@service.setup_default_edits
 		end
 
 		def self.setup_plugins(plugins)
