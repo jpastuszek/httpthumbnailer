@@ -1,0 +1,49 @@
+module Ownership
+	MovingBorrowedError = Class.new(RuntimeError)
+	BorrowingAfterMoveError = Class.new(RuntimeError)
+	MovingAfterMoveError = Class.new(RuntimeError)
+
+	# TODO: add assertions
+	def own
+		@owned = true
+
+		begin
+			object = yield self
+			return object unless @owned
+			if object.kind_of? self.class
+				object.destroy!
+			end
+		ensure
+			destroy! if owned?
+		end
+	end
+
+	def owned?
+		@owned
+	end
+
+	def borrow
+		@moved and raise BorrowingAfterMoveError, "cannot borrow after move '#{self}'"
+		was_owned = @owned
+		begin
+			@owned = false
+			yield self
+		ensure
+			@owned = was_owned
+		end
+	end
+
+	def move
+		@moved and raise MovingAfterMoveError, "cannot move after move '#{self}'"
+		@owned or raise MovingBorrowedError, "cannot move borrowed '#{self}'"
+		begin
+			yield self
+		ensure
+			destroy! if owned?
+			@moved = true
+			@owned = false
+		end
+	end
+end
+
+
