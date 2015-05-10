@@ -37,7 +37,12 @@ module Ownership
 		@moved and raise MovingAfterMoveError, "cannot move after move '#{self}'"
 		@owned or raise MovingBorrowedError, "cannot move borrowed '#{self}'"
 		begin
-			yield self
+			ret = yield self
+			if ret == self
+				@owned = false
+				@moved = false
+			end
+			ret
 		ensure
 			destroy! if owned?
 			@moved = true

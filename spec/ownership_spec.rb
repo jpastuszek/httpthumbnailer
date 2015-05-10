@@ -187,6 +187,31 @@ describe 'image ownership' do
 				end
 			end
 		end
+		describe 'moving out' do
+			context 'when self was returned' do
+				it 'should not destroy the image and yield the ownership' do
+					subject.own do |image|
+						image.should be_owned
+						image.move do |moved|
+							moved.should be_owned
+							moved
+						end
+						image.should_not be_owned
+						subject.should_not be_destoryed
+					end
+					subject.should_not be_destoryed
+				end
+				it 'should return the image' do
+					subject.own do |image|
+						ret = image.move do |moved|
+							moved
+						end
+						ret.should be image
+					end
+					subject.should_not be_destoryed
+				end
+			end
+		end
 		context 'when other kinde of object was returned by the block' do
 			it 'should return that object' do
 				subject.own do |image|
