@@ -26,13 +26,13 @@ describe 'image ownership' do
 				image.should be_owned
 			end
 		end
-		it 'should destory new image returned by the block' do
+		it 'should not destory new image returned by the block' do
 			new_image = Image.new
 			subject.own do |image|
 				new_image
 			end
 			subject.should be_destoryed
-			new_image.should be_destoryed
+			new_image.should_not be_destoryed
 		end
 		it 'should return nil' do
 			subject.own do |image|
@@ -310,6 +310,21 @@ describe 'image ownership' do
 				end
 			end
 			context 'when self is returend' do
+				context 'and the image was new' do
+					it 'should not destory the image' do
+						ret = subject.replace do |image|
+							image
+						end
+						ret.should_not be_destoryed
+						subject.should_not be_destoryed
+					end
+					it 'should return the image' do
+						ret = subject.replace do |image|
+							image
+						end
+						ret.should be subject
+					end
+				end
 				context 'and the image was owned' do
 					it 'should not destory the image' do
 						subject.own do |image|

@@ -6,13 +6,13 @@ module Ownership
 	# TODO: add assertions
 	def own
 		@owned = true
-
 		begin
-			object = yield self
-			return object unless @owned
-			if object.kind_of? self.class
-				object.destroy!
+			ret = yield self
+			if ret == self
+				@owned = nil
+				@moved = nil
 			end
+			ret
 		ensure
 			destroy! if owned?
 		end
@@ -24,6 +24,7 @@ module Ownership
 
 	def borrow
 		@moved and raise BorrowingAfterMoveError, "cannot borrow after move '#{self}'"
+		@owned.nil? and fail "object #{self} not owned by anyone"
 		was_owned = @owned
 		begin
 			@owned = false
@@ -36,6 +37,7 @@ module Ownership
 	def move
 		@moved and raise MovingAfterMoveError, "cannot move after move '#{self}'"
 		@owned or raise MovingBorrowedError, "cannot move borrowed '#{self}'"
+		@owned.nil? and fail "object #{self} not owned by anyone"
 		begin
 			ret = yield self
 			if ret == self
