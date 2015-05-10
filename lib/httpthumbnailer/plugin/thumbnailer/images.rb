@@ -1,6 +1,6 @@
 require 'RMagick'
 require 'forwardable'
-require_relative 'image_cleanup'
+require 'httpthumbnailer/ownership'
 
 module Plugin
 	module Thumbnailer
@@ -39,23 +39,32 @@ module Plugin
 				raise ZeroSizedImageError.new(width, height) if width == 0 or height == 0
 
 				begin
-					image = @image
+					@image.borrow do |orig|
+						image = orig
 
-					spec.edits.each do |edit|
-						log.debug "applying edit: #{edit}"
-						image = edit_image(image, edit.name, *edit.args)
-					end
-
-					thumbnail_image(image, spec.method, width, height, spec.options).replace do |image|
-						if image.alpha?
-							log.info 'thumbnail has alpha, rendering on background'
-							image.render_on_background(spec.options['background-color'])
+						spec.edits.each do |edit|
+							log.debug "applying edit: #{edit}"
+							image = image.replace do |image|
+								edit_image(image, edit.name, *edit.args)
+							end
 						end
-					end.borrow do |image|
-						Service.stats.incr_total_thumbnails_created
-						image_format = spec.format == :input ? @image.format : spec.format
 
-						yield Thumbnail.new(image, image_format, spec.options)
+						image.replace do |image|
+							thumbnail_image(image, spec.method, width, height, spec.options)
+							.replace do |image|
+								if image.alpha?
+									log.info 'thumbnail has alpha, rendering on background'
+									image.render_on_background(spec.options['background-color'])
+								else
+									image
+								end
+							end
+						end.replace do |image|
+							Service.stats.incr_total_thumbnails_created
+							image_format = spec.format == :input ? @image.format : spec.format
+
+							yield Thumbnail.new(image, image_format, spec.options)
+						end
 					end
 				rescue Magick::ImageMagickError => error
 					raise ImageTooLargeError, error.message if error.message =~ /cache resources exhausted/
@@ -64,26 +73,17 @@ module Plugin
 			end
 
 			def edit_image(image, name, *args)
-				image.replace do |image|
-					impl = @edits[name] or raise UnsupportedEditError, name
-					image = impl.call(image, *args)
-					fail "edit '#{name}' returned '#{image.calls.name}' - expecting nil or Magick::Image" unless image.nil? or image.kind_of? Magick::Image
-					image
-				end
+				impl = @edits[name] or raise UnsupportedEditError, name
+				ret = impl.call(image, *args)
+				fail "edit '#{name}' returned '#{ret.class.name}' - expecting nil or Magick::Image" unless ret.nil? or ret.kind_of? Magick::Image
+				ret or image
 			end
 
 			def thumbnail_image(image, method, width, height, options)
-				image.replace do |image|
-					impl = @thumbnailing_methods[method] or raise UnsupportedMethodError, method
-					impl.call(image, width, height, options)
-				end
-			end
-
-			# behave as @image in processing
-			def borrow
-				@image.borrow do |image|
-					yield self
-				end
+				impl = @thumbnailing_methods[method] or raise UnsupportedMethodError, method
+				ret = impl.call(image, width, height, options)
+				fail "thumbnailing method '#{name}' returned '#{ret.class.name}' - expecting nil or Magick::Image" unless ret.nil? or ret.kind_of? Magick::Image
+				ret or image
 			end
 
 			def_delegators :@image, :destroy!, :destroyed?, :format, :width, :height
@@ -156,7 +156,7 @@ module Plugin
 		end
 
 		class Magick::Image
-			include Plugin::Thumbnailer::ImageProcessing
+			include Ownership
 
 			def render_on_background(background_color, width = nil, height = nil, float_x = 0.5, float_y = 0.5)
 				# default to image size
@@ -175,7 +175,7 @@ module Plugin
 					end
 					self.depth = 8
 				}.replace do |background|
-					background.composite!(self, *background.float_to_offset(self.columns, self.rows, float_x, float_y), Magick::OverCompositeOp)
+					background.composite(self, *background.float_to_offset(self.columns, self.rows, float_x, float_y), Magick::OverCompositeOp)
 				end
 			end
 
@@ -188,7 +188,7 @@ module Plugin
 
 				scale = [width / columns.to_f, height / rows.to_f].max
 
-				resize((scale * columns).ceil, (scale * rows).ceil).replace do |image|
+				resize((scale * columns).ceil, (scale * rows).ceil).move do |image|
 					next if width == image.columns and height == image.rows
 					image.crop(*image.float_to_offset(width, height, float_x, float_y), width, height, true)
 				end
@@ -232,10 +232,10 @@ module Plugin
 			end
 
 			def blur_region(x, y, h, w, radious, sigma)
-				replace do |orig|
-					orig.blur_image(radious, sigma).replace do |blur|
+				move do |orig|
+					orig.blur_image(radious, sigma).move do |blur|
 						blur.crop(x, y, h, w, true)
-					end.replace do |blur|
+					end.move do |blur|
 						orig.composite(blur, x, y, Magick::OverCompositeOp)
 					end
 				end

@@ -1,7 +1,6 @@
 require 'RMagick'
 require 'forwardable'
 require_relative 'thumbnailer/images'
-require_relative 'thumbnailer/image_cleanup'
 
 module Plugin
 	module Thumbnailer
@@ -136,7 +135,7 @@ module Plugin
 				end
 			end
 
-			def load(io, options = {})
+			def load(io, options = {}, &block)
 				mw = options[:max_width]
 				mh = options[:max_height]
 				if mw and mh
@@ -173,7 +172,8 @@ module Plugin
 					end
 					blob = nil
 
-					images.shift.replace do |image|
+					image = images.shift
+					begin
 						images.each do |other|
 							other.destroy!
 						end
@@ -187,8 +187,6 @@ module Plugin
 							image[key] = nil
 						end
 
-						image
-					end.replace do |image|
 						if mw and mh and not options[:no_downscale]
 							f = image.find_downscale_factor(mw, mh)
 							if f > 1
@@ -197,7 +195,12 @@ module Plugin
 								Service.stats.incr_total_images_downscaled
 							end
 						end
-						InputImage.new(image, @thumbnailing_methods, @edits)
+						image.own do |image|
+							yield InputImage.new(image, @thumbnailing_methods, @edits)
+						end
+					rescue
+						image.destroy!
+						raise
 					end
 				rescue Magick::ImageMagickError => error
 					raise ImageTooLargeError, error if error.message =~ /cache resources exhausted/
@@ -236,7 +239,7 @@ module Plugin
 				end
 
 				thumbnailing_method('pad') do |image, width, height, options|
-					image.resize_to_fit(width, height).replace do |resize|
+					image.resize_to_fit(width, height).move do |resize|
 						resize.render_on_background(options['background-color'], width, height, (Float(options['float-x']) rescue 0.5), (Float(options['float-y']) rescue 0.5))
 					end if image.columns != width or image.rows != height
 				end

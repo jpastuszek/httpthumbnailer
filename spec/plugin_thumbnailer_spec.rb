@@ -11,11 +11,15 @@ describe Plugin::Thumbnailer::Service do
 	end
 
 	def square_odd
-		subject.load(TestImage.io('square_odd.png'))
+		subject.load(TestImage.io('square_odd.png')) do |image|
+			yield image
+		end
 	end
 
 	def square_even
-		subject.load(TestImage.io('square_even.png'))
+		subject.load(TestImage.io('square_even.png')) do |image|
+			yield image
+		end
 	end
 
 	before :each do
@@ -27,10 +31,11 @@ describe Plugin::Thumbnailer::Service do
 	end
 
 	it "should load images from provided blob" do
-		image = subject.load(TestImage.io('square_odd.png'))
-		image.format.should == 'PNG'
-		image.width.should == 99
-		image.height.should == 99
+		subject.load(TestImage.io('square_odd.png')) do |image|
+			image.format.should == 'PNG'
+			image.width.should == 99
+			image.height.should == 99
+		end
 	end
 
 	describe 'encoding' do

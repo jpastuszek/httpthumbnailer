@@ -17,7 +17,7 @@ class Thumbnailer < Controller
 				opts[:max_height] = spec.height if spec.height.is_a? Integer
 			end
 
-			thumbnailer.load(req.body, opts).borrow do |input_image|
+			thumbnailer.load(req.body, opts) do |input_image|
 				log.info "original image loaded: #{input_image.mime_type}"
 
 				log.info "generating thumbnail: #{spec}"
@@ -41,7 +41,7 @@ class Thumbnailer < Controller
 					opts[:max_height] = thumbnail_specs.max_height
 			end
 
-			thumbnailer.load(req.body, opts).borrow do |input_image|
+			thumbnailer.load(req.body, opts) do |input_image|
 				log.info "original image loaded: #{input_image.mime_type}"
 				write_preamble 200,
 					"X-Input-Image-Mime-Type" => input_image.mime_type,
@@ -87,7 +87,7 @@ class Thumbnailer < Controller
 			opts[:no_downscale] = true
 
 			# RMagick of v2.13.2 does not use ImageMagick's PingBlob so we have to actually load the image
-			thumbnailer.load(req.body, opts).borrow do |input_image|
+			thumbnailer.load(req.body, opts) do |input_image|
 				mime_type = input_image.mime_type
 				log.info "image loaded and identified as: #{mime_type}"
 				write_json 200, {
