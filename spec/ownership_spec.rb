@@ -232,6 +232,159 @@ describe 'image ownership' do
 		end
 	end
 
+	describe '#replace' do
+		it 'should take ownership of new image' do
+			subject.replace do |image|
+				subject.should be_owned
+			end
+			subject.should be_destoryed
+		end
+		it 'should borrow borrowed image' do
+			subject.own do |image|
+				image.borrow do |borrowed|
+					borrowed.should_not be_owned
+					borrowed.replace do |replaced|
+						replaced.should_not be_owned
+					end
+				end
+			end
+		end
+		it 'should move owned image' do
+			subject.own do |image|
+				image.move do |moved|
+					moved.should be_owned
+					moved.replace do |replaced|
+						replaced.should be_owned
+					end
+				end
+			end
+		end
+
+		describe 'contitional return' do
+			context 'when new image is returned' do
+				context 'and the image was owned' do
+					it 'should destory the image' do
+						new_image = Image.new
+						subject.own do |image|
+							ret = image.replace do |replaced|
+								new_image
+							end
+							ret.should_not be_destoryed
+							image.should be_destoryed
+						end
+					end
+					it 'should return new image' do
+						new_image = Image.new
+						subject.own do |image|
+							ret = image.replace do |replaced|
+								new_image
+							end
+							ret.should be new_image
+						end
+					end
+				end
+				context 'and the image was not owned' do
+					it 'should not destory the image' do
+						new_image = Image.new
+						subject.own do |image|
+							image.borrow do |borrowed|
+								ret = borrowed.replace do |replaced|
+									new_image
+								end
+								ret.should_not be_destoryed
+								image.should_not be_destoryed
+							end
+						end
+					end
+					it 'should return new image' do
+						new_image = Image.new
+						subject.own do |image|
+							image.borrow do |borrowed|
+								ret = borrowed.replace do |replaced|
+									new_image
+								end
+								ret.should be new_image
+							end
+						end
+					end
+				end
+			end
+			context 'when self is returend' do
+				context 'and the image was owned' do
+					it 'should not destory the image' do
+						subject.own do |image|
+							ret = image.replace do |replaced|
+								replaced
+							end
+							ret.should_not be_destoryed
+							image.should_not be_destoryed
+						end
+					end
+					it 'should return the image' do
+						subject.own do |image|
+							ret = image.replace do |replaced|
+								replaced
+							end
+							ret.should be image
+						end
+					end
+				end
+				context 'and the image was not owned' do
+					it 'should not destory the image' do
+						subject.own do |image|
+							image.borrow do |borrowed|
+								ret = borrowed.replace do |replaced|
+									replaced
+								end
+								ret.should_not be_destoryed
+								borrowed.should_not be_destoryed
+							end
+							image.should_not be_destoryed
+						end
+					end
+					it 'should return new image' do
+						subject.own do |image|
+							image.borrow do |borrowed|
+								ret = borrowed.replace do |replaced|
+									replaced
+								end
+								ret.should be image
+							end
+						end
+					end
+				end
+			end
+		end
+
+		context 'image is owned' do
+			context 'new image is returned' do
+				it 'should return new image' do
+					new_image = Image.new
+					subject.own do |image|
+						ret = image.replace do |moved|
+							moved.should be_owned
+							new_image
+						end
+						ret.should be new_image
+					end
+				end
+				it 'should move ownership of the image' do
+					new_image = Image.new
+					subject.own do |image|
+						image.should be_owned
+						image.replace do |moved|
+							moved.should be_owned
+							new_image
+						end
+						image.should_not be_owned
+						image.should be_destoryed
+					end
+					subject.should be_destoryed
+				end
+			end
+		end
+	end
+
 	describe 'image after borrow' do
 		it 'should not be destoryed' do
 			subject.own do |image|

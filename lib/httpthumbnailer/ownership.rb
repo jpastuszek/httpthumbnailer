@@ -49,6 +49,16 @@ module Ownership
 			@owned = false
 		end
 	end
+
+	def replace(&block)
+		if @owned.nil?
+			own(&block)
+		elsif @owned
+			move(&block)
+		else
+			borrow(&block)
+		end
+	end
 end
 
 
