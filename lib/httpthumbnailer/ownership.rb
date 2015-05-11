@@ -1,6 +1,5 @@
 module Ownership
-	OwningBorrowedError = Class.new(RuntimeError)
-	OwningDestroyedError = Class.new(RuntimeError)
+	UseDestroyedError = Class.new(RuntimeError)
 	BorrowingDestoryedError = Class.new(RuntimeError)
 	BorrowingNotOwnedError = Class.new(RuntimeError)
 
@@ -24,38 +23,35 @@ module Ownership
 		end
 	end
 
-	def own
-		@destroyed and raise OwningDestroyedError, "cannot own a destoryed object '#{self}'"
-		@borrowed and raise OwningBorrowedError, "cannot own a borrowed object '#{self}'"
-		# take ownership; it may be owned already
-		@owned = true
-		begin
-			ret = yield self
-			# give up ownership if nothing happened with the obejct
-			if ret == self or ret == nil
-				@owned = nil
-				return self
-			end
-			ret
-		ensure
-			# if I am still an owner destroy and give up ownership
-			if @owned
-				destroy!
-				@destroyed = true
-				@owned = nil
-			end
-		end
-	end
-
-	alias :move :own
-
-	def replace(&block)
+	def get(&block)
 		if @borrowed
 			borrow(&block)
 		else
-			own(&block)
+			@destroyed and raise UseDestroyedError, "cannot own a destoryed object '#{self}'"
+			# take ownership; it may be owned already
+			@owned = true
+			begin
+				ret = yield self
+				# give up ownership if nothing happened with the obejct
+				if ret == self or ret == nil
+					@owned = nil
+					return self
+				end
+				ret
+			ensure
+				# if I am still an owner destroy and give up ownership
+				if @owned
+					destroy!
+					@destroyed = true
+					@owned = nil
+				end
+			end
 		end
 	end
+
+	alias :replace :get
+	alias :move :get
+	alias :own :get
 end
 
 

@@ -430,7 +430,7 @@ describe 'image ownership' do
 				expect {
 					image.move do |image|
 					end
-				}.to raise_error Ownership::OwningDestroyedError
+				}.to raise_error Ownership::UseDestroyedError
 			end
 		end
 	end
