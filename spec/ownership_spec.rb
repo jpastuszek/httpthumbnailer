@@ -265,7 +265,38 @@ describe 'object ownership' do
 	end
 
 	describe 'exception safety' do
-		pending
+		context 'when exception was thrown' do
+			it 'should destroy owned object' do
+				expect {
+					subject.get do |object|
+						raise 'test'
+					end
+				}.to raise_error RuntimeError, 'test'
+				subject.should be_destoryed
+			end
+
+			it 'should destroy owned and then borrowed object' do
+				expect {
+					subject.get do |object|
+						subject.borrow do |object|
+							raise 'test'
+						end
+					end
+				}.to raise_error RuntimeError, 'test'
+				subject.should be_destoryed
+			end
+
+			it 'should destroy owned and then moved object' do
+				expect {
+					subject.get do |object|
+						subject.get do |object|
+							raise 'test'
+						end
+					end
+				}.to raise_error RuntimeError, 'test'
+				subject.should be_destoryed
+			end
+		end
 	end
 end
 
