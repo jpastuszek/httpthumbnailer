@@ -260,17 +260,32 @@ module Plugin
 
 			def setup_default_edits
 				edit('cut') do |image, x, y, width, height|
-					x = x.to_f
-					y = y.to_f
-					width = width.to_f
-					height = height.to_f
+					x = Float(x) rescue 0.25
+					y = Float(y) rescue 0.25
+					width = Float(width) rescue 0.5
+					height = Float(height) rescue 0.5
 
-					x ||= 0.25
-					y ||= 0.25
-					width ||= 0.5
-					height ||= 0.5
+					image.crop(
+						*image.rel_to_px(x, y),
+						*image.rel_to_px(width, height),
+						true
+					) if image.width != width or image.height != height
+				end
 
-					image.crop(x * image.columns, y * image.rows, width * image.columns, height * image.rows, true) if image.columns != width or image.rows != height
+				edit('blur') do |image, box_x, box_y, box_width, box_height, options|
+					box_x = Float(box_x) rescue 0.0
+					box_y = Float(box_y) rescue 0.0
+					box_width = Float(box_width) rescue 1.0
+					box_height = Float(box_height) rescue 1.0
+
+					radious = Float(options['radious']) rescue 0.0 # auto
+					sigma = Float(options['sigma']) rescue 2.5
+
+					image.blur_region(
+						*image.rel_to_px(box_x, box_y),
+						*image.rel_to_px(box_width, box_height),
+						radious, sigma
+					)
 				end
 			end
 		end

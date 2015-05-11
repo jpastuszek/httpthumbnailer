@@ -50,6 +50,7 @@ module Plugin
 							end
 							image
 						end.get do |image|
+							log.debug "thumbnailing with method: #{spec.method} #{width}x#{height} #{spec.options}"
 							thumbnail_image(image, spec.method, width, height, spec.options)
 						end.get do |image|
 							if image.alpha?
@@ -229,7 +230,7 @@ module Plugin
 				blur_image(radious, sigma).get do |blur|
 					blur.crop(x, y, h, w, true)
 				end.get do |blur|
-					blur.composite(blur, x, y, Magick::OverCompositeOp)
+					self.composite!(blur, x, y, Magick::OverCompositeOp)
 				end
 			end
 
