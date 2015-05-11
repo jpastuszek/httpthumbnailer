@@ -8,9 +8,10 @@ module Ownership
 		@owned = true
 		begin
 			ret = yield self
-			if ret == self
+			if ret == self or ret == nil
 				@owned = nil
 				@moved = nil
+				return self
 			end
 			ret
 		ensure
@@ -40,9 +41,10 @@ module Ownership
 		@owned.nil? and fail "object #{self} not owned by anyone"
 		begin
 			ret = yield self
-			if ret == self
+			if ret == self or ret == nil
 				@owned = false
 				@moved = false
+				return self
 			end
 			ret
 		ensure

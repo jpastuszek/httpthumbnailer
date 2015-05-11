@@ -188,7 +188,7 @@ module Plugin
 
 				scale = [width / columns.to_f, height / rows.to_f].max
 
-				resize((scale * columns).ceil, (scale * rows).ceil).move do |image|
+				resize((scale * columns).ceil, (scale * rows).ceil).replace do |image|
 					next if width == image.columns and height == image.rows
 					image.crop(*image.float_to_offset(width, height, float_x, float_y), width, height, true)
 				end
@@ -232,12 +232,10 @@ module Plugin
 			end
 
 			def blur_region(x, y, h, w, radious, sigma)
-				move do |orig|
-					orig.blur_image(radious, sigma).move do |blur|
-						blur.crop(x, y, h, w, true)
-					end.move do |blur|
-						orig.composite(blur, x, y, Magick::OverCompositeOp)
-					end
+				blur_image(radious, sigma).replace do |blur|
+					blur.crop(x, y, h, w, true)
+				end.replace do |blur|
+					orig.composite(blur, x, y, Magick::OverCompositeOp)
 				end
 			end
 
