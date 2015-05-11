@@ -40,6 +40,8 @@ module Plugin
 			end
 		end
 
+		UpscaledError = Class.new RuntimeError
+
 		class Service
 			include ClassLogging
 
@@ -154,29 +156,37 @@ module Plugin
 						old_memory_limit = set_limit(:memory, borrowed_memory_limit)
 					end
 
-					images = Magick::Image.from_blob(blob) do |info|
-						if mw and mh
-							define('jpeg', 'size', "#{mw*2}x#{mh*2}")
-							define('jbig', 'size', "#{mw*2}x#{mh*2}")
-						end
-					end
-
-					image = images.first
-					if image.columns > image.base_columns or image.rows > image.base_rows and not options[:no_reload]
-						log.warn "input image got upscaled from: #{image.base_columns}x#{image.base_rows} to #{image.columns}x#{image.rows}: reloading without max size hint!"
-						images.each do |other|
-							other.destroy!
-						end
-						images = Magick::Image.from_blob(blob)
-						Service.stats.incr_total_images_reloaded
-					end
-					blob = nil
-
-					image = images.shift
 					begin
-						images.each do |other|
-							other.destroy!
+						images = Magick::Image.from_blob(blob) do |info|
+							if mw and mh
+								define('jpeg', 'size', "#{mw*2}x#{mh*2}")
+								define('jbig', 'size', "#{mw*2}x#{mh*2}")
+							end
 						end
+						begin
+							image = images.shift
+							begin
+								if image.columns > image.base_columns or image.rows > image.base_rows and not options[:no_reload]
+									log.warn "input image got upscaled from: #{image.base_columns}x#{image.base_rows} to #{image.columns}x#{image.rows}: reloading without max size hint!"
+									raise UpscaledError
+								end
+								image
+							rescue
+								image.destroy!
+								raise
+							end
+						ensure
+							images.each do |other|
+								other.destroy!
+							end
+						end
+					rescue UpscaledError
+						Service.stats.incr_total_images_reloaded
+						mw = mh = nil
+						retry
+					end.get do |image|
+						blob = nil
+
 						log.info "loaded image: #{image.inspect}"
 						Service.stats.incr_total_images_loaded
 
@@ -186,22 +196,20 @@ module Plugin
 							log.debug "deleting user propertie '#{key}'"
 							image[key] = nil
 						end
-
+						image
+					end.get do |image|
 						if mw and mh and not options[:no_downscale]
 							f = image.find_downscale_factor(mw, mh)
 							if f > 1
 								image = image.downscale(f)
 								log.info "downscaled image by factor of #{f}: #{image.inspect}"
 								Service.stats.incr_total_images_downscaled
+								image
 							end
 						end
-						image.get do |image|
-							yield InputImage.new(image, @thumbnailing_methods, @edits)
-							true # make sure it is destroyed
-						end
-					rescue
-						image.destroy!
-						raise
+					end.get do |image|
+						yield InputImage.new(image, @thumbnailing_methods, @edits)
+						true # make sure it is destroyed
 					end
 				rescue Magick::ImageMagickError => error
 					raise ImageTooLargeError, error if error.message =~ /cache resources exhausted/
