@@ -97,11 +97,6 @@ module Plugin
 			def height
 				@image.base_rows
 			end
-
-			# needs to be seen as @image when returned in replace block
-			def equal?(image)
-				super image or @image.equal? image
-			end
 		end
 
 		class Thumbnail
