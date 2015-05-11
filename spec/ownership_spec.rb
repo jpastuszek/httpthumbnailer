@@ -20,50 +20,14 @@ describe 'image ownership' do
 	end
 
 	describe '#own' do
-		it 'should take ownership of new image and yield it' do
+		it 'should yield image' do
 			subject.own do |image|
-				subject.should be image
+				image.should be subject
+			end
+		end
+		it 'should take ownership of yielded image' do
+			subject.own do |image|
 				image.should be_owned
-			end
-		end
-		it 'should not destory new image returned by the block' do
-			new_image = Image.new
-			subject.own do |image|
-				new_image
-			end
-			subject.should be_destoryed
-			new_image.should_not be_destoryed
-		end
-		it 'should return nil' do
-			subject.own do |image|
-			end.should be_nil
-		end
-
-		context 'on image that was not moved' do
-			it 'should end up with not destoryed image' do
-				subject.own do |image|
-					image.borrow do |borrowed|
-					end
-					image.should_not be_destoryed
-				end
-			end
-			it 'should destory the image' do
-				subject.own do |image|
-					image.borrow do |borrowed|
-					end
-				end
-				subject.should be_destoryed
-			end
-		end
-		context 'when image was moved' do
-			it 'should end up with destoryed image' do
-				subject.own do |image|
-					image.move do |moved|
-					end
-					image.should be_destoryed
-					image
-				end
-				subject.should be_destoryed
 			end
 		end
 	end
@@ -76,7 +40,7 @@ describe 'image ownership' do
 				end
 			end
 		end
-		it 'should not take ownership image' do
+		it 'should not take ownership of yielded image' do
 			subject.own do |image|
 				image.should be_owned
 				subject.borrow do |borrowed|
@@ -107,6 +71,7 @@ describe 'image ownership' do
 					end
 					ret.should_not be_destoryed
 					image.should_not be_destoryed
+					ret
 				end
 				subject.should be_destoryed
 			end
@@ -124,11 +89,12 @@ describe 'image ownership' do
 			end
 			it 'should not destroy image' do
 				subject.own do |image|
-					subject.borrow do |borrowed|
+					ret = subject.borrow do |borrowed|
 						borrowed.should_not be_destoryed
 						1
 					end
 					image.should_not be_destoryed
+					ret
 				end
 				subject.should be_destoryed
 			end
@@ -143,7 +109,7 @@ describe 'image ownership' do
 				end
 			end
 		end
-		it 'should transfer ownership' do
+		it 'should transfer ownership to yielded image' do
 			subject.own do |image|
 				image.should be_owned
 				image.move do |moved|
@@ -407,6 +373,7 @@ describe 'image ownership' do
 					borrowed.should_not be_destoryed
 				end
 				image.should_not be_destoryed
+				1
 			end
 			subject.should be_destoryed
 		end
@@ -435,8 +402,10 @@ describe 'image ownership' do
 			subject.own do |image|
 				image.move do |moved|
 					moved.should_not be_destoryed
+					1
 				end
 				image.should be_destoryed
+				1
 			end
 			subject.should be_destoryed
 		end
