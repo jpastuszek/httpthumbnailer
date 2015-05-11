@@ -240,21 +240,21 @@ module Plugin
 
 			def setup_default_methods
 				thumbnailing_method('crop') do |image, width, height, options|
-					image.resize_to_fill(width, height, (Float(options['float-x']) rescue 0.5), (Float(options['float-y']) rescue 0.5)) if image.columns != width or image.rows != height
+					image.resize_to_fill(width, height, (Float(options['float-x']) rescue 0.5), (Float(options['float-y']) rescue 0.5)) if image.width != width or image.height != height
 				end
 
 				thumbnailing_method('fit') do |image, width, height, options|
-					image.resize_to_fit(width, height) if image.columns != width or image.rows != height
+					image.resize_to_fit(width, height) if image.width != width or image.height != height
 				end
 
 				thumbnailing_method('pad') do |image, width, height, options|
 					image.resize_to_fit(width, height).get do |resize|
 						resize.render_on_background(options['background-color'], width, height, (Float(options['float-x']) rescue 0.5), (Float(options['float-y']) rescue 0.5))
-					end if image.columns != width or image.rows != height
+					end if image.width != width or image.height != height
 				end
 
 				thumbnailing_method('limit') do |image, width, height, options|
-					image.resize_to_fit(width, height) if image.columns > width or image.rows > height
+					image.resize_to_fit(width, height) if image.width > width or image.height > height
 				end
 			end
 
