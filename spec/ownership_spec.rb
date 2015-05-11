@@ -412,6 +412,7 @@ describe 'image ownership' do
 		it '#borrow should raise error' do
 			subject.own do |image|
 				image.move do |moved|
+					1
 				end
 				expect {
 					image.borrow do |image|
@@ -422,6 +423,7 @@ describe 'image ownership' do
 		it '#move should raise error' do
 			subject.own do |image|
 				image.move do |moved|
+					1
 				end
 				expect {
 					image.move do |image|

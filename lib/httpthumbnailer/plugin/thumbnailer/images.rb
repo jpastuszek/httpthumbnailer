@@ -51,13 +51,12 @@ module Plugin
 
 						image.replace do |image|
 							thumbnail_image(image, spec.method, width, height, spec.options)
-							.replace do |image|
-								if image.alpha?
-									log.info 'thumbnail has alpha, rendering on background'
-									image.render_on_background(spec.options['background-color'])
-								else
-									image
-								end
+						end.replace do |image|
+							if image.alpha?
+								log.info 'thumbnail has alpha, rendering on background'
+								image.render_on_background(spec.options['background-color'])
+							else
+								image
 							end
 						end.replace do |image|
 							Service.stats.incr_total_thumbnails_created
