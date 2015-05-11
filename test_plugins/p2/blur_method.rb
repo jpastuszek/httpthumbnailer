@@ -11,7 +11,7 @@ thumbnailing_method('blur')  do |image, width, height, options|
 		*image.rel_to_px(box_x, box_y),
 		*image.rel_to_px(box_w, box_h),
 		radious, sigma
-	).replace do |image|
+	).get do |image|
 		image.resize_to_fit(width, height) if image.columns != width or image.rows != height
 	end
 end

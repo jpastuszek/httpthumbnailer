@@ -229,7 +229,7 @@ module Plugin
 				blur_image(radious, sigma).get do |blur|
 					blur.crop(x, y, h, w, true)
 				end.get do |blur|
-					orig.composite(blur, x, y, Magick::OverCompositeOp)
+					blur.composite(blur, x, y, Magick::OverCompositeOp)
 				end
 			end
 
