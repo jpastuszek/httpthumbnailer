@@ -43,8 +43,10 @@ describe 'image ownership' do
 		it 'should not take ownership of yielded image' do
 			subject.own do |image|
 				image.should be_owned
+				image.should_not be_borrowed
 				subject.borrow do |borrowed|
-					borrowed.should_not be_owned
+					borrowed.should be_owned
+					borrowed.should be_borrowed
 				end
 				image.should be_owned
 			end
@@ -125,7 +127,7 @@ describe 'image ownership' do
 						expect {
 							borrowed.move do |image|
 							end
-						}.to raise_error Ownership::MovingBorrowedError
+						}.to raise_error Ownership::OwningBorrowedError
 					end
 				end
 			end
@@ -208,9 +210,9 @@ describe 'image ownership' do
 		it 'should borrow borrowed image' do
 			subject.own do |image|
 				image.borrow do |borrowed|
-					borrowed.should_not be_owned
+					borrowed.should be_borrowed
 					borrowed.replace do |replaced|
-						replaced.should_not be_owned
+						replaced.should be_borrowed
 					end
 				end
 			end
@@ -417,7 +419,7 @@ describe 'image ownership' do
 				expect {
 					image.borrow do |image|
 					end
-				}.to raise_error Ownership::BorrowingAfterMoveError
+				}.to raise_error Ownership::BorrowingDestoryedError
 			end
 		end
 		it '#move should raise error' do
