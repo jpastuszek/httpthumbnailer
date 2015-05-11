@@ -44,21 +44,21 @@ module Plugin
 
 						spec.edits.each do |edit|
 							log.debug "applying edit: #{edit}"
-							image = image.replace do |image|
+							image = image.get do |image|
 								edit_image(image, edit.name, *edit.args)
 							end
 						end
 
-						image.replace do |image|
+						image.get do |image|
 							thumbnail_image(image, spec.method, width, height, spec.options)
-						end.replace do |image|
+						end.get do |image|
 							if image.alpha?
 								log.info 'thumbnail has alpha, rendering on background'
 								image.render_on_background(spec.options['background-color'])
 							else
 								image
 							end
-						end.replace do |image|
+						end.get do |image|
 							Service.stats.incr_total_thumbnails_created
 							image_format = spec.format == :input ? @image.format : spec.format
 
@@ -173,7 +173,7 @@ module Plugin
 						raise Plugin::Thumbnailer::InvalidColorNameError.new(background_color)
 					end
 					self.depth = 8
-				}.replace do |background|
+				}.get do |background|
 					background.composite(self, *background.float_to_offset(self.columns, self.rows, float_x, float_y), Magick::OverCompositeOp)
 				end
 			end
@@ -187,7 +187,7 @@ module Plugin
 
 				scale = [width / columns.to_f, height / rows.to_f].max
 
-				resize((scale * columns).ceil, (scale * rows).ceil).replace do |image|
+				resize((scale * columns).ceil, (scale * rows).ceil).get do |image|
 					next if width == image.columns and height == image.rows
 					image.crop(*image.float_to_offset(width, height, float_x, float_y), width, height, true)
 				end
@@ -231,9 +231,9 @@ module Plugin
 			end
 
 			def blur_region(x, y, h, w, radious, sigma)
-				blur_image(radious, sigma).replace do |blur|
+				blur_image(radious, sigma).get do |blur|
 					blur.crop(x, y, h, w, true)
-				end.replace do |blur|
+				end.get do |blur|
 					orig.composite(blur, x, y, Magick::OverCompositeOp)
 				end
 			end

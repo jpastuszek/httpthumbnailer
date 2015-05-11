@@ -195,8 +195,9 @@ module Plugin
 								Service.stats.incr_total_images_downscaled
 							end
 						end
-						image.own do |image|
+						image.get do |image|
 							yield InputImage.new(image, @thumbnailing_methods, @edits)
+							true # make sure it is destroyed
 						end
 					rescue
 						image.destroy!
@@ -239,7 +240,7 @@ module Plugin
 				end
 
 				thumbnailing_method('pad') do |image, width, height, options|
-					image.resize_to_fit(width, height).replace do |resize|
+					image.resize_to_fit(width, height).get do |resize|
 						resize.render_on_background(options['background-color'], width, height, (Float(options['float-x']) rescue 0.5), (Float(options['float-y']) rescue 0.5))
 					end if image.columns != width or image.rows != height
 				end

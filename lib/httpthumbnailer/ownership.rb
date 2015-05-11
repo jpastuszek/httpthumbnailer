@@ -48,10 +48,6 @@ module Ownership
 			end
 		end
 	end
-
-	alias :replace :get
-	alias :move :get
-	alias :own :get
 end
 
 

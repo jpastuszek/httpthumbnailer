@@ -134,16 +134,16 @@ describe 'object ownership' do
 		end
 		context 'when other kinde of object was returned by the block' do
 			it 'should return that object' do
-				subject.own do |object|
-					ret = subject.move do |borrowed|
+				subject.get do |object|
+					ret = subject.get do |borrowed|
 						1
 					end
 					ret.should be 1
 				end
 			end
 			it 'should destory object it was moving' do
-				subject.own do |object|
-					object.move do |moved|
+				subject.get do |object|
+					object.get do |moved|
 						1
 					end
 					object.should be_destoryed
@@ -207,7 +207,7 @@ describe 'object ownership' do
 			end
 		end
 		it 'should not destroy the object' do
-			subject.own do |object|
+			subject.get do |object|
 				subject.borrow do |borrowed|
 					1
 				end
