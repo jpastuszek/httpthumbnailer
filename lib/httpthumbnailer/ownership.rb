@@ -1,15 +1,14 @@
 module Ownership
 	MovingBorrowedError = Class.new(RuntimeError)
 	BorrowingAfterMoveError = Class.new(RuntimeError)
-	MovingAfterMoveError = Class.new(RuntimeError)
-
+	OwningDestroyedError = Class.new(RuntimeError)
 
 	def owned?
 		@owned
 	end
 
 	def borrow
-		@moved and raise BorrowingAfterMoveError, "cannot borrow after move '#{self}'"
+		@destroyed and raise BorrowingAfterMoveError, "cannot borrow after move '#{self}'"
 		@owned.nil? and fail "object #{self} not owned by anyone"
 		was_owned = @owned
 		begin
@@ -20,36 +19,34 @@ module Ownership
 		end
 	end
 
-	def move
-		@moved and raise MovingAfterMoveError, "cannot move after move '#{self}'"
+	def own
+		@destroyed and raise OwningDestroyedError, "cannot own a destoryed object '#{self}'"
 		@owned == false and raise MovingBorrowedError, "cannot move borrowed '#{self}'"
 		@owned = true
 		begin
 			ret = yield self
 			if ret == self or ret == nil
 				@owned = nil
-				@moved = nil
+				@destroyed = nil
 				return self
 			end
 			ret
 		ensure
 			if owned?
 				destroy!
-				@moved = true
+				@destroyed = true
 				@owned = false
 			end
 		end
 	end
 
-	alias :own :move
+	alias :move :own
 
 	def replace(&block)
-		if @owned.nil?
-			own(&block)
-		elsif @owned
-			move(&block)
-		else
+		if @owned == false
 			borrow(&block)
+		else
+			own(&block)
 		end
 	end
 end

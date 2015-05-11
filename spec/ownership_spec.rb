@@ -428,7 +428,7 @@ describe 'image ownership' do
 				expect {
 					image.move do |image|
 					end
-				}.to raise_error Ownership::MovingAfterMoveError
+				}.to raise_error Ownership::OwningDestroyedError
 			end
 		end
 	end
