@@ -39,17 +39,17 @@ module Plugin
 				raise ZeroSizedImageError.new(width, height) if width == 0 or height == 0
 
 				begin
-					@image.borrow do |orig|
-						image = orig
-
-						spec.edits.each do |edit|
-							log.debug "applying edit: #{edit}"
-							image = image.get do |image|
-								edit_image(image, edit.name, *edit.args)
-							end
-						end
-
+					# we don't want to destory the image after we have generated the thumbnail
+					@image.borrow do |image|
 						image.get do |image|
+							spec.edits.each do |edit|
+								log.debug "applying edit: #{edit}"
+								image = image.get do |image|
+									edit_image(image, edit.name, *edit.args)
+								end
+							end
+							image
+						end.get do |image|
 							thumbnail_image(image, spec.method, width, height, spec.options)
 						end.get do |image|
 							if image.alpha?
@@ -79,8 +79,10 @@ module Plugin
 			end
 
 			def thumbnail_image(image, method, width, height, options)
+				p image
 				impl = @thumbnailing_methods[method] or raise UnsupportedMethodError, method
 				ret = impl.call(image, width, height, options)
+				p image
 				fail "thumbnailing method '#{name}' returned '#{ret.class.name}' - expecting nil or Magick::Image" unless ret.nil? or ret.kind_of? Magick::Image
 				ret or image
 			end
@@ -169,7 +171,7 @@ module Plugin
 					end
 					self.depth = 8
 				}.get do |background|
-					background.composite(self, *background.float_to_offset(self.columns, self.rows, float_x, float_y), Magick::OverCompositeOp)
+					background.composite!(self, *background.float_to_offset(self.columns, self.rows, float_x, float_y), Magick::OverCompositeOp)
 				end
 			end
 
