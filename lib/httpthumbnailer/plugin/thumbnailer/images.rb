@@ -79,10 +79,8 @@ module Plugin
 			end
 
 			def thumbnail_image(image, method, width, height, options)
-				p image
 				impl = @thumbnailing_methods[method] or raise UnsupportedMethodError, method
 				ret = impl.call(image, width, height, options)
-				p image
 				fail "thumbnailing method '#{name}' returned '#{ret.class.name}' - expecting nil or Magick::Image" unless ret.nil? or ret.kind_of? Magick::Image
 				ret or image
 			end
