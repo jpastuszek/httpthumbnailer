@@ -22,6 +22,8 @@ module Plugin
 		end
 
 		class InputImage
+			UpscaledError = Class.new RuntimeError
+
 			include ClassLogging
 			extend Forwardable
 
