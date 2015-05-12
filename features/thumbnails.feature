@@ -120,6 +120,18 @@ Feature: Generating set of thumbnails with single PUT request
 		Then third part should contain JPEG image of size 16x32
 		And third part Content-Type header should be image/jpeg
 
+	@error_handling
+	Scenario: Reporitng of bat thumbnail option value
+		Given test.jpg file content as request body
+		When I do PUT request http://localhost:3100/thumbnails/crop,4,4,png,float-x:xxx/crop,128,128,png
+		Then response status should be 200
+		And I should get multipart response
+		And first part Content-Type header should be text/plain
+		And first part body should be CRLF endend lines
+		"""
+		error while thumbnailing with method 'crop': expected argument 'float-x' to be a float, got: xxx
+		"""
+
 	@resources
 	Scenario: Memory limits exhausted while thumbnailing
 		Given test.jpg file content as request body
