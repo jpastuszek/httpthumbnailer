@@ -1,7 +1,7 @@
 Feature: Generating set of thumbnails with single PUT request
 	In order to generate a set of image thumbnails
 	A user must PUT an image to URL in format
-	/thumbnails[/<thumbnail type>,<width>,<height>,<format>[,<option key>:<option value>]+]+
+	/thumbnails[/<thumbnail type>,<width>,<height>,<format>[,<option key>:<option value>]*]*
 
 	Background:
 		Given httpthumbnailer server is running at http://localhost:3100/
