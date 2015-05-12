@@ -43,10 +43,20 @@ module Plugin
 			end
 		end
 
+		class ThumbnailArgumentError < ArgumentError
+			def initialize(method, msg)
+				super("error while thumbnailing with method '#{method}': #{msg}")
+			end
+		end
+
+		class EditArgumentError < ArgumentError
+			def initialize(name, msg)
+				super("error while applying edit '#{name}': #{msg}")
+			end
+		end
+
 		def self.setup(app)
 			Service.logger = app.logger_for(Service)
-			InputImage.logger = app.logger_for(InputImage)
-			Thumbnail.logger = app.logger_for(Thumbnail)
 
 			@@service = Service.new(
 				limit_memory: app.settings[:limit_memory],

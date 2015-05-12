@@ -47,6 +47,9 @@ module Plugin
 			end
 
 			def initialize(options = {})
+				InputImage.logger = logger_for(InputImage)
+				Thumbnail.logger = logger_for(Thumbnail)
+
 				@thumbnailing_methods = {}
 				@edits = {}
 				@options = options
@@ -144,6 +147,7 @@ module Plugin
 				end
 			end
 
+			# TODO: move to own file
 			def setup_built_in_plugins
 				log.info("loading built in plugins")
 				plugin = PluginContext.new do

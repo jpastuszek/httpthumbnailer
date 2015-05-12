@@ -65,7 +65,10 @@ class Thumbnailer < Controller
 							write_error_part 400, error
 						when Plugin::Thumbnailer::ZeroSizedImageError
 							write_error_part 400, error
-						#TODO: more errors
+						when Plugin::Thumbnailer::ThumbnailArgumentError
+							write_error_part 400, error
+						when Plugin::Thumbnailer::EditArgumentError
+							write_error_part 400, error
 						else
 							log.error "unhandled error while generating multipart response for thumbnail spec: #{spec}", error
 							write_error_part 500, error
