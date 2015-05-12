@@ -88,7 +88,7 @@ class Magick::Image
 		blur_image(radious, sigma).get do |blur|
 			blur.crop(x, y, h, w, true)
 		end.get do |blur|
-			self.composite!(blur, x, y, Magick::OverCompositeOp)
+			self.composite(blur, x, y, Magick::OverCompositeOp)
 		end
 	end
 
