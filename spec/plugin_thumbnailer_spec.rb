@@ -6,7 +6,7 @@ require 'httpthumbnailer/thumbnail_specs'
 describe Plugin::Thumbnailer::Service do
 	subject do
 		service = Plugin::Thumbnailer::Service.new
-		service.setup_default_methods
+		service.setup_built_in_plugins
 		service
 	end
 

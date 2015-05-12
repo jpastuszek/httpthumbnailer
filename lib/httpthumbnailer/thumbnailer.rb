@@ -2,6 +2,7 @@ require 'httpthumbnailer/plugin/thumbnailer'
 require 'httpthumbnailer/thumbnail_specs'
 
 class Thumbnailer < Controller
+	Plugin::Thumbnailer.logger = logger_for(Plugin::Thumbnailer)
 	self.plugin Plugin::Thumbnailer
 
 	self.define do

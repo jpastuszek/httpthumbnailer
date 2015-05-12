@@ -79,9 +79,19 @@ module Plugin
 				end
 			end
 
-			def edit_image(image, name, *args)
+			def edit_image(image, name, *args, options, spec)
 				impl = @edits[name] or raise UnsupportedEditError, name
-				ret = impl.call(image, *args)
+
+				# make sure we pass as many args as expected (filling with nil)
+				args_no = impl.arity - 3 # for image, optioins and spec
+				args = args.dup
+				args.fill(nil, (args.length)...args_no)
+				if args.length > args_no
+					log.warn "extra arguments to edit '#{name}': #{args[args_no..-1].join(', ')}"
+					args = args[0...args_no]
+				end
+
+				ret = impl.call(image, *args, options, spec)
 				fail "edit '#{name}' returned '#{ret.class.name}' - expecting nil or Magick::Image" unless ret.nil? or ret.kind_of? Magick::Image
 				ret or image
 			end
@@ -195,7 +205,9 @@ module Plugin
 
 				scale = [width / columns.to_f, height / rows.to_f].max
 
-				resize((scale * columns).ceil, (scale * rows).ceil).get do |image|
+				get do |image| # this will comsume (destory) self just after resize
+					image.resize((scale * columns).ceil, (scale * rows).ceil)
+				end.get do |image|
 					next if width == image.width and height == image.height
 					image.crop(*image.float_to_offset(width, height, float_x, float_y), width, height, true)
 				end

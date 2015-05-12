@@ -1,6 +1,8 @@
 require 'RMagick'
 require 'forwardable'
 require_relative 'thumbnailer/images'
+require 'httpthumbnailer/plugin'
+
 
 module Plugin
 	module Thumbnailer
@@ -41,6 +43,8 @@ module Plugin
 		end
 
 		UpscaledError = Class.new RuntimeError
+
+		include ClassLogging
 
 		class Service
 			include ClassLogging
@@ -241,64 +245,74 @@ module Plugin
 				old
 			end
 
-			def setup_default_methods
-				thumbnailing_method('crop') do |image, width, height, options|
-					image.resize_to_fill(width, height, (Float(options['float-x']) rescue 0.5), (Float(options['float-y']) rescue 0.5)) if image.width != width or image.height != height
+			def load_plugin(plugin_context)
+				plugin_context.thumbnailing_methods.each do |name, block|
+					thumbnailing_method(name, &block)
 				end
 
-				thumbnailing_method('fit') do |image, width, height, options|
-					image.resize_to_fit(width, height) if image.width != width or image.height != height
-				end
-
-				thumbnailing_method('pad') do |image, width, height, options|
-					image.resize_to_fit(width, height).get do |resize|
-						resize.render_on_background(options['background-color'], width, height, (Float(options['float-x']) rescue 0.5), (Float(options['float-y']) rescue 0.5))
-					end if image.width != width or image.height != height
-				end
-
-				thumbnailing_method('limit') do |image, width, height, options|
-					image.resize_to_fit(width, height) if image.width > width or image.height > height
+				plugin_context.edits.each do |name, block|
+					edit(name, &block)
 				end
 			end
 
-			def setup_default_edits
-				edit('cut') do |image, x, y, width, height|
-					x = Float(x) rescue 0.25
-					y = Float(y) rescue 0.25
-					width = Float(width) rescue 0.5
-					height = Float(height) rescue 0.5
+			def setup_built_in_plugins
+				log.info("loading built in plugins")
+				plugin = PluginContext.new do
+					thumbnailing_method('crop') do |image, width, height, options|
+						image.resize_to_fill(width, height, (Float(options['float-x']) rescue 0.5), (Float(options['float-y']) rescue 0.5)) if image.width != width or image.height != height
+					end
 
-					image.crop(
-						*image.rel_to_px(x, y),
-						*image.rel_to_px(width, height),
-						true
-					) if image.width != width or image.height != height
-				end
+					thumbnailing_method('fit') do |image, width, height, options|
+						image.resize_to_fit(width, height) if image.width != width or image.height != height
+					end
 
-				edit('blur') do |image, box_x, box_y, box_width, box_height, options|
-					box_x = Float(box_x) rescue 0.0
-					box_y = Float(box_y) rescue 0.0
-					box_width = Float(box_width) rescue 1.0
-					box_height = Float(box_height) rescue 1.0
+					thumbnailing_method('pad') do |image, width, height, options|
+						image.resize_to_fit(width, height).get do |resize|
+							resize.render_on_background(options['background-color'], width, height, (Float(options['float-x']) rescue 0.5), (Float(options['float-y']) rescue 0.5))
+						end if image.width != width or image.height != height
+					end
 
-					radious = Float(options['radious']) rescue 0.0 # auto
-					sigma = Float(options['sigma']) rescue 2.5
+					thumbnailing_method('limit') do |image, width, height, options|
+						image.resize_to_fit(width, height) if image.width > width or image.height > height
+					end
+					edit('cut') do |image, x, y, width, height|
+						x = Float(x) rescue 0.25
+						y = Float(y) rescue 0.25
+						width = Float(width) rescue 0.5
+						height = Float(height) rescue 0.5
 
-					image.blur_region(
-						*image.rel_to_px(box_x, box_y),
-						*image.rel_to_px(box_width, box_height),
-						radious, sigma
-					)
-				end
+						image.crop(
+							*image.rel_to_px(x, y),
+							*image.rel_to_px(width, height),
+							true
+						) if image.width != width or image.height != height
+					end
 
-				edit('rotate') do |image, angle, options, thumbnail_spec|
-					angle = Float(angle) rescue 90.0
-					options ||= {}
+					edit('blur') do |image, box_x, box_y, box_width, box_height, options|
+						box_x = Float(box_x) rescue 0.0
+						box_y = Float(box_y) rescue 0.0
+						box_width = Float(box_width) rescue 1.0
+						box_height = Float(box_height) rescue 1.0
 
-					image.with_background_color(options['background-color'] || thumbnail_spec.options['background-color']) do
-						image.rotate(angle)
+						radious = Float(options['radious']) rescue 0.0 # auto
+						sigma = Float(options['sigma']) rescue 2.5
+
+						image.blur_region(
+							*image.rel_to_px(box_x, box_y),
+							*image.rel_to_px(box_width, box_height),
+							radious, sigma
+						)
+					end
+
+					edit('rotate') do |image, angle, options, thumbnail_spec|
+						angle = float!('angle', angle)
+						image.with_background_color(options['background-color'] || thumbnail_spec.options['background-color']) do
+							image.rotate(angle)
+						end
 					end
 				end
+
+				load_plugin(plugin)
 			end
 		end
 
@@ -312,15 +326,12 @@ module Plugin
 				limit_map: app.settings[:limit_map],
 				limit_disk: app.settings[:limit_disk]
 			)
-
-			@@service.setup_default_methods
-			@@service.setup_default_edits
+			@@service.setup_built_in_plugins
 		end
 
-		def self.setup_plugins(plugins)
-			plugins.map(&:thumbnailing_methods).flatten(1).each do |name, block|
-				@@service.thumbnailing_method(name, &block)
-			end
+		def self.setup_plugin_from_file(file)
+			log.info("loading plugin from: #{file}")
+			@@service.load_plugin(PluginContext.from_file(file))
 		end
 
 		def thumbnailer

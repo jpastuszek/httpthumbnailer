@@ -47,8 +47,10 @@ Application.new('httpthumbnailer', port: 3100) do
 	end
 
 	main do |settings|
-		require 'httpthumbnailer/plugin'
-		plugin_contexts = settings.plugins.map do |dir|
+		require 'httpthumbnailer/error_reporter'
+		require 'httpthumbnailer/thumbnailer'
+
+		settings.plugins.map do |dir|
 			begin
 				dir.realpath
 			rescue Errno::ENOENT => error
@@ -57,17 +59,11 @@ Application.new('httpthumbnailer', port: 3100) do
 			end
 		end.compact.map do |dir|
 			Pathname::glob(dir + '**/*.rb')
-		end.map do |plugin_files|
-			plugin_files.sort.map do |plugin_file|
-				log.info("loading plugin from: #{plugin_file}")
-				PluginContext.new(plugin_file)
+		end.each do |plugin_files|
+			plugin_files.sort.each do |plugin_file|
+				Plugin::Thumbnailer.setup_plugin_from_file(plugin_file)
 			end
-		end.flatten
-
-		require 'httpthumbnailer/error_reporter'
-		require 'httpthumbnailer/thumbnailer'
-
-		Plugin::Thumbnailer.setup_plugins(plugin_contexts)
+		end
 
 		class HTTPThumbnailer < Controller
 			extend Stats
