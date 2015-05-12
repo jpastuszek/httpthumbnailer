@@ -31,6 +31,77 @@ module Plugin
 				@edits = edits
 			end
 
+			def self.from_blob(blob, thumbnailing_methods, edits, options = {}, &block)
+				mw = options[:max_width]
+				mh = options[:max_height]
+				if mw and mh
+					mw = mw.to_i
+					mh = mh.to_i
+					log.info "using max size hint of: #{mw}x#{mh}"
+				end
+
+				begin
+					begin
+						images = Magick::Image.from_blob(blob) do |info|
+							if mw and mh
+								define('jpeg', 'size', "#{mw*2}x#{mh*2}")
+								define('jbig', 'size', "#{mw*2}x#{mh*2}")
+							end
+						end
+						begin
+							image = images.shift
+							begin
+								if image.columns > image.base_columns or image.rows > image.base_rows and not options[:no_reload]
+									log.warn "input image got upscaled from: #{image.base_columns}x#{image.base_rows} to #{image.columns}x#{image.rows}: reloading without max size hint!"
+									raise UpscaledError
+								end
+								image
+							rescue
+								image.destroy!
+								raise
+							end
+						ensure
+							images.each do |other|
+								other.destroy!
+							end
+						end
+					rescue UpscaledError
+						Service.stats.incr_total_images_reloaded
+						mw = mh = nil
+						retry
+					end.get do |image|
+						blob = nil
+
+						log.info "loaded image: #{image.inspect}"
+						Service.stats.incr_total_images_loaded
+
+						# clean up the image
+						image.strip!
+						image.properties do |key, value|
+							log.debug "deleting user propertie '#{key}'"
+							image[key] = nil
+						end
+						image
+					end.get do |image|
+						if mw and mh and not options[:no_downscale]
+							f = image.find_downscale_factor(mw, mh)
+							if f > 1
+								image = image.downscale(f)
+								log.info "downscaled image by factor of #{f}: #{image.inspect}"
+								Service.stats.incr_total_images_downscaled
+								image
+							end
+						end
+					end.get do |image|
+						yield self.new(image, thumbnailing_methods, edits)
+						true # make sure it is destroyed
+					end
+				rescue Magick::ImageMagickError => error
+					raise ImageTooLargeError, error if error.message =~ /cache resources exhausted/
+					raise UnsupportedMediaTypeError, error
+				end
+			end
+
 			def thumbnail(spec)
 				spec = spec.dup
 				# default background is white
@@ -111,7 +182,7 @@ module Plugin
 				raise ThumbnailArgumentError, "error while thumbnailing with method '#{method}': #{error.message}"
 			end
 
-			def_delegators :@image, :destroy!, :destroyed?, :format, :width, :height
+			def_delegators :@image, :format, :width, :height
 
 			include MimeType
 
