@@ -58,6 +58,16 @@ Feature: Applying edits before thumbnailing the image
 		Then response should contain PNG image of size 117x128
 		And that image pixel at 4x4 should be of color blue
 
+	@edits @multipart
+	Scenario: Edits should only apply to single image with multipart
+		Given test.jpg file content as request body
+		When I do PUT request http://localhost:3100/thumbnails/fit,128,128,png!rotate,90/fit,128,128,jpeg!rotate,30/fit,128,128,jpeg
+		Then response status should be 200
+		And I should get multipart response
+		Then first part should contain PNG image of size 128x91
+		Then second part should contain JPEG image of size 117x128
+		Then third part should contain JPEG image of size 91x128
+
 	@edits @error_handling
 	Scenario: Reporitng of edit spec format - no value
 		Given test.jpg file content as request body
