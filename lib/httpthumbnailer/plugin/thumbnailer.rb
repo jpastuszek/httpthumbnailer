@@ -259,7 +259,7 @@ module Plugin
 				log.info("loading built in plugins")
 				plugin = PluginContext.new do
 					thumbnailing_method('crop') do |image, width, height, options|
-						image.resize_to_fill(width, height, (Float(options['float-x']) rescue 0.5), (Float(options['float-y']) rescue 0.5)) if image.width != width or image.height != height
+						image.resize_to_fill(width, height, float!('float-x', options['float-x'], 0.5), float!('float-y', options['float-y'], 0.5)) if image.width != width or image.height != height
 					end
 
 					thumbnailing_method('fit') do |image, width, height, options|
@@ -268,18 +268,19 @@ module Plugin
 
 					thumbnailing_method('pad') do |image, width, height, options|
 						image.resize_to_fit(width, height).get do |resize|
-							resize.render_on_background(options['background-color'], width, height, (Float(options['float-x']) rescue 0.5), (Float(options['float-y']) rescue 0.5))
+							resize.render_on_background(options['background-color'], width, height, float!('float-x', options['float-x'], 0.5), float!('float-y', options['float-y'], 0.5))
 						end if image.width != width or image.height != height
 					end
 
 					thumbnailing_method('limit') do |image, width, height, options|
 						image.resize_to_fit(width, height) if image.width > width or image.height > height
 					end
-					edit('cut') do |image, x, y, width, height|
-						x = Float(x) rescue 0.25
-						y = Float(y) rescue 0.25
-						width = Float(width) rescue 0.5
-						height = Float(height) rescue 0.5
+
+					edit('cut') do |image, x, y, width, height, options, thumbnail_spec|
+						x = float!('x', x)
+						y = float!('y', y)
+						width = float!('width', width)
+						height = float!('height', height)
 
 						image.crop(
 							*image.rel_to_px(x, y),
@@ -288,14 +289,14 @@ module Plugin
 						) if image.width != width or image.height != height
 					end
 
-					edit('blur') do |image, box_x, box_y, box_width, box_height, options|
-						box_x = Float(box_x) rescue 0.0
-						box_y = Float(box_y) rescue 0.0
-						box_width = Float(box_width) rescue 1.0
-						box_height = Float(box_height) rescue 1.0
+					edit('blur') do |image, box_x, box_y, box_width, box_height, options, thumbnail_spec|
+						box_x = float!('box_x', box_x)
+						box_y = float!('box_y', box_y)
+						box_width = float!('box_width', box_width)
+						box_height = float!('box_height', box_height)
 
-						radious = Float(options['radious']) rescue 0.0 # auto
-						sigma = Float(options['sigma']) rescue 2.5
+						radious = float!('radious', options['radious'], 0.0) # auto
+						sigma = float!('sigma', options['sigma'], 20)
 
 						image.blur_region(
 							*image.rel_to_px(box_x, box_y),

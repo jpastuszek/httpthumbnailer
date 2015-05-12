@@ -13,10 +13,10 @@ class ErrorReporter < Controller
 
 		on error(
 			ThumbnailSpec::BadThubnailSpecError,
-			PluginContext::PluginArgumentError,
 			Plugin::Thumbnailer::ZeroSizedImageError,
 			Plugin::Thumbnailer::UnsupportedMethodError,
-			Plugin::Thumbnailer::InvalidColorNameError
+			Plugin::Thumbnailer::InvalidColorNameError,
+			Plugin::Thumbnailer::EditArgumentError
 		) do |error|
 			write_error 400, error
 		end

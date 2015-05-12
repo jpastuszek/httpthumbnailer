@@ -66,7 +66,7 @@ Feature: Applying edits before thumbnailing the image
 		And response content type should be text/plain
 		And response body should be CRLF endend lines
 		"""
-		expected argument 'angle' to be a float but got no value
+		error while applying edit 'rotate': expected argument 'angle' to be a float but got no value
 		"""
 
 	@edits @error_handling
@@ -77,7 +77,7 @@ Feature: Applying edits before thumbnailing the image
 		And response content type should be text/plain
 		And response body should be CRLF endend lines
 		"""
-		expected argument 'angle' to be a float, got: xxx
+		error while applying edit 'rotate': expected argument 'angle' to be a float, got: xxx
 		"""
 
 	@edits @error_handling

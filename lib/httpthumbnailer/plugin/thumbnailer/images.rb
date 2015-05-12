@@ -4,6 +4,8 @@ require 'httpthumbnailer/ownership'
 
 module Plugin
 	module Thumbnailer
+		EditArgumentError = Class.new(ArgumentError)
+
 		module MimeType
 			# ImageMagick Image.mime_type is absolutely bunkers! It goes over file system to look for some strange files WTF?!
 			# Also it cannot be used for thumbnails since they are not yet rendered to desired format
@@ -92,8 +94,11 @@ module Plugin
 				end
 
 				ret = impl.call(image, *args, options, spec)
+
 				fail "edit '#{name}' returned '#{ret.class.name}' - expecting nil or Magick::Image" unless ret.nil? or ret.kind_of? Magick::Image
 				ret or image
+			rescue PluginContext::PluginArgumentError => error
+				raise EditArgumentError, "error while applying edit '#{name}': #{error.message}"
 			end
 
 			def thumbnail_image(image, method, width, height, options)
