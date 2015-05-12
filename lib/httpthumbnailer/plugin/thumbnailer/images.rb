@@ -22,7 +22,7 @@ module Plugin
 			include ClassLogging
 			extend Forwardable
 
-			def initialize(image, thumbnailing_methods, edits, options = {})
+			def initialize(image, thumbnailing_methods, edits)
 				@image = image
 				@thumbnailing_methods = thumbnailing_methods
 				@edits = edits
@@ -42,10 +42,17 @@ module Plugin
 					# we don't want to destory the image after we have generated the thumbnail
 					@image.borrow do |image|
 						image.get do |image|
+							if image.alpha?
+								log.info 'image has alpha, rendering on background'
+								image.render_on_background(spec.options['background-color'])
+							else
+								image
+							end
+						end.get do |image|
 							spec.edits.each do |edit|
 								log.debug "applying edit: #{edit}"
 								image = image.get do |image|
-									edit_image(image, edit.name, *edit.args)
+									edit_image(image, edit.name, *edit.args, edit.options, spec)
 								end
 							end
 							image
@@ -152,6 +159,18 @@ module Plugin
 
 		class Magick::Image
 			include Ownership
+			### WARNING: 'raise' is overwritten with an image operation method; use Kernel::raise instead!
+
+			def self.new_8bit(width, height, background_color = "none")
+				Magick::Image.new(width, height) {
+					self.depth = 8
+					begin
+						self.background_color = background_color
+					rescue ArgumentError
+						Kernel::raise Plugin::Thumbnailer::InvalidColorNameError.new(background_color)
+					end
+				}
+			end
 
 			def render_on_background(background_color, width = nil, height = nil, float_x = 0.5, float_y = 0.5)
 				# default to image size
@@ -162,14 +181,7 @@ module Plugin
 				width = self.columns if width < self.columns
 				height = self.rows if height < self.rows
 
-				Magick::Image.new(width, height) {
-					begin
-						self.background_color = background_color
-					rescue ArgumentError
-						raise Plugin::Thumbnailer::InvalidColorNameError.new(background_color)
-					end
-					self.depth = 8
-				}.get do |background|
+				self.class.new_8bit(width, height, background_color).get do |background|
 					background.composite!(self, *background.float_to_offset(self.columns, self.rows, float_x, float_y), Magick::OverCompositeOp)
 				end
 			end
@@ -184,7 +196,7 @@ module Plugin
 				scale = [width / columns.to_f, height / rows.to_f].max
 
 				resize((scale * columns).ceil, (scale * rows).ceil).get do |image|
-					next if width == image.columns and height == image.rows
+					next if width == image.width and height == image.height
 					image.crop(*image.float_to_offset(width, height, float_x, float_y), width, height, true)
 				end
 			end
@@ -235,6 +247,24 @@ module Plugin
 			end
 
 			# helpers
+
+			def with_background_color(color)
+				if color
+					was = self.background_color
+					begin
+						begin
+							self.background_color = color
+						rescue ArgumentError
+							Kernel::raise Plugin::Thumbnailer::InvalidColorNameError.new(color)
+						end
+						yield
+					ensure
+						self.background_color = was
+					end
+				else
+					yield
+				end
+			end
 
 			def rel_to_px(x, y)
 				[x * columns, y * rows]

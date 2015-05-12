@@ -12,8 +12,8 @@ module Ownership
 	end
 
 	def borrow
-		@destroyed and raise BorrowingDestoryedError, "cannot borrow a destroyed obejct '#{self}'"
-		@owned or raise BorrowingNotOwnedError, "cannot borrow not owned object '#{self}'"
+		@destroyed and Kernel::raise BorrowingDestoryedError, "cannot borrow a destroyed obejct '#{self}'"
+		@owned or Kernel::raise BorrowingNotOwnedError, "cannot borrow not owned object '#{self}'"
 		was_borrowed = @borrowed
 		begin
 			@borrowed = true
@@ -27,7 +27,7 @@ module Ownership
 		if @borrowed
 			borrow(&block)
 		else
-			@destroyed and raise UseDestroyedError, "cannot own a destoryed object '#{self}'"
+			@destroyed and Kernel::raise UseDestroyedError, "cannot own a destoryed object '#{self}'"
 			# take ownership; it may be owned already
 			@owned = true
 			begin

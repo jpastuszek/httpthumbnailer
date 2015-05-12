@@ -62,7 +62,8 @@ module Plugin
 				:total_images_created_crop,
 				:total_images_created_sample,
 				:total_images_created_blur_image,
-				:total_images_created_composite
+				:total_images_created_composite,
+				:total_images_created_rotate
 			)
 
 			def self.input_formats
@@ -125,6 +126,8 @@ module Plugin
 							Service.stats.incr_total_images_created_blur_image
 						when :composite
 							Service.stats.incr_total_images_created_composite
+						when :rotate
+							Service.stats.incr_total_images_created_rotate
 						else
 							log.warn "uncounted image creation method: #{method}"
 						end
@@ -286,6 +289,15 @@ module Plugin
 						*image.rel_to_px(box_width, box_height),
 						radious, sigma
 					)
+				end
+
+				edit('rotate') do |image, angle, options, thumbnail_spec|
+					angle = Float(angle) rescue 90.0
+					options ||= {}
+
+					image.with_background_color(options['background-color'] || thumbnail_spec.options['background-color']) do
+						image.rotate(angle)
+					end
 				end
 			end
 		end

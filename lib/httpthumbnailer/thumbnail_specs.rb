@@ -44,15 +44,16 @@ class ThumbnailSpec
 	end
 
 	class Edit
-		attr_reader :name, :args
+		attr_reader :name, :args, :options
 
-		def initialize(name, *args)
+		def initialize(name, options = {}, *args)
 			@name = name
+			@options = options
 			@args = args
 		end
 
 		def to_s
-			"#{name}(#{args.join(',')})"
+			"#{name}(#{args.join(',')})#{options.inspect}"
 		end
 	end
 
@@ -89,8 +90,7 @@ class ThumbnailSpec
 				edit_opts[key] = value
 			end
 
-			args << edit_opts unless edit_opts.empty?
-			Edit.new(name, *args)
+			Edit.new(name, edit_opts, *args)
 		end
 
 		ThumbnailSpec.new(method, width, height, format, opts, edits)
