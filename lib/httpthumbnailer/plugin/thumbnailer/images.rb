@@ -4,6 +4,7 @@ require 'httpthumbnailer/ownership'
 
 module Plugin
 	module Thumbnailer
+		ThumbnailArgumentError = Class.new(ArgumentError)
 		EditArgumentError = Class.new(ArgumentError)
 
 		module MimeType
@@ -106,6 +107,8 @@ module Plugin
 				ret = impl.call(image, width, height, options)
 				fail "thumbnailing method '#{name}' returned '#{ret.class.name}' - expecting nil or Magick::Image" unless ret.nil? or ret.kind_of? Magick::Image
 				ret or image
+			rescue PluginContext::PluginArgumentError => error
+				raise ThumbnailArgumentError, "error while thumbnailing with method '#{method}': #{error.message}"
 			end
 
 			def_delegators :@image, :destroy!, :destroyed?, :format, :width, :height

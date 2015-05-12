@@ -16,6 +16,7 @@ class ErrorReporter < Controller
 			Plugin::Thumbnailer::ZeroSizedImageError,
 			Plugin::Thumbnailer::UnsupportedMethodError,
 			Plugin::Thumbnailer::InvalidColorNameError,
+			Plugin::Thumbnailer::ThumbnailArgumentError,
 			Plugin::Thumbnailer::EditArgumentError
 		) do |error|
 			write_error 400, error

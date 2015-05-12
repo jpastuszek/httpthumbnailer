@@ -148,6 +148,17 @@ Feature: Generating single thumbnail with PUT request
 		"""
 
 	@error_handling
+	Scenario: Reporitng of bad thumbanil option value
+		Given test.jpg file content as request body
+		When I do PUT request http://localhost:3100/thumbnail/crop,128,128,png,float-x:xxx
+		Then response status should be 400
+		And response content type should be text/plain
+		And response body should be CRLF endend lines
+		"""
+		error while thumbnailing with method 'crop': expected argument 'float-x' to be a float, got: xxx
+		"""
+
+	@error_handling
 	Scenario: Reporitng of bad operation value
 		Given test.jpg file content as request body
 		When I do PUT request http://localhost:3100/thumbnail/blah,128,128,png
