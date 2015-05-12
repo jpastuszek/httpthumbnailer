@@ -1,3 +1,4 @@
+require_relative 'service/magick'
 require_relative 'service/images'
 require_relative 'service/built_in_plugins'
 

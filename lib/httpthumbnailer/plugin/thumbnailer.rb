@@ -1,4 +1,3 @@
-require 'RMagick'
 require 'forwardable'
 require 'httpthumbnailer/plugin'
 require_relative 'thumbnailer/service'
