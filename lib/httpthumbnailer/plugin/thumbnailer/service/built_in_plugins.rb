@@ -21,18 +21,18 @@ module Plugin
 						image.resize_to_fit(width, height) if image.width > width or image.height > height
 					end
 
+					edit('resize_crop') do |image, width, height, options, thumbnail_spec|
+						width = float!('width', width)
+						height = float!('height', height)
+
+						image.resize_to_fill(width, height, ufloat!('float-x', options['float-x'], 0.5), ufloat!('float-y', options['float-y'], 0.5)) if image.width != width or image.height != height
+					end
+
 					edit('resize_fit') do |image, width, height, options, thumbnail_spec|
 						width = float!('width', width)
 						height = float!('height', height)
 
 						image.resize_to_fit(width, height) if image.width != width or image.height != height
-					end
-
-					edit('resize_fill') do |image, width, height, options, thumbnail_spec|
-						width = float!('width', width)
-						height = float!('height', height)
-
-						image.resize_to_fill(width, height, ufloat!('float-x', options['float-x'], 0.5), ufloat!('float-y', options['float-y'], 0.5)) if image.width != width or image.height != height
 					end
 
 					edit('resize_limit') do |image, width, height, options, thumbnail_spec|
@@ -42,7 +42,7 @@ module Plugin
 						image.resize_to_fit(width, height) if image.width > width or image.height > height
 					end
 
-					edit('cut') do |image, x, y, width, height, options, thumbnail_spec|
+					edit('crop') do |image, x, y, width, height, options, thumbnail_spec|
 						x = ufloat!('x', x)
 						y = ufloat!('y', y)
 						width = ufloat!('width', width)
@@ -53,6 +53,24 @@ module Plugin
 							*image.rel_to_px(width, height),
 							true
 						) if image.width != width or image.height != height
+					end
+
+					edit('pixelate') do |image, box_x, box_y, box_width, box_height, options, thumbnail_spec|
+						box_x = ufloat!('box_x', box_x)
+						box_y = ufloat!('box_y', box_y)
+						box_width = ufloat!('box_width', box_width)
+						box_height = ufloat!('box_height', box_height)
+
+						size = ufloat!('size', options['size'], 0.01)
+
+						# make size relative to image diagonal
+						diag = Math.sqrt(image.width ** 2 + image.height ** 2)
+
+						image.pixelate_region(
+							*image.rel_to_px(box_x, box_y),
+							*image.rel_to_px(box_width, box_height),
+							size * diag
+						)
 					end
 
 					edit('blur') do |image, box_x, box_y, box_width, box_height, options, thumbnail_spec|

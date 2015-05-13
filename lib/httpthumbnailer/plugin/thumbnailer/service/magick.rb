@@ -84,6 +84,20 @@ class Magick::Image
 		[x, y]
 	end
 
+	def pixelate_region(x, y, w, h, size)
+		factor = 1.0 / size
+
+		crop(x, y, w, h, true).get do |work_space|
+			work_space.sample((factor * w).ceil, (factor * h).ceil)
+		end.get do |image|
+			image.sample(size)
+		end.get do |image|
+			image.crop(0, 0 , w, h, true)
+		end.get do |image|
+			self.composite(image, x, y, Magick::OverCompositeOp)
+		end
+	end
+
 	def blur_region(x, y, w, h, radious, sigma)
 		# NOTE: we need to have bigger region to blure then the final regios to prevent edge artifacts
 		# TODO: how do I calculate margin better? See: https://github.com/trevor/ImageMagick/blob/82d683349c7a6adc977f6f638f1b340e01bf0ea9/branches/ImageMagick-6.5.9/magick/gem.c#L787
