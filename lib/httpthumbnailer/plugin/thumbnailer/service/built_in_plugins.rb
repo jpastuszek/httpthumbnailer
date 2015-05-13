@@ -40,13 +40,13 @@ module Plugin
 						box_width = float!('box_width', box_width)
 						box_height = float!('box_height', box_height)
 
-						radious = float!('radious', options['radious'], 0.0) # auto
+						radius = uint!('radius', options['radius'], 0) # auto
 						sigma = float!('sigma', options['sigma'], 20)
 
 						image.blur_region(
 							*image.rel_to_px(box_x, box_y),
 							*image.rel_to_px(box_width, box_height),
-							radious, sigma
+							radius, sigma
 						)
 					end
 

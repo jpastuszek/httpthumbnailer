@@ -28,15 +28,40 @@ class PluginContext
 		@edits << [name, block]
 	end
 
+	def with_default(arg, default = nil)
+		return default if arg.nil? or arg == ''
+		arg
+	end
+
 	# static helpers
+	def int!(name, arg, default = nil)
+		value = with_default(arg, default) or raise PluginArgumentError, "expected argument '#{name}' to be an integer but got no value"
+		begin
+			Integer(value)
+		rescue ArgumentError
+			raise PluginArgumentError, "expected argument '#{name}' to be an integer, got: #{arg.inspect}"
+		end
+	end
+
+	def uint!(name, arg, default = nil)
+		ret = int!(name, arg, default)
+	 	ret < 0 and raise PluginArgumentError, "expected argument '#{name}' to be an unsigned integer, got negative value: #{arg}"
+		ret
+	end
+
 	def float!(name, arg, default = nil)
-		value = arg
-		value ||= default or raise PluginArgumentError, "expected argument '#{name}' to be a float but got no value"
+		value = with_default(arg, default) or raise PluginArgumentError, "expected argument '#{name}' to be a float but got no value"
 		begin
 			Float(value)
-		rescue
+		rescue ArgumentError
 			raise PluginArgumentError, "expected argument '#{name}' to be a float, got: #{arg}"
 		end
+	end
+
+	def ufloat!(name, arg, default = nil)
+		ret = float!(name, arg, default)
+		ret < 0 and raise PluginArgumentError, "expected argument '#{name}' to be an unsigned float, got negative value: #{arg}"
+		ret
 	end
 
 	def offset_to_center(x, y, w, h)
