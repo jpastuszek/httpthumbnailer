@@ -1,4 +1,5 @@
 class PluginContext
+	include ClassLogging
 	PluginArgumentError = Class.new ArgumentError
 
 	attr_reader :thumbnailing_methods

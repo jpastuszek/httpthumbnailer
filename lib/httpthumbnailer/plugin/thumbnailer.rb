@@ -56,6 +56,7 @@ module Plugin
 
 		def self.setup(app)
 			Service.logger = app.logger_for(Service)
+			PluginContext.logger = app.logger_for(PluginContext)
 
 			@@service = Service.new(
 				limit_memory: app.settings[:limit_memory],

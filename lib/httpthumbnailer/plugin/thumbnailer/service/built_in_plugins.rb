@@ -82,6 +82,22 @@ module Plugin
 						radius = uint!('radius', options['radius'], 0) # auto
 						sigma = ufloat!('sigma', options['sigma'], 20)
 
+						# make radius and sigma relative to image diagonal
+						diag = Math.sqrt(image.width ** 2 + image.height ** 2)
+
+						radius = radius * diag
+						sigma = sigma * diag
+
+						if radius > 50
+							log.warn "limiting effective radius from #{radius} down to 50"
+							radius = 50
+						end
+
+						if sigma > 50
+							log.warn "limiting effective sigma from #{sigma} down to 50"
+							sigma = 50
+						end
+
 						image.blur_region(
 							*image.rel_to_px(box_x, box_y),
 							*image.rel_to_px(box_width, box_height),
