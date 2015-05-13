@@ -20,6 +20,7 @@ module Plugin
 				:total_images_destroyed,
 				:total_images_created_from_blob,
 				:total_images_created_initialize,
+				:total_images_created_initialize_copy,
 				:total_images_created_resize,
 				:total_images_created_crop,
 				:total_images_created_sample,
@@ -77,6 +78,8 @@ module Plugin
 							Service.stats.incr_total_images_created_from_blob
 						when :initialize
 							Service.stats.incr_total_images_created_initialize
+						when :initialize_copy
+							Service.stats.incr_total_images_created_initialize_copy
 						when :resize
 							Service.stats.incr_total_images_created_resize
 						when :resize!

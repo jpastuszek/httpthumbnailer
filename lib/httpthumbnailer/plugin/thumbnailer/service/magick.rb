@@ -1,9 +1,20 @@
 require 'RMagick'
 require 'httpthumbnailer/ownership'
 
+### WARNING: 'raise' is overwritten with an image operation method; use Kernel::raise instead!
 class Magick::Image
 	include Ownership
-	### WARNING: 'raise' is overwritten with an image operation method; use Kernel::raise instead!
+
+	# use this on image before doing in-place (like composite!) edit so borrowed images are not changed
+	def get_for_inplace
+		get do |image|
+			if image.borrowed?
+				yield image.copy
+			else
+				yield image
+			end
+		end
+	end
 
 	def self.new_8bit(width, height, background_color = "none")
 		Magick::Image.new(width, height) {
@@ -94,7 +105,9 @@ class Magick::Image
 		end.get do |image|
 			image.crop(0, 0 , w, h, true)
 		end.get do |image|
-			self.composite(image, x, y, Magick::OverCompositeOp)
+			get_for_inplace do |orig|
+				orig.composite!(image, x, y, Magick::OverCompositeOp)
+			end
 		end
 	end
 
@@ -123,13 +136,17 @@ class Magick::Image
 		end.get do |blur|
 				blur.crop(x - mx, y - my, w, h, true)
 		end.get do |blur|
-			self.composite(blur, x, y, Magick::OverCompositeOp)
+			get_for_inplace do |orig|
+				orig.composite!(blur, x, y, Magick::OverCompositeOp)
+			end
 		end
 	end
 
 	def render_rectangle(x, y, w, h, color)
 		Magick::Image.new_8bit(w, h, color).get do |box|
-			self.composite(box, x, y, Magick::OverCompositeOp)
+			get_for_inplace do |orig|
+				orig.composite!(box, x, y, Magick::OverCompositeOp)
+			end
 		end
 	end
 
