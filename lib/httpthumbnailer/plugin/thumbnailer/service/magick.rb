@@ -84,9 +84,30 @@ class Magick::Image
 		[x, y]
 	end
 
-	def blur_region(x, y, h, w, radious, sigma)
-		blur_image(radious, sigma).get do |blur|
-			blur.crop(x, y, h, w, true)
+	def blur_region(x, y, w, h, radious, sigma)
+		# NOTE: we need to have bigger region to blure then the final regios to prevent edge artifacts
+		# TODO: how do I calculate margin better? See: https://github.com/trevor/ImageMagick/blob/82d683349c7a6adc977f6f638f1b340e01bf0ea9/branches/ImageMagick-6.5.9/magick/gem.c#L787
+		margin = [3, radious, sigma].max
+
+		mx = x - margin
+		my = y - margin
+		mw = w + margin
+		mh = h + margin
+
+		# limit the box with margin to available image size
+		mx = 0 if mx < 0
+		my = 0 if my < 0
+		mw = width - mx if mw + mx > width
+		mh = height - my if mh + my > height
+
+		#p [x, y, w, h]
+		#p [mx, my, mw, mh]
+		#p [x - mx, y - my, w, h]
+
+		crop(mx, my, mw, mh, true).get do |work_space|
+			work_space.blur_image(radious, sigma)
+		end.get do |blur|
+				blur.crop(x - mx, y - my, w, h, true)
 		end.get do |blur|
 			self.composite(blur, x, y, Magick::OverCompositeOp)
 		end
