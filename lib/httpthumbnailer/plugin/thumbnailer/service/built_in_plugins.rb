@@ -21,11 +21,32 @@ module Plugin
 						image.resize_to_fit(width, height) if image.width > width or image.height > height
 					end
 
-					edit('cut') do |image, x, y, width, height, options, thumbnail_spec|
-						x = float!('x', x)
-						y = float!('y', y)
+					edit('resize_fit') do |image, width, height, options, thumbnail_spec|
 						width = float!('width', width)
 						height = float!('height', height)
+
+						image.resize_to_fit(width, height) if image.width != width or image.height != height
+					end
+
+					edit('resize_fill') do |image, width, height, options, thumbnail_spec|
+						width = float!('width', width)
+						height = float!('height', height)
+
+						image.resize_to_fill(width, height, ufloat!('float-x', options['float-x'], 0.5), ufloat!('float-y', options['float-y'], 0.5)) if image.width != width or image.height != height
+					end
+
+					edit('resize_limit') do |image, width, height, options, thumbnail_spec|
+						width = float!('width', width)
+						height = float!('height', height)
+
+						image.resize_to_fit(width, height) if image.width > width or image.height > height
+					end
+
+					edit('cut') do |image, x, y, width, height, options, thumbnail_spec|
+						x = ufloat!('x', x)
+						y = ufloat!('y', y)
+						width = ufloat!('width', width)
+						height = ufloat!('height', height)
 
 						image.crop(
 							*image.rel_to_px(x, y),
@@ -35,13 +56,13 @@ module Plugin
 					end
 
 					edit('blur') do |image, box_x, box_y, box_width, box_height, options, thumbnail_spec|
-						box_x = float!('box_x', box_x)
-						box_y = float!('box_y', box_y)
-						box_width = float!('box_width', box_width)
-						box_height = float!('box_height', box_height)
+						box_x = ufloat!('box_x', box_x)
+						box_y = ufloat!('box_y', box_y)
+						box_width = ufloat!('box_width', box_width)
+						box_height = ufloat!('box_height', box_height)
 
 						radius = uint!('radius', options['radius'], 0) # auto
-						sigma = float!('sigma', options['sigma'], 20)
+						sigma = ufloat!('sigma', options['sigma'], 20)
 
 						image.blur_region(
 							*image.rel_to_px(box_x, box_y),
