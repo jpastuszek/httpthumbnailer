@@ -80,7 +80,7 @@ module Plugin
 						box_height = ufloat!('box_height', box_height)
 
 						radius = uint!('radius', options['radius'], 0) # auto
-						sigma = ufloat!('sigma', options['sigma'], 20)
+						sigma = ufloat!('sigma', options['sigma'], 0.01)
 
 						# make radius and sigma relative to image diagonal
 						diag = Math.sqrt(image.width ** 2 + image.height ** 2)
