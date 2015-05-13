@@ -1,7 +1,7 @@
 source "http://rubygems.org"
 ruby "1.9.3"
 
-gem "unicorn-cuba-base", "~> 1.4.1"
+gem "unicorn-cuba-base", "~> 1.5.0"
 #gem "unicorn-cuba-base", path: "../unicorn-cuba-base"
 gem "rmagick", "~> 2"
 

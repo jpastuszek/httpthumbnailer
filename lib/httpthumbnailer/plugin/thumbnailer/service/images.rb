@@ -21,6 +21,8 @@ module Plugin
 				UpscaledError = Class.new RuntimeError
 
 				include ClassLogging
+				include PerfStats
+				extend PerfStats
 				extend Forwardable
 
 				def initialize(image, thumbnailing_methods, edits)
@@ -39,58 +41,68 @@ module Plugin
 					end
 
 					begin
-						begin
-							images = Magick::Image.from_blob(blob) do |info|
-								if mw and mh
-									define('jpeg', 'size', "#{mw*2}x#{mh*2}")
-									define('jbig', 'size', "#{mw*2}x#{mh*2}")
-								end
-							end
-							begin
-								image = images.shift
+						image = measure "loading original image" do
+							image = measure "loading image form blob" do
 								begin
-									if image.columns > image.base_columns or image.rows > image.base_rows and not options[:no_reload]
-										log.warn "input image got upscaled from: #{image.base_columns}x#{image.base_rows} to #{image.columns}x#{image.rows}: reloading without max size hint!"
-										raise UpscaledError
+									images = measure "loading image form blob #{mw ? 'with' : 'without'} size hit" do
+										Magick::Image.from_blob(blob) do |info|
+											if mw and mh
+												define('jpeg', 'size', "#{mw*2}x#{mh*2}")
+												define('jbig', 'size', "#{mw*2}x#{mh*2}")
+											end
+										end
 									end
-									image
-								rescue
-									image.destroy!
-									raise
-								end
-							ensure
-								images.each do |other|
-									other.destroy!
+									begin
+										image = images.shift
+										begin
+											if image.columns > image.base_columns or image.rows > image.base_rows and not options[:no_reload]
+												log.warn "input image got upscaled from: #{image.base_columns}x#{image.base_rows} to #{image.columns}x#{image.rows}: reloading without max size hint!"
+												raise UpscaledError
+											end
+											image
+										rescue
+											image.destroy!
+											raise
+										end
+									ensure
+										images.each do |other|
+											other.destroy!
+										end
+									end
+								rescue UpscaledError
+									Service.stats.incr_total_images_reloaded
+									mw = mh = nil
+									retry
 								end
 							end
-						rescue UpscaledError
-							Service.stats.incr_total_images_reloaded
-							mw = mh = nil
-							retry
-						end.get do |image|
-							blob = nil
+							image.get do |image|
+								blob = nil
 
-							log.info "loaded image: #{image.inspect}"
-							Service.stats.incr_total_images_loaded
+								log.info "loaded image: #{image.inspect.strip}"
+								Service.stats.incr_total_images_loaded
 
-							# clean up the image
-							image.strip!
-							image.properties do |key, value|
-								log.debug "deleting user propertie '#{key}'"
-								image[key] = nil
-							end
-							image
-						end.get do |image|
-							if mw and mh and not options[:no_downscale]
-								f = image.find_downscale_factor(mw, mh)
-								if f > 1
-									image = image.downscale(f)
-									log.info "downscaled image by factor of #{f}: #{image.inspect}"
-									Service.stats.incr_total_images_downscaled
-									image
+								# clean up the image
+								image.strip!
+								image.properties do |key, value|
+									log.debug "deleting user propertie '#{key}'"
+									image[key] = nil
+								end
+								image
+							end.get do |image|
+								if mw and mh and not options[:no_downscale]
+									f = image.find_downscale_factor(mw, mh)
+									if f > 1
+										measure "downscailing '#{image.inspect.strip}'" do
+											image = image.downscale(f)
+											log.info "downscaled image by factor of #{f}: #{image.inspect.strip}"
+											Service.stats.incr_total_images_downscaled
+											image
+										end
+									end
 								end
 							end
-						end.get do |image|
+						end
+						image.get do |image|
 							yield self.new(image, thumbnailing_methods, edits)
 							true # make sure it is destroyed
 						end
@@ -111,38 +123,48 @@ module Plugin
 					raise ZeroSizedImageError.new(width, height) if width == 0 or height == 0
 
 					begin
-						# we don't want to destory the image after we have generated the thumbnail
-						@image.borrow do |image|
-							image.get do |image|
-								if image.alpha?
-									log.info 'image has alpha, rendering on background'
-									image.render_on_background(spec.options['background-color'])
-								else
-									image
-								end
-							end.get do |image|
-								spec.edits.each do |edit|
-									log.debug "applying edit: #{edit}"
-									image = image.get do |image|
-										edit_image(image, edit.name, *edit.args, edit.options, spec)
+						measure "generating thumbnail with spec '#{spec}'" do
+							# we don't want to destory the image after we have generated the thumbnail
+							@image.borrow do |image|
+								image.get do |image|
+									if image.alpha?
+										measure "rendering image '#{image.inspect.strip}' on background" do
+											log.info 'image has alpha, rendering on background'
+											image.render_on_background(spec.options['background-color'])
+										end
+									else
+										image
 									end
-								end
-								image
-							end.get do |image|
-								log.debug "thumbnailing with method: #{spec.method} #{width}x#{height} #{spec.options}"
-								thumbnail_image(image, spec.method, width, height, spec.options)
-							end.get do |image|
-								if image.alpha?
-									log.info 'thumbnail has alpha, rendering on background'
-									image.render_on_background(spec.options['background-color'])
-								else
+								end.get do |image|
+									spec.edits.each do |edit|
+										log.debug "applying edit '#{edit}'"
+										image = image.get do |image|
+											measure "edit '#{edit}'" do
+												edit_image(image, edit.name, *edit.args, edit.options, spec)
+											end
+										end
+									end
 									image
-								end
-							end.get do |image|
-								Service.stats.incr_total_thumbnails_created
-								image_format = spec.format == :input ? @image.format : spec.format
+								end.get do |image|
+									log.debug "thumbnailing with method '#{spec.method} #{width}x#{height} #{spec.options}'"
+									measure "thumbnailing with method '#{spec.method} #{width}x#{height} #{spec.options}'" do
+										thumbnail_image(image, spec.method, width, height, spec.options)
+									end
+								end.get do |image|
+									if image.alpha?
+										measure "rendering thumbnail '#{image.inspect.strip}' on background" do
+											log.info 'thumbnail has alpha, rendering on background'
+											image.render_on_background(spec.options['background-color'])
+										end
+									else
+										image
+									end
+								end.get do |image|
+									Service.stats.incr_total_thumbnails_created
+									image_format = spec.format == :input ? @image.format : spec.format
 
-								yield Thumbnail.new(image, image_format, spec.options)
+									yield Thumbnail.new(image, image_format, spec.options)
+								end
 							end
 						end
 					rescue Magick::ImageMagickError => error
