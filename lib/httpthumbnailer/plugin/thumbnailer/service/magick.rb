@@ -127,6 +127,12 @@ class Magick::Image
 		end
 	end
 
+	def render_rectangle(x, y, w, h, color)
+		Magick::Image.new_8bit(w, h, color).get do |box|
+			self.composite(box, x, y, Magick::OverCompositeOp)
+		end
+	end
+
 	# helpers
 
 	def with_background_color(color)

@@ -105,6 +105,21 @@ module Plugin
 						)
 					end
 
+					edit('rectangle') do |image, box_x, box_y, box_width, box_height, options, thumbnail_spec|
+						box_x = ufloat!('box_x', box_x)
+						box_y = ufloat!('box_y', box_y)
+						box_width = ufloat!('box_width', box_width)
+						box_height = ufloat!('box_height', box_height)
+
+						color = options['color'] || 'black'
+
+						image.render_rectangle(
+							*image.rel_to_px(box_x, box_y),
+							*image.rel_to_px(box_width, box_height),
+							color
+						)
+					end
+
 					edit('rotate') do |image, angle, options, thumbnail_spec|
 						angle = float!('angle', angle)
 						image.with_background_color(options['background-color'] || thumbnail_spec.options['background-color']) do
