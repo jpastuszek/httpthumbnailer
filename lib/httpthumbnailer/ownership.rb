@@ -33,7 +33,8 @@ module Ownership
 			begin
 				ret = yield self
 				# give up ownership if nothing happened with the obejct
-				if ret == self or ret == nil
+				# NOTE: we use equal here sice == may actually test pixel by pixel which is not the point!
+				if ret.equal?(self) or ret.nil?
 					@owned = nil
 					return self
 				end
