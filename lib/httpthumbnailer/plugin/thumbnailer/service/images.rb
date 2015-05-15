@@ -219,6 +219,7 @@ module Plugin
 			class Thumbnail
 				include ClassLogging
 				extend Forwardable
+				include PerfStats
 
 				def initialize(image, format, options = {})
 					@image = image
@@ -243,10 +244,12 @@ module Plugin
 					quality = @quality
 					interlace = @interlace
 
-					@image.to_blob do
-						self.format = format
-						self.quality = quality if quality
-						self.interlace = interlace
+					measure "to blob #{@format} (quality: #{@quality} interlace: #{@interlace})" do
+						@image.to_blob do
+							self.format = format
+							self.quality = quality if quality
+							self.interlace = interlace
+						end
 					end
 				end
 
