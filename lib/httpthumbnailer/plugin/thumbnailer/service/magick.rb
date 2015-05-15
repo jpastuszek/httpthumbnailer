@@ -143,11 +143,13 @@ class Magick::Image
 	end
 
 	def render_rectangle(x, y, w, h, color)
-		Magick::Image.new_8bit(w, h, color).get do |box|
 			get_for_inplace do |orig|
-				orig.composite!(box, x, y, Magick::OverCompositeOp)
+				gc = Magick::Draw.new
+				gc.fill = color
+				gc.rectangle(x, y, x + w, y + h)
+				gc.draw(orig)
+				orig
 			end
-		end
 	end
 
 	# helpers
