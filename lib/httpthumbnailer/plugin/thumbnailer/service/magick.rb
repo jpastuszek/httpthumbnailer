@@ -4,6 +4,8 @@ require 'httpthumbnailer/ownership'
 ### WARNING: 'raise' is overwritten with an image operation method; use Kernel::raise instead!
 class Magick::Image
 	include Ownership
+	include ClassLogging
+	include PerfStats
 
 	# use this on image before doing in-place (like composite!) edit so borrowed images are not changed
 	def get_for_inplace
@@ -134,7 +136,7 @@ class Magick::Image
 		crop(mx, my, mw, mh, true).get do |work_space|
 			work_space.blur_image(radious, sigma)
 		end.get do |blur|
-				blur.crop(x - mx, y - my, w, h, true)
+			blur.crop(x - mx, y - my, w, h, true)
 		end.get do |blur|
 			get_for_inplace do |orig|
 				orig.composite!(blur, x, y, Magick::OverCompositeOp)

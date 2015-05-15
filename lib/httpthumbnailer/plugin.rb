@@ -1,6 +1,7 @@
 class PluginContext
 	include ClassLogging
 	PluginArgumentError = Class.new ArgumentError
+	include PerfStats
 
 	attr_reader :thumbnailing_methods
 	attr_reader :edits

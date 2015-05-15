@@ -52,6 +52,7 @@ module Plugin
 			def initialize(options = {})
 				InputImage.logger = logger_for(InputImage)
 				Thumbnail.logger = logger_for(Thumbnail)
+				Magick::Image.logger = logger_for(Magick::Image)
 
 				@thumbnailing_methods = {}
 				@edits = {}
