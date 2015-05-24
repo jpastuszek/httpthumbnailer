@@ -22,6 +22,7 @@ class ThumbnailSpecs < Array
 	end
 end
 
+# TODO: use better pasers...
 class ThumbnailSpec
 	class BadThubnailSpecError < ArgumentError
 		class MissingArgumentError < BadThubnailSpecError
