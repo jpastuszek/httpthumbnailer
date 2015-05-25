@@ -122,6 +122,7 @@ module Plugin
 
 					edit('rotate') do |image, angle, options, thumbnail_spec|
 						angle = float!('angle', angle)
+						next image if angle % 360 == 0
 						image.with_background_color(options['background-color'] || thumbnail_spec.options['background-color']) do
 							image.rotate(angle)
 						end
