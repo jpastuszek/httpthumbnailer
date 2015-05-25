@@ -8,8 +8,7 @@ thumbnailing_method('blur')  do |image, width, height, options|
 	box_h = Float(options['box-h']) rescue 0.5
 
 	image.blur_region(
-		*image.rel_to_px(box_x, box_y),
-		*image.rel_to_px(box_w, box_h),
+		*image.rel_to_px_box(box_x, box_y, box_w, box_h),
 		radious, sigma
 	).get do |image|
 		image.resize_to_fit(width, height) if image.columns != width or image.rows != height
