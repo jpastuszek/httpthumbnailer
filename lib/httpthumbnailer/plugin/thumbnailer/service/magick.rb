@@ -175,7 +175,15 @@ class Magick::Image
 	end
 
 	def rel_to_px(x, y)
-		[(x * columns).round, (y * rows).round]
+		[(x * columns).floor, (y * rows).floor]
+	end
+
+	def rel_to_px_dim(width, height)
+		[(width * columns).ceil, (height * rows).ceil]
+	end
+
+	def rel_to_px_box(x, y, width, height)
+		[*rel_to_px(x, y), *rel_to_px_dim(width, height)]
 	end
 
 	def px_to_rel(x, y)

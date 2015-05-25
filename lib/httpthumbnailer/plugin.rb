@@ -79,6 +79,8 @@ class PluginContext
 		y = 0.0 if y < 0
 		width = 1.0 - x if width + x > 1
 		height = 1.0 - y if height + y > 1
+		width = Float::EPSILON if width < 0
+		height = Float::EPSILON if height < 0
 		[x, y, width, height]
 	end
 end

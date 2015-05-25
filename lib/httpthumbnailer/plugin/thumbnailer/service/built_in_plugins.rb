@@ -53,10 +53,9 @@ module Plugin
 						next image if [x, y, width, height] == [0.0, 0.0, 1.0, 1.0]
 
 						image.crop(
-							*image.rel_to_px(x, y),
-							*image.rel_to_px(width, height),
+							*image.rel_to_px_box(x, y, width, height),
 							true
-						) if image.width != width or image.height != height
+						)
 					end
 
 					edit('pixelate') do |image, box_x, box_y, box_width, box_height, options, thumbnail_spec|
