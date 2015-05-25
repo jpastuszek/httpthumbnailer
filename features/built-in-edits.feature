@@ -144,3 +144,47 @@ Feature: Built in edits
 		And that image pixel at 479x359 should be of color blue
 		And that image pixel at 480x360 should be of color #6a0e15
 
+	@edits @built-in @resize-fit
+	Scenario: Resize by fitting image within dimensions
+		Given test2.png file content as request body
+		When I do PUT request http://localhost:3100/thumbnail/limit,1280,1280,png!resize_fit,400,400!rectangle,0.4,0.4,0.2,0.2,color:blue
+		Then response status should be 200
+		Then response should contain PNG image of size 400x300
+		And that image pixel at 159x119 should be of color #bc1616
+		And that image pixel at 160x120 should be of color blue
+		And that image pixel at 200x150 should be of color blue
+		And that image pixel at 239x179 should be of color blue
+		And that image pixel at 240x180 should be of color #73181c
+
+	@edits @built-in @resize-crop
+	Scenario: Resize by cropping image to given dimensions
+		Given test2.png file content as request body
+		When I do PUT request http://localhost:3100/thumbnail/limit,1280,1280,png!resize_crop,300,300!rectangle,0.4,0.4,0.2,0.2,color:blue
+		Then response status should be 200
+		Then response should contain PNG image of size 300x300
+		And that image pixel at 119x119 should be of color #81130b
+		And that image pixel at 120x120 should be of color blue
+		And that image pixel at 160x160 should be of color blue
+		And that image pixel at 179x179 should be of color blue
+		And that image pixel at 180x180 should be of color #e9e9e9
+
+	@edits @built-in @resize-limit
+	Scenario: Resize to given dimensions like fit if image is larger that that dimensions
+		Given test2.png file content as request body
+		When I do PUT request http://localhost:3100/thumbnail/limit,1280,1280,png!resize_limit,400,400!rectangle,0.4,0.4,0.2,0.2,color:blue
+		Then response status should be 200
+		Then response should contain PNG image of size 400x300
+		And that image pixel at 159x119 should be of color #bc1616
+		And that image pixel at 160x120 should be of color blue
+		And that image pixel at 200x150 should be of color blue
+		And that image pixel at 239x179 should be of color blue
+		And that image pixel at 240x180 should be of color #73181c
+		When I do PUT request http://localhost:3100/thumbnail/limit,1280,1280,png!resize_limit,900,900!rectangle,0.4,0.4,0.2,0.2,color:blue
+		Then response status should be 200
+		Then response should contain PNG image of size 800x600
+		And that image pixel at 319x239 should be of color #bc1616
+		And that image pixel at 320x240 should be of color blue
+		And that image pixel at 400x300 should be of color blue
+		And that image pixel at 479x359 should be of color blue
+		And that image pixel at 480x360 should be of color #6a0e15
+
