@@ -42,6 +42,14 @@ module Plugin
 						image.resize_to_fit(width, height) if image.width > width or image.height > height
 					end
 
+					edit('rotate') do |image, angle, options, thumbnail_spec|
+						angle = float!('angle', angle)
+						next image if angle % 360 == 0
+						image.with_background_color(options['background-color'] || thumbnail_spec.options['background-color']) do
+							image.rotate(angle)
+						end
+					end
+
 					edit('crop') do |image, x, y, width, height, options, thumbnail_spec|
 						x, y, width, height = normalize_box(
 							float!('x', x),
@@ -104,26 +112,19 @@ module Plugin
 					end
 
 					edit('rectangle') do |image, box_x, box_y, box_width, box_height, options, thumbnail_spec|
-						box_x = ufloat!('box_x', box_x)
-						box_y = ufloat!('box_y', box_y)
-						box_width = ufloat!('box_width', box_width)
-						box_height = ufloat!('box_height', box_height)
+						x, y, width, height = normalize_box(
+							float!('box_x', box_x),
+							float!('box_y', box_y),
+							float!('box_width', box_width),
+							float!('box_height', box_height)
+						)
 
 						color = options['color'] || 'black'
 
 						image.render_rectangle(
-							*image.rel_to_px(box_x, box_y),
-							*image.rel_to_px(box_width, box_height),
+							*image.rel_to_px_box(x, y, width, height),
 							color
 						)
-					end
-
-					edit('rotate') do |image, angle, options, thumbnail_spec|
-						angle = float!('angle', angle)
-						next image if angle % 360 == 0
-						image.with_background_color(options['background-color'] || thumbnail_spec.options['background-color']) do
-							image.rotate(angle)
-						end
 					end
 				end
 			end

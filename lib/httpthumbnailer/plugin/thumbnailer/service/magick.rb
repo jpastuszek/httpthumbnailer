@@ -156,7 +156,7 @@ class Magick::Image
 			get_for_inplace do |orig|
 				gc = Magick::Draw.new
 				gc.fill = color
-				gc.rectangle(x, y, x + w, y + h)
+				gc.rectangle(x, y, x + w - 1, y + h - 1)
 				gc.draw(orig)
 				orig
 			end
