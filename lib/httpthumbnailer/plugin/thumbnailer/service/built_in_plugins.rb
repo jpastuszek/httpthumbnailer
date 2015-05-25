@@ -43,10 +43,17 @@ module Plugin
 					end
 
 					edit('crop') do |image, x, y, width, height, options, thumbnail_spec|
-						x = ufloat!('x', x)
-						y = ufloat!('y', y)
-						width = ufloat!('width', width)
-						height = ufloat!('height', height)
+						x = float!('x', x)
+						y = float!('y', y)
+						width = float!('width', width)
+						height = float!('height', height)
+
+						x = 0.0 if x < 0
+						y = 0.0 if y < 0
+						width = 1.0 if width + x > 1
+						height = 1.0 if height + y > 1
+
+						next image if [x, y, width, height] == [0.0, 0.0, 1.0, 1.0]
 
 						image.crop(
 							*image.rel_to_px(x, y),
