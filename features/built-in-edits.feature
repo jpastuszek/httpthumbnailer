@@ -120,3 +120,15 @@ Feature: Built in edits
 		And that image pixel at 479x359 should be of color #871007
 		And that image pixel at 480x360 should be of color #6a0e15
 
+	@edits @built-in @blur
+	Scenario: Pixelating given region
+		Given test2.png file content as request body
+		When I do PUT request http://localhost:3100/thumbnail/limit,1280,1280,png!blur,0.4,0.4,0.2,0.2,sigma:0.05
+		Then response status should be 200
+		Then response should contain PNG image of size 800x600
+		And that image pixel at 319x239 should be of color #bc1616
+		And that image pixel at 320x240 should be of color #9b3d3c with fuzz 5%
+		And that image pixel at 400x300 should be of color #9b3d3c with fuzz 5%
+		And that image pixel at 479x359 should be of color #9b3d3c with fuzz 5%
+		And that image pixel at 480x360 should be of color #6a0e15
+

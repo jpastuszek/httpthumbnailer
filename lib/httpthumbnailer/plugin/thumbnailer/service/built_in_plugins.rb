@@ -74,19 +74,18 @@ module Plugin
 					end
 
 					edit('blur') do |image, box_x, box_y, box_width, box_height, options, thumbnail_spec|
-						box_x = ufloat!('box_x', box_x)
-						box_y = ufloat!('box_y', box_y)
-						box_width = ufloat!('box_width', box_width)
-						box_height = ufloat!('box_height', box_height)
+						x, y, width, height = normalize_box(
+							float!('box_x', box_x),
+							float!('box_y', box_y),
+							float!('box_width', box_width),
+							float!('box_height', box_height)
+						)
 
 						radius = uint!('radius', options['radius'], 0) # auto
 						sigma = ufloat!('sigma', options['sigma'], 0.01)
 
-						# make radius and sigma relative to image diagonal
-						diag = Math.sqrt(image.width ** 2 + image.height ** 2)
-
-						radius = radius * diag
-						sigma = sigma * diag
+						radius = image.rel_to_diagonal(radius)
+						sigma = image.rel_to_diagonal(sigma)
 
 						if radius > 50
 							log.warn "limiting effective radius from #{radius} down to 50"
@@ -99,8 +98,7 @@ module Plugin
 						end
 
 						image.blur_region(
-							*image.rel_to_px(box_x, box_y),
-							*image.rel_to_px(box_width, box_height),
+							*image.rel_to_px_box(x, y, width, height),
 							radius, sigma
 						)
 					end

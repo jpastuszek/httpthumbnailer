@@ -131,12 +131,24 @@ And /(.*) part body will be saved as (.*) for human inspection/ do |part, file|
 	(support_dir + file).open('w'){|f| f.write(data)}
 end
 
-And /that image pixel at (.*)x(.*) should be of color ([^ ]+)/ do |x, y, color|
+And /that image pixel at (.*)x(.*) should be of color ([^ ]+)$/ do |x, y, color|
 	@image.pixel_color(x.to_i, y.to_i).should == Magick::Pixel.from_color(color)
 end
 
-And /that image pixel at (.*)x(.*) should be of color ([^ ]+) with fuzz (.*)/ do |x, y, color, fuzz|
-	@image.pixel_color(x.to_i, y.to_i).fcmp(Magick::Pixel.from_color(color), fuzz).should == true
+And /that image pixel at (.*)x(.*) should be of color ([^ ]+) with fuzz (.*)%/ do |x, y, color, fuzz|
+	p1 = @image.pixel_color(x.to_i, y.to_i)
+	p2 = Magick::Pixel.from_color(color)
+	fuzz = fuzz.to_f / 100
+
+	diff =
+		((p1.red - p2.red).abs.to_f / Magick::QuantumRange) / 3 +
+		((p1.green - p2.green).abs.to_f / Magick::QuantumRange) / 3 +
+		((p1.blue - p2.blue).abs.to_f / Magick::QuantumRange) / 3
+
+	diff.should < fuzz
+
+	# this does not work :/
+	#@image.pixel_color(x.to_i, y.to_i).fcmp(Magick::Pixel.from_color(color), p(fuzz.to_f)).should == true
 end
 
 And /that image should be (.*) bit image/ do |bits|

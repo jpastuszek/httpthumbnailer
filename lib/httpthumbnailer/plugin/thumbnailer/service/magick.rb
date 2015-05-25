@@ -211,7 +211,7 @@ class Magick::Image
 	end
 
 	def diagonal
-		Math.sqrt(width ** 2 + height ** 2)
+		@_diag ||= Math.sqrt(width ** 2 + height ** 2)
 	end
 end
 
