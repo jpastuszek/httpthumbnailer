@@ -107,3 +107,16 @@ Feature: Built in edits
 		Then response status should be 200
 		Then response should contain PNG image of size 128x128
 
+	@edits @built-in @pixelate
+	Scenario: Pixelating given region
+		Given test2.png file content as request body
+		When I do PUT request http://localhost:3100/thumbnail/limit,1280,1280,png!pixelate,0.4,0.4,0.2,0.2,size:0.1
+		Then response status should be 200
+		Then response should contain PNG image of size 800x600
+		And that image pixel at 319x239 should be of color #bc1616
+		And that image pixel at 320x240 should be of color #862e2e
+		And that image pixel at 419x339 should be of color #862e2e
+		And that image pixel at 420x340 should be of color #871007
+		And that image pixel at 479x359 should be of color #871007
+		And that image pixel at 480x360 should be of color #6a0e15
+

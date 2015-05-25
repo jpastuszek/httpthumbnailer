@@ -59,20 +59,17 @@ module Plugin
 					end
 
 					edit('pixelate') do |image, box_x, box_y, box_width, box_height, options, thumbnail_spec|
-						box_x = ufloat!('box_x', box_x)
-						box_y = ufloat!('box_y', box_y)
-						box_width = ufloat!('box_width', box_width)
-						box_height = ufloat!('box_height', box_height)
-
+						x, y, width, height = normalize_box(
+							float!('box_x', box_x),
+							float!('box_y', box_y),
+							float!('box_width', box_width),
+							float!('box_height', box_height)
+						)
 						size = ufloat!('size', options['size'], 0.01)
 
-						# make size relative to image diagonal
-						diag = Math.sqrt(image.width ** 2 + image.height ** 2)
-
 						image.pixelate_region(
-							*image.rel_to_px(box_x, box_y),
-							*image.rel_to_px(box_width, box_height),
-							size * diag
+							*image.rel_to_px_box(x, y, width, height),
+							image.rel_to_diagonal(size)
 						)
 					end
 

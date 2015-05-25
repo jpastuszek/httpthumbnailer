@@ -131,8 +131,12 @@ And /(.*) part body will be saved as (.*) for human inspection/ do |part, file|
 	(support_dir + file).open('w'){|f| f.write(data)}
 end
 
-And /that image pixel at (.*)x(.*) should be of color (.*)/ do |x, y, color|
-	@image.pixel_color(x.to_i, y.to_i).to_color.sub(/^#/, '0x').should == color
+And /that image pixel at (.*)x(.*) should be of color ([^ ]+)/ do |x, y, color|
+	@image.pixel_color(x.to_i, y.to_i).should == Magick::Pixel.from_color(color)
+end
+
+And /that image pixel at (.*)x(.*) should be of color ([^ ]+) with fuzz (.*)/ do |x, y, color, fuzz|
+	@image.pixel_color(x.to_i, y.to_i).fcmp(Magick::Pixel.from_color(color), fuzz).should == true
 end
 
 And /that image should be (.*) bit image/ do |bits|

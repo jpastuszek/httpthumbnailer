@@ -100,6 +100,13 @@ class Magick::Image
 	def pixelate_region(x, y, w, h, size)
 		factor = 1.0 / size
 
+		# what happens here
+		# 1. get an required box cut form the image
+		# 2. resize it down by fracto
+		# 3. resize it back up by factor
+		# 4. since we may end up with bigger image (due to size of the pixelate pixel) crop it to required size again
+		# 5. composite over the original image in required position
+
 		crop(x, y, w, h, true).get do |work_space|
 			work_space.sample((factor * w).ceil, (factor * h).ceil)
 		end.get do |image|
@@ -107,6 +114,7 @@ class Magick::Image
 		end.get do |image|
 			image.crop(0, 0 , w, h, true)
 		end.get do |image|
+			p [x + w, y + h]
 			get_for_inplace do |orig|
 				orig.composite!(image, x, y, Magick::OverCompositeOp)
 			end
@@ -174,7 +182,7 @@ class Magick::Image
 		end
 	end
 
-	def rel_to_px(x, y)
+	def rel_to_px_pos(x, y)
 		[(x * columns).floor, (y * rows).floor]
 	end
 
@@ -183,7 +191,11 @@ class Magick::Image
 	end
 
 	def rel_to_px_box(x, y, width, height)
-		[*rel_to_px(x, y), *rel_to_px_dim(width, height)]
+		[*rel_to_px_pos(x, y), *rel_to_px_dim(width, height)]
+	end
+
+	def rel_to_diagonal(v)
+		v * diagonal
 	end
 
 	def px_to_rel(x, y)
@@ -196,6 +208,10 @@ class Magick::Image
 
 	def height
 		rows
+	end
+
+	def diagonal
+		Math.sqrt(width ** 2 + height ** 2)
 	end
 end
 
