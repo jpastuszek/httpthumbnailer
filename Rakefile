@@ -21,6 +21,12 @@ Jeweler::Tasks.new do |gem|
   gem.description = %Q{Provides HTTP API for thumbnailing images}
   gem.email = "jpastuszek@gmail.com"
   gem.authors = ["Jakub Pastuszek"]
+  gem.files.exclude "features/**/*"
+  gem.files.exclude "load_test/**/*"
+  gem.files.exclude "spec/**/*"
+  gem.files.exclude "test_plugins/**/*"
+  gem.files.exclude "*.gemspec"
+  gem.files.exclude ".rspec"
   # dependencies defined in Gemfile
 end
 Jeweler::RubygemsDotOrgTasks.new
