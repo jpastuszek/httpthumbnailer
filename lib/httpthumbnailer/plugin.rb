@@ -73,5 +73,13 @@ class PluginContext
 	def center_to_offset(center_x, center_y, w, h)
 		[center_x - w / 2, center_y - h / 2]
 	end
+
+	def normalize_box(x, y, width, height)
+		x = 0.0 if x < 0
+		y = 0.0 if y < 0
+		width = 1.0 - x if width + x > 1
+		height = 1.0 - y if height + y > 1
+		[x, y, width, height]
+	end
 end
 

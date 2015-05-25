@@ -75,6 +75,9 @@ Feature: Built in edits
 		When I do PUT request http://localhost:3100/thumbnail/fit,128,128,png!crop,-20.2,-20.2,1.8,10.8
 		Then response status should be 200
 		Then response should contain PNG image of size 91x128
+		When I do PUT request http://localhost:3100/thumbnail/fit,128,128,png!crop,0.0,0.0,1.8,10.8
+		Then response status should be 200
+		Then response should contain PNG image of size 91x128
 
 	@edits @built-in @crop
 	Scenario: Cropping normalization

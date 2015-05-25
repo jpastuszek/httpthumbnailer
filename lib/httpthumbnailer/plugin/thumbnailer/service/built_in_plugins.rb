@@ -43,15 +43,12 @@ module Plugin
 					end
 
 					edit('crop') do |image, x, y, width, height, options, thumbnail_spec|
-						x = float!('x', x)
-						y = float!('y', y)
-						width = float!('width', width)
-						height = float!('height', height)
-
-						x = 0.0 if x < 0
-						y = 0.0 if y < 0
-						width = 1.0 if width + x > 1
-						height = 1.0 if height + y > 1
+						x, y, width, height = normalize_box(
+							float!('x', x),
+							float!('y', y),
+							float!('width', width),
+							float!('height', height)
+						)
 
 						next image if [x, y, width, height] == [0.0, 0.0, 1.0, 1.0]
 
