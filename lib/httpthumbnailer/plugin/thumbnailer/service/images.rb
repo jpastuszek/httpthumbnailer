@@ -112,59 +112,69 @@ module Plugin
 					end
 				end
 
-				def thumbnail(spec)
+				def thumbnail!(spec, &block)
+					# it is OK if the image get's destroyed in the process
+					@image.get do |image|
+						_thumbnail(image, spec, &block)
+					end
+				end
+
+				def thumbnail(spec, &block)
+					# we don't want to destory the input image after we have generated the thumbnail so we can generate another one
+					@image.borrow do |image|
+						_thumbnail(image, spec, &block)
+					end
+				end
+
+				def _thumbnail(image, spec)
 					spec = spec.dup
 					# default background is white
 					spec.options['background-color'] = spec.options.fetch('background-color', 'white').sub(/^0x/, '#')
 
 					width = spec.width == :input ? @image.columns : spec.width
 					height = spec.height == :input ? @image.rows : spec.height
+					image_format = spec.format == :input ? @image.format : spec.format
 
 					raise ZeroSizedImageError.new(width, height) if width == 0 or height == 0
 
 					begin
 						measure "generating thumbnail with spec '#{spec}'" do
-							# we don't want to destory the image after we have generated the thumbnail
-							@image.borrow do |image|
-								image.get do |image|
-									if image.alpha?
-										measure "rendering image '#{image.inspect.strip}' on background" do
-											log.info 'image has alpha, rendering on background'
-											image.render_on_background(spec.options['background-color'])
-										end
-									else
-										image
+							image.get do |image|
+								if image.alpha?
+									measure "rendering image '#{image.inspect.strip}' on background" do
+										log.info 'image has alpha, rendering on background'
+										image.render_on_background(spec.options['background-color'])
 									end
-								end.get do |image|
-									spec.edits.each do |edit|
-										log.debug "applying edit '#{edit}'"
-										image = image.get do |image|
-											measure "edit '#{edit}'" do
-												edit_image(image, edit.name, *edit.args, edit.options, spec)
-											end
-										end
-									end
+								else
 									image
-								end.get do |image|
-									log.debug "thumbnailing with method '#{spec.method} #{width}x#{height} #{spec.options}'"
-									measure "thumbnailing with method '#{spec.method} #{width}x#{height} #{spec.options}'" do
-										thumbnail_image(image, spec.method, width, height, spec.options)
-									end
-								end.get do |image|
-									if image.alpha?
-										measure "rendering thumbnail '#{image.inspect.strip}' on background" do
-											log.info 'thumbnail has alpha, rendering on background'
-											image.render_on_background(spec.options['background-color'])
-										end
-									else
-										image
-									end
-								end.get do |image|
-									Service.stats.incr_total_thumbnails_created
-									image_format = spec.format == :input ? @image.format : spec.format
-
-									yield Thumbnail.new(image, image_format, spec.options)
 								end
+							end.get do |image|
+								spec.edits.each do |edit|
+									log.debug "applying edit '#{edit}'"
+									image = image.get do |image|
+										measure "edit '#{edit}'" do
+											edit_image(image, edit.name, *edit.args, edit.options, spec)
+										end
+									end
+								end
+								image
+							end.get do |image|
+								log.debug "thumbnailing with method '#{spec.method} #{width}x#{height} #{spec.options}'"
+								measure "thumbnailing with method '#{spec.method} #{width}x#{height} #{spec.options}'" do
+									thumbnail_image(image, spec.method, width, height, spec.options)
+								end
+							end.get do |image|
+								if image.alpha?
+									measure "rendering thumbnail '#{image.inspect.strip}' on background" do
+										log.info 'thumbnail has alpha, rendering on background'
+										image.render_on_background(spec.options['background-color'])
+									end
+								else
+									image
+								end
+							end.get do |image|
+								Service.stats.incr_total_thumbnails_created
+								yield Thumbnail.new(image, image_format, spec.options)
 							end
 						end
 					rescue Magick::ImageMagickError => error

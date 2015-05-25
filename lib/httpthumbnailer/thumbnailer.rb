@@ -21,14 +21,19 @@ class Thumbnailer < Controller
 			thumbnailer.load(req.body, opts) do |input_image|
 				log.info "original image loaded: #{input_image.mime_type}"
 
+				# take the values here since the input_image will be destroyed after thumbnail!
+				input_image_mime_type = input_image.mime_type
+				input_image_width = input_image.width
+				input_image_height = input_image.height
+
 				log.info "generating thumbnail: #{spec}"
-				input_image.thumbnail(spec) do |image|
+				input_image.thumbnail!(spec) do |image|
 					write 200, image.mime_type, image.data,
 						"X-Image-Width" => image.width,
 						"X-Image-Height" => image.height,
-						"X-Input-Image-Mime-Type" => input_image.mime_type,
-						"X-Input-Image-Width" => input_image.width,
-						"X-Input-Image-Height" => input_image.height
+						"X-Input-Image-Mime-Type" => input_image_mime_type,
+						"X-Input-Image-Width" => input_image_width,
+						"X-Input-Image-Height" => input_image_height
 				end
 			end
 		end
