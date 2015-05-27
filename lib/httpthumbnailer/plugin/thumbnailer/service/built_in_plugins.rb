@@ -89,7 +89,7 @@ module Plugin
 							float!('box_height', box_height)
 						)
 
-						radius = uint!('radius', options['radius'], 0) # auto
+						radius = ufloat!('radius', options['radius'], 0.0) # auto
 						sigma = ufloat!('sigma', options['sigma'], 0.01)
 
 						radius = image.rel_to_diagonal(radius)
