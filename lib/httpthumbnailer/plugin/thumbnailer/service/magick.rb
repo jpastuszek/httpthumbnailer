@@ -121,10 +121,10 @@ class Magick::Image
 		end
 	end
 
-	def blur_region(x, y, w, h, radious, sigma)
+	def blur_region(x, y, w, h, radius, sigma)
 		# NOTE: we need to have bigger region to blure then the final regios to prevent edge artifacts
 		# TODO: how do I calculate margin better? See: https://github.com/trevor/ImageMagick/blob/82d683349c7a6adc977f6f638f1b340e01bf0ea9/branches/ImageMagick-6.5.9/magick/gem.c#L787
-		margin = [3, radious, sigma].max.ceil
+		margin = [3, radius, sigma].max.ceil
 
 		mx = x - margin
 		my = y - margin
@@ -142,7 +142,7 @@ class Magick::Image
 		#p [x - mx, y - my, w, h]
 
 		crop(mx, my, mw, mh, true).get do |work_space|
-			work_space.blur_image(radious, sigma)
+			work_space.blur_image(radius, sigma)
 		end.get do |blur|
 			blur.crop(x - mx, y - my, w, h, true)
 		end.get do |blur|

@@ -1,5 +1,5 @@
 thumbnailing_method('blur')  do |image, width, height, options|
-	radious = Float(options['radious']) rescue 0.0 # auto
+	radius = Float(options['radius']) rescue 0.0 # auto
 	sigma = Float(options['sigma']) rescue 2.5
 
 	box_x = Float(options['box-x']) rescue 0.25
@@ -9,7 +9,7 @@ thumbnailing_method('blur')  do |image, width, height, options|
 
 	image.blur_region(
 		*image.rel_to_px_box(box_x, box_y, box_w, box_h),
-		radious, sigma
+		radius, sigma
 	).get do |image|
 		image.resize_to_fit(width, height) if image.columns != width or image.rows != height
 	end
