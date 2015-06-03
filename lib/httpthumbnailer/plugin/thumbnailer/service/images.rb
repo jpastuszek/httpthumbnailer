@@ -44,7 +44,7 @@ module Plugin
 						image = measure "loading original image" do
 							image = measure "loading image form blob" do
 								begin
-									images = measure "loading image form blob #{mw ? 'with' : 'without'} size hit" do
+									images = measure "loading image form blob #{mw ? 'with' : 'without'} size hint", "#{mw*2}x#{mh*2}" do
 										Magick::Image.from_blob(blob) do |info|
 											if mw and mh
 												define('jpeg', 'size', "#{mw*2}x#{mh*2}")
@@ -92,7 +92,7 @@ module Plugin
 								if mw and mh and not options[:no_downscale]
 									f = image.find_downscale_factor(mw, mh)
 									if f > 1
-										measure "downscailing '#{image.inspect.strip}'" do
+										measure "downscailing", image.inspect.strip do
 											image = image.downscale(f)
 											log.info "downscaled image by factor of #{f}: #{image.inspect.strip}"
 											Service.stats.incr_total_images_downscaled
@@ -138,10 +138,10 @@ module Plugin
 					raise ZeroSizedImageError.new(width, height) if width == 0 or height == 0
 
 					begin
-						measure "generating thumbnail with spec '#{spec}'" do
+						measure "generating thumbnail to spec", spec do
 							image.get do |image|
 								if image.alpha?
-									measure "rendering image '#{image.inspect.strip}' on background" do
+									measure "rendering image on background", image.inspect.strip  do
 										log.info 'image has alpha, rendering on background'
 										image.render_on_background(spec.options['background-color'])
 									end
@@ -152,7 +152,7 @@ module Plugin
 								spec.edits.each do |edit|
 									log.debug "applying edit '#{edit}'"
 									image = image.get do |image|
-										measure "edit '#{edit}'" do
+										measure "edit", edit do
 											edit_image(image, edit.name, *edit.args, edit.options, spec)
 										end
 									end
@@ -160,12 +160,12 @@ module Plugin
 								image
 							end.get do |image|
 								log.debug "thumbnailing with method '#{spec.method} #{width}x#{height} #{spec.options}'"
-								measure "thumbnailing with method '#{spec.method} #{width}x#{height} #{spec.options}'" do
+								measure "thumbnailing with method", "#{spec.method} #{width}x#{height} #{spec.options}" do
 									thumbnail_image(image, spec.method, width, height, spec.options)
 								end
 							end.get do |image|
 								if image.alpha?
-									measure "rendering thumbnail '#{image.inspect.strip}' on background" do
+									measure "rendering thumbnail on background", image.inspect.strip do
 										log.info 'thumbnail has alpha, rendering on background'
 										image.render_on_background(spec.options['background-color'])
 									end
@@ -254,7 +254,7 @@ module Plugin
 					quality = @quality
 					interlace = @interlace
 
-					measure "to blob #{@format} (quality: #{@quality} interlace: #{@interlace})" do
+					measure "to blob", "#{@format} (quality: #{@quality} interlace: #{@interlace})" do
 						@image.to_blob do
 							self.format = format
 							self.quality = quality if quality
