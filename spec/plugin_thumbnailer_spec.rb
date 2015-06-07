@@ -3,6 +3,9 @@ require 'unicorn-cuba-base'
 require 'httpthumbnailer/plugin/thumbnailer'
 require 'httpthumbnailer/thumbnail_specs'
 
+MemoryLimit.logger = RootLogger.new('/dev/null')
+Plugin::Thumbnailer::Service.logger = RootLogger.new('/dev/null')
+
 describe Plugin::Thumbnailer::Service do
 	subject do
 		service = Plugin::Thumbnailer::Service.new
