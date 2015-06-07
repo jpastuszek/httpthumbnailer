@@ -34,24 +34,26 @@ module Plugin
 				def self.from_blob(blob, thumbnailing_methods, edits, options = {}, &block)
 					mw = options[:max_width]
 					mh = options[:max_height]
-					if mw and mh
-						mw = mw.to_i
-						mh = mh.to_i
-						log.info "using max size hint of: #{mw}x#{mh}"
-					end
 
 					begin
 						image = measure "loading original image" do
 							image = measure "loading image form blob" do
 								begin
-									images = measure "loading image form blob #{mw ? 'with' : 'without'} size hint", "#{mw*2}x#{mh*2}" do
-										Magick::Image.from_blob(blob) do |info|
-											if mw and mh
-												define('jpeg', 'size', "#{mw*2}x#{mh*2}")
-												define('jbig', 'size', "#{mw*2}x#{mh*2}")
+									images =
+										if mw and mh
+											measure "loading image form blob with size hint", "#{mw}x#{mh}" do
+												log.info "using max size hint of: #{mw}x#{mh}"
+												Magick::Image.from_blob(blob) do |info|
+													# actual hint is 2x the max thumbnail dimensions so we don't loose too much quality
+													define('jpeg', 'size', "#{mw*2}x#{mh*2}")
+													define('jbig', 'size', "#{mw*2}x#{mh*2}")
+												end
+											end
+										else
+											measure "loading image form blob without size hint" do
+												Magick::Image.from_blob(blob)
 											end
 										end
-									end
 									begin
 										image = images.shift
 										begin
