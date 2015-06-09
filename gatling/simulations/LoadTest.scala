@@ -16,6 +16,7 @@ class LoadTest extends Simulation {
     val image_files = csv("index.csv").circular
     val thumbnail_req = csv("thumbnail.csv").records
     val thumbnails_req = csv("thumbnails.csv").records
+    val edits_req = csv("edits.csv").records
 
     val rnd = new scala.util.Random(42)
 
@@ -61,6 +62,15 @@ class LoadTest extends Simulation {
         .exec(flattenMapIntoAttributes("${thumbnails}"))
         .exec(request)
       }
+
+    val thumbnail_with_edits =
+      group("Edits") {
+        exec((session) => {
+          session.set("edits", edits_req(rnd.nextInt(edits_req length)))
+        })
+        .exec(flattenMapIntoAttributes("${edits}"))
+        .exec(request)
+      }
   }
 
   val httpThumbnailer = http.baseURL(sys.env("HTTP_THUMBNAILER_ADDR"))
@@ -76,7 +86,8 @@ class LoadTest extends Simulation {
         Thumbnailer.identify.pause(50 millisecond, 200 millisecond),
         repeat(10) {
           exec(
-            Thumbnailer.thumbnail.pause(50 millisecond, 200 millisecond)
+            Thumbnailer.thumbnail.pause(50 millisecond, 200 millisecond),
+            Thumbnailer.thumbnail_with_edits.pause(50 millisecond, 200 millisecond)
           )
         },
         Thumbnailer.thumbnails.pause(50 millisecond, 200 millisecond)
@@ -88,9 +99,10 @@ class LoadTest extends Simulation {
   ).maxDuration(300 seconds)
   .assertions(
     global.failedRequests.percent.is(0),
-    details("Identify").responseTime.percentile3.lessThan(150),
+    details("Identify").responseTime.percentile3.lessThan(200),
     details("Thumbnail").responseTime.percentile3.lessThan(500),
-    details("Thumbnails").responseTime.percentile3.lessThan(1100)
+    details("Thumbnails").responseTime.percentile3.lessThan(1100),
+    details("Edits").responseTime.percentile3.lessThan(200)
   )
 }
 

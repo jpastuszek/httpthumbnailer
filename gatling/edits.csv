@@ -1,0 +1,9 @@
+name,uri,mime_type,body
+Pixelate,"/thumbnail/fit,165,165,JPEG!pixelate,0.4,0.3,0.2,0.3",image/jpeg,JFIF
+Rectangle,"/thumbnail/fit,165,165,JPEG!rectangle,0.45,0.35,0.2,0.3",image/jpeg,JFIF
+Blur,"/thumbnail/fit,165,165,JPEG!blur,0.45,0.35,0.2,0.3",image/jpeg,JFIF
+Resize Crop,"/thumbnail/fit,165,165,JPEG!resize_crop,200,200",image/jpeg,JFIF
+Combo 1,"/thumbnail/fit,165,165,JPEG!pixelate,0.4,0.3,0.2,0.3!rectangle,0.45,0.35,0.2,0.3",image/jpeg,JFIF
+Combo 2,"/thumbnail/fit,165,165,JPEG!pixelate,0.4,0.3,0.2,0.3!blur,0.45,0.35,0.2,0.3",image/jpeg,JFIF
+Combo 3,"/thumbnail/fit,165,165,JPEG!pixelate,0.4,0.3,0.2,0.3!resize_crop,200,200",image/jpeg,JFIF
+Long Combo,"/thumbnail/fit,165,165,JPEG!pixelate,0.4,0.3,0.2,0.3!blur,0.45,0.35,0.2,0.3!rectangle,0.45,0.35,0.2,0.3!resize_crop,200,200",image/jpeg,JFIF
