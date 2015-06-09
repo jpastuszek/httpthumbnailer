@@ -61,3 +61,6 @@ gatling/101_ObjectCategories/
 gatling/101_ObjectCategories.tar.gz
 gatling/gatling-charts-highcharts-bundle-*/
 gatling/gatling-charts-highcharts-bundle-*-bundle.zip
+
+.DS_Store
+*.gem
