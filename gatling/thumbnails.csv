@@ -1,0 +1,2 @@
+name,uri,mime_type,body
+Multipart 1,"/thumbnails/crop,100,100,JPEG/crop,800,600,JPEG/crop,300,400,PNG/pad,100,100,JPEG/fit,100,100,JPEG/limit,100,100,JPEG/limit,500,500,JPEG/limit,1500,1500,JPEG",multipart/mixed,JFIF

@@ -1,0 +1,9 @@
+name,uri,mime_type,body
+Crop 100x100 JPEG,"/thumbnail/crop,100,100,JPEG",image/jpeg,JFIF
+Crop 800x600 JPEG,"/thumbnail/crop,800,600,JPEG",image/jpeg,JFIF
+Crop 300x400 PNG,"/thumbnail/crop,300,400,PNG",image/png,PNG
+Pad 100x100 JPEG,"/thumbnail/pad,100,100,JPEG",image/jpeg,JFIF
+Fit 100x100 JPEG,"/thumbnail/fit,100,100,JPEG",image/jpeg,JFIF
+Limit 100x100 JPEG,"/thumbnail/limit,100,100,JPEG",image/jpeg,JFIF
+Limit 500x500 JPEG,"/thumbnail/limit,500,500,JPEG",image/jpeg,JFIF
+Limit 1500x1500 JPEG,"/thumbnail/limit,1500,1500,JPEG",image/jpeg,JFIF

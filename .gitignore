@@ -56,3 +56,8 @@ features/support/test-pad.png
 features/support/test-transparent-default.png
 
 .idea/
+gatling/index.csv
+gatling/101_ObjectCategories/
+gatling/101_ObjectCategories.tar.gz
+gatling/gatling-charts-highcharts-bundle-*/
+gatling/gatling-charts-highcharts-bundle-*-bundle.zip
