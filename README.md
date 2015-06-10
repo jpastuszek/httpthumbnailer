@@ -314,7 +314,7 @@ Custom thumbnailing operations and edits can be programed using plugin API.
 By default HTTP Thumbnailer will look for plugins in `/usr/share/httpthumbnailer/plugins`. Options `--plugins` can be used to point to different directory; it can also be specified multiple times to point to more than one directory.
 Plugin file needs to end with `.rb` extension to be found anywhere within directory structure pointed by `--plugins` options (or in default directory).
 
-### Defining thumbnailing operations
+### Defining new thumbnailing operations
 
 To define new thumbnailing operation provide block like this:
 
@@ -333,7 +333,7 @@ Server will pass following objects:
 
 Block should return (last value or with `next` keyword) new image or the image passed with `image` argument or `nil` if no change was done.
 
-### Defining edit
+### Defining new edits
 
 To define new edit provide block like this:
 
