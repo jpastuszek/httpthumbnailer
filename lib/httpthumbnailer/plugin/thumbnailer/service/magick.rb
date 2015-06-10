@@ -114,7 +114,6 @@ class Magick::Image
 		end.get do |image|
 			image.crop(0, 0 , w, h, true)
 		end.get do |image|
-			p [x + w, y + h]
 			get_for_inplace do |orig|
 				orig.composite!(image, x, y, Magick::OverCompositeOp)
 			end
@@ -136,10 +135,6 @@ class Magick::Image
 		my = 0 if my < 0
 		mw = width - mx if mw + mx > width
 		mh = height - my if mh + my > height
-
-		#p [x, y, w, h]
-		#p [mx, my, mw, mh]
-		#p [x - mx, y - my, w, h]
 
 		crop(mx, my, mw, mh, true).get do |work_space|
 			work_space.blur_image(radius, sigma)
