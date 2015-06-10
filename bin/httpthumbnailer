@@ -18,7 +18,11 @@ Application.new('httpthumbnailer', port: 3100) do
 			description: 'path to directory from which plugins will be loaded (files with .rb extension)',
 			default: '/usr/share/httpthumbnailer/plugins'
 		switch :no_optimization,
-			description: 'disable load time size hinting and prescaling optimizations'
+			description: 'disable load time size hinting and down sampling optimizations'
+		switch :no_reload,
+			description: 'disable reloading of images that got upscaled when using hit size during load (broken JPEG lib)'
+		switch :no_downsample,
+			description: 'disable down sampling image before processing'
 		version (Pathname.new(__FILE__).dirname + '..' + 'VERSION').read
 	end
 
@@ -41,6 +45,8 @@ Application.new('httpthumbnailer', port: 3100) do
 		end
 
 		Controller.settings[:optimization] = (not settings.no_optimization)
+		Controller.settings[:no_reload] = settings.no_reload
+		Controller.settings[:no_downsample] = settings.no_downsample
 		Controller.settings[:limit_memory] = settings.limit_memory * 1024**2
 		Controller.settings[:limit_map] = settings.limit_disk * 1024**2
 		Controller.settings[:limit_disk] = settings.limit_disk * 1024**2

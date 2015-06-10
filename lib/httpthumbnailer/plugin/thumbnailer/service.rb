@@ -11,7 +11,7 @@ module Plugin
 			def_stats(
 				:total_images_loaded,
 				:total_images_reloaded,
-				:total_images_downscaled,
+				:total_images_downsampled,
 				:total_thumbnails_created,
 				:images_loaded,
 				:max_images_loaded,

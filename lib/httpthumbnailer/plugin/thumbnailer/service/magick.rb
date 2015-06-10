@@ -68,14 +68,14 @@ class Magick::Image
 		out
 	end
 
-	def downscale(f)
+	def downsample(f)
 		sample(columns / f, rows / f)
 	end
 
-	def find_downscale_factor(max_width, max_height, factor = 1)
+	def find_downsample_factor(max_width, max_height, factor = 1)
 		new_factor = factor * 2
 		if columns / new_factor > max_width * 2 and rows / new_factor > max_height * 2
-			find_downscale_factor(max_width, max_height, factor * 2)
+			find_downsample_factor(max_width, max_height, factor * 2)
 		else
 			factor
 		end

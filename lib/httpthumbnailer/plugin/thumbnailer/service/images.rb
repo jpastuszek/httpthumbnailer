@@ -91,13 +91,13 @@ module Plugin
 								end
 								image
 							end.get do |image|
-								if mw and mh and not options[:no_downscale]
-									f = image.find_downscale_factor(mw, mh)
+								if mw and mh and not options[:no_downsample]
+									f = image.find_downsample_factor(mw, mh)
 									if f > 1
-										measure "downscailing", image.inspect.strip do
-											image = image.downscale(f)
-											log.info "downscaled image by factor of #{f}: #{image.inspect.strip}"
-											Service.stats.incr_total_images_downscaled
+										measure "downsampling", image.inspect.strip do
+											image = image.downsample(f)
+											log.info "downsampled image by factor of #{f}: #{image.inspect.strip}"
+											Service.stats.incr_total_images_downsampled
 											image
 										end
 									end
