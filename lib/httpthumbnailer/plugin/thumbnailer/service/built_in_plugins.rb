@@ -51,7 +51,7 @@ module Plugin
 					end
 
 					edit('crop') do |image, x, y, width, height, options, thumbnail_spec|
-						x, y, width, height = normalize_box(
+						x, y, width, height = normalize_region(
 							float!('x', x),
 							float!('y', y),
 							float!('width', width),
@@ -67,7 +67,7 @@ module Plugin
 					end
 
 					edit('pixelate') do |image, box_x, box_y, box_width, box_height, options, thumbnail_spec|
-						x, y, width, height = normalize_box(
+						x, y, width, height = normalize_region(
 							float!('box_x', box_x),
 							float!('box_y', box_y),
 							float!('box_width', box_width),
@@ -82,7 +82,7 @@ module Plugin
 					end
 
 					edit('blur') do |image, box_x, box_y, box_width, box_height, options, thumbnail_spec|
-						x, y, width, height = normalize_box(
+						x, y, width, height = normalize_region(
 							float!('box_x', box_x),
 							float!('box_y', box_y),
 							float!('box_width', box_width),
@@ -112,7 +112,7 @@ module Plugin
 					end
 
 					edit('rectangle') do |image, box_x, box_y, box_width, box_height, options, thumbnail_spec|
-						x, y, width, height = normalize_box(
+						x, y, width, height = normalize_region(
 							float!('box_x', box_x),
 							float!('box_y', box_y),
 							float!('box_width', box_width),

@@ -190,11 +190,7 @@ class Magick::Image
 	end
 
 	def rel_to_diagonal(v)
-		v * diagonal
-	end
-
-	def px_to_rel(x, y)
-		[x / columns, y / rows]
+		(v * diagonal).ceil
 	end
 
 	def width
@@ -206,7 +202,7 @@ class Magick::Image
 	end
 
 	def diagonal
-		@_diag ||= Math.sqrt(width ** 2 + height ** 2)
+		@_diag ||= Math.sqrt(width ** 2 + height ** 2).ceil
 	end
 end
 

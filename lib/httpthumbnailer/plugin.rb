@@ -74,7 +74,7 @@ class PluginContext
 		[center_x - w / 2, center_y - h / 2]
 	end
 
-	def normalize_box(x, y, width, height)
+	def normalize_region(x, y, width, height)
 		x = 0.0 if x < 0
 		y = 0.0 if y < 0
 		width = 1.0 - x if width + x > 1
