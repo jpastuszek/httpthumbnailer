@@ -63,7 +63,7 @@ export HTTP_THUMBNAILER_ADDR
 export MAX_USERS
 echo "Ramping up test to ${MAX_USERS} users"
 
-RUN_TAG=`date -u +%Y%m%d_%H%M%S`-`git describe --always`
+RUN_TAG=`date -u +%Y%m%d_%H%M%S`-`git describe --always --tags`
 CLASS=$1
 if [[ -z "$CLASS" ]]; then
    CLASS=LoadTest
