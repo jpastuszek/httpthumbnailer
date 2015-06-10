@@ -59,7 +59,15 @@ module Plugin
 										begin
 											if image.columns > image.base_columns or image.rows > image.base_rows
 												log.warn "input image got upscaled from: #{image.base_columns}x#{image.base_rows} to #{image.columns}x#{image.rows}"
-												raise UpscaledError if not options[:no_reload]
+												if not options[:no_upscale_fix]
+													raise UpscaledError if options[:reload]
+													measure "downsampling input image to base size", "#{image.base_columns}x#{image.base_rows}" do
+														log.warn "downsampling input image to base size: #{image.base_columns}x#{image.base_rows}"
+														image = image.get do |image|
+															image.sample(image.base_columns, image.base_rows)
+														end
+													end
+												end
 											end
 											image
 										rescue

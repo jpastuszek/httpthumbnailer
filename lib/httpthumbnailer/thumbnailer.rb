@@ -18,7 +18,8 @@ class Thumbnailer < Controller
 				opts[:max_height] = spec.height if spec.height.is_a? Integer
 			end
 
-			opts[:no_reload] = settings[:no_reload]
+			opts[:reload] = settings[:reload]
+			opts[:no_upscale_fix] = settings[:no_upscale_fix]
 			opts[:no_downsample] = settings[:no_downsample]
 
 			thumbnailer.load(req.body, opts) do |input_image|
@@ -50,7 +51,8 @@ class Thumbnailer < Controller
 					opts[:max_height] = thumbnail_specs.max_height
 			end
 
-			opts[:no_reload] = settings[:no_reload]
+			opts[:reload] = settings[:reload]
+			opts[:no_upscale_fix] = settings[:no_upscale_fix]
 			opts[:no_downsample] = settings[:no_downsample]
 
 			thumbnailer.load(req.body, opts) do |input_image|
@@ -99,7 +101,7 @@ class Thumbnailer < Controller
 			end
 
 			# disable preprocessing since we don't need them here
-			opts[:no_reload] = true
+			opts[:no_upscale_fix] = true
 			opts[:no_downsample] = true
 
 			# RMagick of v2.13.2 does not use ImageMagick's PingBlob so we have to actually load the image
