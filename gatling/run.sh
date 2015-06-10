@@ -4,6 +4,7 @@
 # Environment variables:
 #	MAX_USERS - how many users to rump up to (default 20)
 #	HTTP_THUMBNAILER_ADDR - can be used to specify other already running instance
+#	HTTP_THUMBNAILER_OPTS - can be used to specify additional startup options for HTTP Thumbnailer
 #
 set -e
 
@@ -44,7 +45,7 @@ start_thumbnailer() {
 	echo "Starting HTTPThumbnailer..."
 	(
 		cd ../../httpthumbnailer
-		bin/httpthumbnailer --listener 127.0.0.1:3150 --pid-file /tmp/httpthumbnailer.pid
+		bin/httpthumbnailer $HTTP_THUMBNAILER_OPTS --listener 127.0.0.1:3150 --pid-file /tmp/httpthumbnailer.pid --log-file /tmp/httpthumbnailer.log --access-log-file /tmp/httpthumbnailer_access.log
 		while ! curl -s -o /dev/null 127.0.0.1:3150/; do sleep 1; echo .; done
 	)
 }
