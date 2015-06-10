@@ -57,9 +57,9 @@ module Plugin
 									begin
 										image = images.shift
 										begin
-											if image.columns > image.base_columns or image.rows > image.base_rows and not options[:no_reload]
-												log.warn "input image got upscaled from: #{image.base_columns}x#{image.base_rows} to #{image.columns}x#{image.rows}: reloading without max size hint!"
-												raise UpscaledError
+											if image.columns > image.base_columns or image.rows > image.base_rows
+												log.warn "input image got upscaled from: #{image.base_columns}x#{image.base_rows} to #{image.columns}x#{image.rows}"
+												raise UpscaledError if not options[:no_reload]
 											end
 											image
 										rescue
@@ -72,6 +72,7 @@ module Plugin
 										end
 									end
 								rescue UpscaledError
+									log.warn "reloading input image without max size hint!"
 									Service.stats.incr_total_images_reloaded
 									mw = mh = nil
 									retry
