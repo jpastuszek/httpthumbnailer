@@ -316,7 +316,7 @@ Plugin file needs to end with `.rb` extension to be found anywhere within direct
 
 ### Defining thumbnailing operations
 
-To define new thumbnailing operation define block like:
+To define new thumbnailing operation provide block like this:
 
 ```ruby
 thumbnailing_method('operation_name') do |image, width, height, options|
@@ -326,31 +326,81 @@ end
 
 Name of the operation is defined by value of `thumbnailing_method` method argument (string).
 
-When called:
-* `image` will be [RMagic::Image](https://rmagick.github.io/index.html) object
-* `width` and `height` will be integers representing required width and height of the thumbnail
-* `options` will be key-value map, where keys and values are strings, passed to request specification
+Server will pass following objects:
+* `image` - [RMagick::Image](https://rmagick.github.io/index.html) object
+* `width` and `height` - integers representing required width and height of the thumbnail
+* `options` - key-value map, where keys and values are strings, passed to request specification
 
-Block should return (last value or with `next` keyword) new image or the image passed with `image` argument if no change was done.
+Block should return (last value or with `next` keyword) new image or the image passed with `image` argument or `nil` if no change was done.
+
+### Defining edit
+
+To define new edit provide block like this:
+
+```ruby
+edit('edit_name') do |image, arg1, arg2, argN, options, thumbnail_spec|
+	# do something with image
+end
+```
+
+Name of the edit is defined by value of `edit` method argument (string).
+
+Server will pass following objects:
+* `image` - [RMagick::Image](https://rmagick.github.io/index.html) object; input image or output of previous edit
+* all arguments as passed to the API; you can capture as many as you need
+* `options` - key-value map, where keys and values are strings, passed to request with edit specification
+* `thumbnail_spec` - object representing thumbnail specification; you can call following methods:
+	* `method` - name of the thumbnailing operation
+	* `width` and `height` - integers representing required width and height of the thumbnail
+	* `format` - requested output format (e.g. `png` or `jpeg`)
+	* `options` - key-value map of thumbnailing options
+	* `edits` - array representing all edits; each edit has following methods:
+		* `name` - name of the edit
+		* `args` - array of edit arguments
+		* `options` - key-value map of edit options
+
+Block should return (last value or with `next` keyword) new image or the image passed with `image` argument or `nil` if no change was done.
+
+### Processing images
 
 If more than one image is created during processing it is important to call `get` on every newly created image (unless it is the one being returned). This method will pass the image to first block argument and will ensure that image is destroyed after use or on exception. Returning `nil` or same image as input will make `get` to return the input image without destroying it.
 
 Example of `get` usage:
+
 ```ruby
 	image.crop(cut_x * image.columns, cut_y * image.rows, cut_w * image.columns, cut_h * image.rows, true).get do |image|
 		image.resize_to_fit(width, height) if image.columns != width or image.rows != height
 	end
 ```
 
-For examples see builtin oparations defined in [built_in_plugins.rb](lib/httpthumbnailer/plugin/thumbnailer/service/built_in_plugins.rb).
-
-### Defining edit
-
-TODO
+For examples see built-in thumbnailing operations and edits defined in [built_in_plugins.rb](lib/httpthumbnailer/plugin/thumbnailer/service/built_in_plugins.rb).
 
 ### Helper functions
 
-TODO
+Following helper methods are available in plugin context:
+* `int!(name, arg, default = nil)` - returns integer from given `arg` string; `name` is used for reporting errors; if `arg` is an empty string returns `default` if not `nil` or fail with **400 Bad Request**
+* `uint!(name, arg, default = nil)` - returns positive integer from given `arg` string; `name` is used for reporting errors; if `arg` is an empty string returns `default` if not `nil` or fail with **400 Bad Request**
+* `float!(name, arg, default = nil)` - returns float from given `arg` string; `name` is used for reporting errors; if `arg` is an empty string returns `default` if not `nil` or fail with **400 Bad Request**
+* `ufloat!(name, arg, default = nil)` - returns positive float from given `arg` string; `name` is used for reporting errors; if `arg` is an empty string returns `default` if not `nil` or fail with **400 Bad Request**
+* `int!(name, arg, default = nil)` - returns integer from given `arg` string; `name` is used for reporting errors; if `arg` is an empty string returns `default` if not `nil` or fail with **400 Bad Request**
+* `offset_to_center(x, y, w, h)` - returns center (`[x, y]`) of the given region
+* `center_to_offset(center_x, center_y, w, h)` - returns offset (`[x, y]`) of given region center (`center_x`, `center_y`) and `width` and `height`
+* `normalize_region(x, y, width, height)` - returns normalized relative (values between 0.0 and 1.0) region offset and dimensions (`[x, y, width, height]`) that fits within normal values so that width and height will never be 0.0 (`Float::EPSILON` instead), x + width and y + height will never be grater than 1.0 and all values will not be negative
+
+Additional [RMagick::Image](https://rmagick.github.io/index.html) object methods are provided:
+* `RMagick::Image.new_8bit(width, height, background_color = 'none')` - create new image of given dimensions and background color (which can be described by pallet color name like **black** of by hex value)
+* `render_on_background(background_color, width = nil, height = nil, float_x = 0.5, float_y = 0.5)` - overlay current image on top of new image (with optionally different dimensions and floating) of given color
+* `float_to_offset(float_width, float_height, float_x = 0.5, float_y = 0.5)` - calculated offset (`[x, y]`) of image with given dimensions (`float_width`, `float_height`) on top of this image given `float_x` and `float_y` values
+* `pixelate_region(x, y, w, h, size)` - pixelate region given with offset (`x`, `y`) and dimensions (`w`, `h`) in pixels of pixel diagonal size (`size`) also in pixels
+* `blur_region(x, y, w, h, radius, sigma)` - blur region given with offset (`x`, `y`) and dimensions (`w`, `h`) in pixels using effect `radius` and `sigma` in pixels
+* `render_rectangle(x, y, w, h, color)` - draw rectangle given with offset (`x`, `y`) and dimensions (`w`, `h`) in pixels
+* `with_background_color(color, &block)` - do **RMagick** image operation that uses background color in given block and restore previous background color when finished
+* `rel_to_px_pos(x, y)` - convert relative offset to offset represented in pixels (using `Float#floor` value)
+* `rel_to_px_dim(width, height)` - convert relative width and height to width and height in pixels  (using `Float#ceil` value)
+* `rel_to_diagonal(v)` - convert relative diagonal to diagonal in pixels (using `Float#ceil` value)
+* `width` - alias for `#columns`
+* `height` - alias for `#height`
+* `diagonal` - calculate diagonal in pixels
 
 ### Memory usage and leaks
 
@@ -403,6 +453,6 @@ Also avoid keeping too many images loaded at the same time. Chain `get` calls ra
 
 ## Copyright
 
-Copyright (c) 2013 Jakub Pastuszek. See LICENSE.txt for
+Copyright (c) 2013 - 20015 Jakub Pastuszek. See LICENSE.txt for
 further details.
 
