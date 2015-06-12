@@ -146,33 +146,33 @@ Following options can be used with thumbnail specification:
 ### Edits
 
 Edits are applied on input image (after possibly being downsampled) and before the final thumbnail is generated.
-Relative vector values are relative to input image dimensions (width and hight), scalar values are relative to input image diagonal.
+Relative vector values are relative to input image dimensions (width and hight), scalar values are relative to input image diagonal. This way edits will look more or less the same no matter what the input or output image resolution is. Also client does not need to know the resolution of input image.
 
 One or more edits can be used with thumbnailing specification:
 * `resize_crop` - cut image to fit within given dimensions keeping aspect ratio
-	* arguments: width and height in pixels
+	* arguments: width, height - dimensions to resize and crop image to in pixels
 	* options:
-		* `float-x` and `float-y` - value between 0.0 and 1.0; move cropping view left to right or top to bottom (0.0 to 1.0); default: 0.5 (center)
+		* `float-x`, `float-y` - value between 0.0 and 1.0; move cropping view left to right or top to bottom (0.0 to 1.0); default: 0.5 (center)
 * `resize_fit` - fit image within given dimensions keeping aspect ratio
-	* arguments: width and height in pixels
+	* arguments: width, height in pixels
 * `resize_limit` - same as `resize_fit` but applied only if image is larger than given dimensions
-	* arguments: width and height in pixels
+	* arguments: width, height - dimension to limit image to in pixels
 * `crop`
-	* arguments: x, y, width and height - values between 0.0 and 1.0; rectangular area of image starting from relative position to image width from left (x) and height from top (y) with relative width and height
-* `pixelate` - pixelate (sample) given rectangular area of image
-	* arguments: box_x, box_y, box_widthd box_height - values between 0.0 and 1.0; rectangular area of image starting from relative position to image width from left (x) and height from top (y) with relative width and height
+	* arguments: x, y, width, height - values between 0.0 and 1.0; region of image starting from relative position to image width from left (x) and height from top (y) with relative width and height
+* `pixelate` - pixelate (sample) given region of image
+	* arguments: box_x, box_y, box_widthd, box_height - values between 0.0 and 1.0; region of image starting from relative position to image width from left (x) and height from top (y) with relative width and height
 	* options:
 		* `size` - size of the pixel (relative to imgae diagonal); default: 0.01
-* `blur` - blur rectangular area of image
-	* arguments: x, y, width and height - values between 0.0 and 1.0; rectangular area of image starting from relative position to image width from left (x) and height from top (y) with relative width and height
+* `blur` - blur region of image
+	* arguments: x, y, width, height - values between 0.0 and 1.0; region of image starting from relative position to image width from left (x) and height from top (y) with relative width and height
 	* options:
 		* `sigma` - amount of blur (relative to imgae diagonal); resulting value is capped to 50 pixels
 		* `radius` - radius of the blur (0.0 - calculated for given sigma) (relative to image diagonal); resulting value is capped to 50 pixels; default: 0.0
 * `rectangle` - draw rectangle over image
-	* arguments: box_x, box_y, box_width and box_height - values between 0.0 and 1.0; rectangle over image starting from relative position to image width from left (x) and height from top (y) with relative width and height
+	* arguments: box_x, box_y, box_width, box_height - values between 0.0 and 1.0; rectangle over image starting from relative position to image width from left (x) and height from top (y) with relative width and height
 	* options:
 		* `color` - color of the rectangle; default: black
-* `rotate` - rotate image clockwise by given angle filling new space with color
+* `rotate` - rotate image clockwise by given angle filling any new image surface with color
 	* arguments: angle - rotation angle in degree
 	* options:
 		* `background-color` - color of the background (when not 90x rotation is used); default: thumbnail `background-color` option or transparent
@@ -274,32 +274,33 @@ Example:
 
 ```bash
 $ curl 127.0.0.1:3100/stats
-total_requests: 119
-total_errors: 1
+workers: 5
+total_requests: 18239789
+total_errors: 903
 calling: 1
 writing: 0
-total_images_loaded: 115
-total_images_reloaded: 30
-total_images_downscaled: 30
-total_thumbnails_created: 147
+total_images_loaded: 17633702
+total_images_reloaded: 0
+total_images_downscaled: 21805
+total_thumbnails_created: 17633090
 images_loaded: 0
-max_images_loaded: 3
-max_images_loaded_worker: 3
-total_images_created: 312
-total_images_destroyed: 312
-total_images_created_from_blob: 115
-total_images_created_initialize: 53
-total_images_created_resize: 101
-total_images_created_crop: 13
-total_images_created_sample: 30
-total_write_multipart: 16
-total_write: 101
-total_write_part: 48
-total_write_error: 1
+max_images_loaded: 101
+max_images_loaded_worker: 101
+total_images_created: 50178054
+total_images_destroyed: 50178054
+total_images_created_from_blob: 17634825
+total_images_created_initialize: 9763067
+total_images_created_resize: 16261541
+total_images_created_crop: 6496816
+total_images_created_sample: 21805
+total_write_multipart: 0
+total_write: 18238885
+total_write_part: 0
+total_write_error: 903
 total_write_error_part: 0
 
-$ curl 127.0.0.1:3100/stats/total_write_multipart
-16
+$ curl 127.0.0.1:3100/stats/total_thumbnails_created
+17633106
 ```
 
 ## Memory limits
@@ -433,8 +434,9 @@ Also avoid keeping too many images loaded at the same time. Chain `get` calls ra
 
 ## Known Issues
 
-* When 413 error is reported due to memory limit exhaustion the disk offloading won't work any more and only requests that can fit in the memory can be processed without getting 413 - this is due to a bug in ImageMagick v6.8.6-8 (2013-08-06 6.8.6-8) or less
+* When 413 error is reported due to memory limit exhaustion the disk offloading won't work any more and only requests that can fit in the memory can be processed without getting 413 - this is due to a bug in ImageMagick v6.8.6-8 (2013-08-06 6.8.6-8) or less; recommended version is 6.8.7-8
 * Mime type generated for images may not be the official mime type assigned for given format; please let me know of any inconsistencies or send a patch to get better output in efficient way
+* CMYK profile JPEGs may render negative
 
 ## TODO
 
@@ -453,6 +455,5 @@ Also avoid keeping too many images loaded at the same time. Chain `get` calls ra
 
 ## Copyright
 
-Copyright (c) 2013 - 20015 Jakub Pastuszek. See LICENSE.txt for
-further details.
+Copyright (c) 2013 - 2015 Jakub Pastuszek. See LICENSE.txt for further details.
 
