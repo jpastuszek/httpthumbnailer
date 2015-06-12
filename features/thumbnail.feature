@@ -159,7 +159,7 @@ Feature: Generating single thumbnail with PUT request
 		"""
 
 	@error_handling
-	Scenario: Reporitng of bad operation value
+	Scenario: Reporitng of bad method value
 		Given test.jpg file content as request body
 		When I do PUT request http://localhost:3100/thumbnail/blah,128,128,png
 		Then response status should be 400

@@ -91,7 +91,7 @@ Feature: Generating set of thumbnails with single PUT request
 		"""
 
 	@error_handling
-	Scenario: Reporitng of bad operation value
+	Scenario: Reporitng of bad method value
 		Given test.jpg file content as request body
 		When I do PUT request http://localhost:3100/thumbnails/crop,4,4,png/blah,128,128,png
 		Then response status should be 200

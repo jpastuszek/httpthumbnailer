@@ -111,15 +111,15 @@ If running as root you can use `--user` option to specify user with whose privil
 Additionally `httpthumbnailer` will log requests in [common NCSA format](http://en.wikipedia.org/wiki/Common_Log_Format) to `httpthumbnailer_access.log` file. Use `--access-log-file` option to change location of access log.
 
 Syslog logging can be enabled with `--syslog-facility` option followed by name of syslog facility to use. When enabled log files are not created and both application logs and access logs are sent to syslog.
-Access logs will gain meta information that will include `type="http-access"` that can be used to filter access log entries out from application log entries.
+Access logs will gain meta information that will include `"type":"http-access"` that can be used to filter access log entries out from application log entries.
 
 With `--xid-header` option name of HTTP request header can be specified. Value of this header will be logged in meta information tag `xid` along side all request related log entries.
 
-Using `--perf-stats` switch will enable logging of performance statistics.
+Using `--perf-stats` switch will enable logging of performance statistics. This log entries will be logged with `"type":"perf-stats"`.
 
-### Thumbnailing operations
+### Thumbnailing methods
 
-For operation type you can use one of the following value:
+For method you can use one of the following value:
 * `fit` - fit image within given dimensions keeping aspect ratio
 * `crop` - cut image to fit within given dimensions keeping aspect ratio
 * `pad` - fit resize image and pad image with background colour to given dimensions keeping aspect ratio
@@ -132,7 +132,7 @@ Optionally format `input` can be used to use the same thumbnail format as input 
 
 ### Thumbnail width and height
 
-Width and height values are in pixels and are interpreted depending on operation used.
+Width and height values are in pixels and are interpreted depending on method used.
 `input` string can be used for width and/or height to use input image width or height.
 
 ### Thumbnail options
@@ -140,7 +140,7 @@ Width and height values are in pixels and are interpreted depending on operation
 Following options can be used with thumbnail specification:
 * `quality` - set output image quality; this is format specific: for JPEG 0 is maximum compression and 100 is maximum quality, for PNG first digit is zlib compression level and second one is filter level
 * `background-color` - color in HTML notation or textual description ('red', 'green' etc.) used for background when processing transparent images or padding; by default white background is used
-* `float-x` and `float-y` - value between 0.0 and 1.0; can be used with `crop` and `pad` operations to move cropping view or image over background left to right or top to bottom (0.0 to 1.0); both default to 0.5 centering the view or image
+* `float-x` and `float-y` - value between 0.0 and 1.0; can be used with `crop` and `pad` methods to move cropping view or image over background left to right or top to bottom (0.0 to 1.0); both default to 0.5 centering the view or image
 * `interlace` - one of `UndefinedInterlace`, `NoInterlace`, `LineInterlace`, `PlaneInterlace`, `PartitionInterlace`, `GIFInterlace`, `JPEGInterlace`, `PNGInterlace`; some formats support interlaced output format; use `JPEGInterlace` or `LineInterlace` or `PlaneInterlace` with `jpeg` format to produce progressive JPEG; defaults to `NoInterlace`
 
 ### Edits
@@ -183,7 +183,7 @@ One or more edits can be used with thumbnailing specification:
 
 To generate single thumbnail send input image with **PUT** request to URI in format:
 
-    /thumbnail/<operation type>,<width>,<height>,<format>[,<option key>:<option value>]*[!<edit name>[,<edit arg>]*[,<edit option>:<edit option value>]*]*
+    /thumbnail/<method>,<width>,<height>,<format>[,<option key>:<option value>]*[!<edit name>[,<edit arg>]*[,<edit option>:<edit option value>]*]*
 
 Server will respond with thumbnail data with correct **Content-Type** header value.
 
@@ -201,7 +201,7 @@ For detailed information about the API see [cucumber features](http://github.com
 
 To generate multiple thumbnails of single image send that image with **PUT** request to URI in format:
 
-    /thumbnails/<operation type>,<width>,<height>,<format>[,<option key>:<option value>]*[!<edit name>[,<edit arg>]*[,<edit option>:<edit option value>]*]*[/<operation type>,<width>,<height>,<format>[,<option key>:<option value>]*]*[!<edit name>[,<edit arg>]*[,<edit option>:<edit option value>]*]*
+    /thumbnails/<method>,<width>,<height>,<format>[,<option key>:<option value>]*[!<edit name>[,<edit arg>]*[,<edit option>:<edit option value>]*]*[/<method>,<width>,<height>,<format>[,<option key>:<option value>]*]*[!<edit name>[,<edit arg>]*[,<edit option>:<edit option value>]*]*
 
 Server will respond with **multi-part content** with each part containing **Content-Type** header and thumbnail data corresponding to format defined in the URI.
 
@@ -310,21 +310,21 @@ To change this defaults use `--limit-memory` option for RAM limit and `--limit-d
 
 ## Plugins
 
-Custom thumbnailing operations and edits can be programed using plugin API.
+Custom thumbnailing methods and edits can be programed using plugin API.
 By default HTTP Thumbnailer will look for plugins in `/usr/share/httpthumbnailer/plugins`. Options `--plugins` can be used to point to different directory; it can also be specified multiple times to point to more than one directory.
 Plugin file needs to end with `.rb` extension to be found anywhere within directory structure pointed by `--plugins` options (or in default directory).
 
-### Defining new thumbnailing operations
+### Defining new thumbnailing methods
 
-To define new thumbnailing operation provide block like this:
+To define new thumbnailing method provide block like this:
 
 ```ruby
-thumbnailing_method('operation_name') do |image, width, height, options|
+thumbnailing_method('method_name') do |image, width, height, options|
 	# do something with image
 end
 ```
 
-Name of the operation is defined by value of `thumbnailing_method` method argument (string).
+Name of the method is defined by value of `thumbnailing_method` method argument (string).
 
 Server will pass following objects:
 * `image` - [RMagick::Image](https://rmagick.github.io/index.html) object
@@ -350,7 +350,7 @@ Server will pass following objects:
 * all arguments as passed to the API; you can capture as many as you need
 * `options` - key-value map, where keys and values are strings, passed to request with edit specification
 * `thumbnail_spec` - object representing thumbnail specification; you can call following methods:
-	* `method` - name of the thumbnailing operation
+	* `method` - name of the thumbnailing method
 	* `width` and `height` - integers representing required width and height of the thumbnail
 	* `format` - requested output format (e.g. `png` or `jpeg`)
 	* `options` - key-value map of thumbnailing options
@@ -373,7 +373,7 @@ Example of `get` usage:
 	end
 ```
 
-For examples see built-in thumbnailing operations and edits defined in [built_in_plugins.rb](lib/httpthumbnailer/plugin/thumbnailer/service/built_in_plugins.rb).
+For examples see built-in thumbnailing methods and edits defined in [built_in_plugins.rb](lib/httpthumbnailer/plugin/thumbnailer/service/built_in_plugins.rb).
 
 ### Helper functions
 
