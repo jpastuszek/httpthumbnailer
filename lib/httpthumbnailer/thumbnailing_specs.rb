@@ -1,5 +1,5 @@
 class ThumbnailingSpecs < Array
-	def self.from_uri(specs)
+	def self.from_string(specs)
 		ts = ThumbnailingSpecs.new
 		specs.split('/').each do |spec|
 			ts << ThumbnailingSpec.from_string(spec)

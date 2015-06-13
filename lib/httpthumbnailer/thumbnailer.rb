@@ -43,7 +43,7 @@ class Thumbnailer < Controller
 		end
 
 		on put, 'thumbnails', /(.*)/ do |specs|
-			thumbnailing_specs = ThumbnailingSpecs.from_uri(specs)
+			thumbnailing_specs = ThumbnailingSpecs.from_string(specs)
 			log.info "thumbnailing image to multiple specs: #{thumbnailing_specs.join(', ')}"
 
 			if settings[:optimization]
