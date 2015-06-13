@@ -1,9 +1,9 @@
 require_relative 'spec_helper'
-require 'httpthumbnailer/thumbnail_specs'
+require 'httpthumbnailer/thumbnailing_specs'
 
-describe ThumbnailSpecs do
+describe ThumbnailingSpecs do
 	it "can be created from URI" do
-		ts = ThumbnailSpecs.from_uri('test,128,256,jpeg,magick:64,number:8/pad,128,128,png,background:0xFF00FF/crop,32,32,gif')
+		ts = ThumbnailingSpecs.from_uri('test,128,256,jpeg,magick:64,number:8/pad,128,128,png,background:0xFF00FF/crop,32,32,gif')
 
 		ts[0].method.should == 'test'
 		ts[0].width.should == 128
@@ -25,7 +25,7 @@ describe ThumbnailSpecs do
 	end
 
 	it 'should provide :input symbol when input is used as width, height or format' do
-		ts = ThumbnailSpecs.from_uri('test,input,256,jpeg,magick:64,number:8/pad,128,input,png,background:0xFF00FF/crop,32,32,input')
+		ts = ThumbnailingSpecs.from_uri('test,input,256,jpeg,magick:64,number:8/pad,128,input,png,background:0xFF00FF/crop,32,32,input')
 
 		ts[0].width.should == :input
 		ts[0].height.should == 256
@@ -41,7 +41,7 @@ describe ThumbnailSpecs do
 	end
 
 	it 'should provide editing specs' do
-		ts = ThumbnailSpecs.from_uri('test,input,256,jpeg,magick:64,number:8!blur,1,2,abc:x,xyz:2!cut,1,2,3,4/pad,128,input,png,background:0xFF00FF!blur,2,2,abc:x,xyz:2!cut,2,2,3,4/crop,32,32,input!blur,3,2,abc:x,xyz:2!cut,3,2,3,4')
+		ts = ThumbnailingSpecs.from_uri('test,input,256,jpeg,magick:64,number:8!blur,1,2,abc:x,xyz:2!cut,1,2,3,4/pad,128,input,png,background:0xFF00FF!blur,2,2,abc:x,xyz:2!cut,2,2,3,4/crop,32,32,input!blur,3,2,abc:x,xyz:2!cut,3,2,3,4')
 
 		ts[0].edits[0].name.should == 'blur'
 		ts[0].edits[0].args.should == ['1', '2']

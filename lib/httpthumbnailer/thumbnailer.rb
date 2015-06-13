@@ -1,5 +1,5 @@
 require 'httpthumbnailer/plugin/thumbnailer'
-require 'httpthumbnailer/thumbnail_specs'
+require 'httpthumbnailer/thumbnailing_specs'
 
 class Thumbnailer < Controller
 	Plugin::Thumbnailer.logger = logger_for(Plugin::Thumbnailer)
@@ -10,7 +10,7 @@ class Thumbnailer < Controller
 		opts[:limit_memory] = memory_limit
 
 		on put, 'thumbnail', /(.*)/ do |spec|
-			spec = ThumbnailSpec.from_uri(spec)
+			spec = ThumbnailingSpec.from_string(spec)
 			log.info "thumbnailing image to single spec: #{spec}"
 
 			if settings[:optimization]
@@ -43,12 +43,12 @@ class Thumbnailer < Controller
 		end
 
 		on put, 'thumbnails', /(.*)/ do |specs|
-			thumbnail_specs = ThumbnailSpecs.from_uri(specs)
-			log.info "thumbnailing image to multiple specs: #{thumbnail_specs.join(', ')}"
+			thumbnailing_specs = ThumbnailingSpecs.from_uri(specs)
+			log.info "thumbnailing image to multiple specs: #{thumbnailing_specs.join(', ')}"
 
 			if settings[:optimization]
-					opts[:max_width] = thumbnail_specs.max_width
-					opts[:max_height] = thumbnail_specs.max_height
+					opts[:max_width] = thumbnailing_specs.max_width
+					opts[:max_height] = thumbnailing_specs.max_height
 			end
 
 			opts[:reload] = settings[:reload]
@@ -62,7 +62,7 @@ class Thumbnailer < Controller
 					"X-Input-Image-Width" => input_image.width,
 					"X-Input-Image-Height" => input_image.height
 
-				thumbnail_specs.each do |spec|
+				thumbnailing_specs.each do |spec|
 					log.info "generating thumbnail: #{spec}"
 					begin
 						input_image.thumbnail(spec) do |image|

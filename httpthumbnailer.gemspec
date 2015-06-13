@@ -36,7 +36,7 @@ Gem::Specification.new do |s|
     "lib/httpthumbnailer/plugin/thumbnailer/service/built_in_plugins.rb",
     "lib/httpthumbnailer/plugin/thumbnailer/service/images.rb",
     "lib/httpthumbnailer/plugin/thumbnailer/service/magick.rb",
-    "lib/httpthumbnailer/thumbnail_specs.rb",
+    "lib/httpthumbnailer/thumbnailing_specs.rb",
     "lib/httpthumbnailer/thumbnailer.rb"
   ]
   s.homepage = "http://github.com/jpastuszek/httpthumbnailer"

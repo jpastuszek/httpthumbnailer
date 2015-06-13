@@ -122,7 +122,7 @@ Feature: Generating single thumbnail with PUT request
 		And response content type should be text/plain
 		And response body should be CRLF endend lines
 		"""
-		bad dimension value: bogous
+		height value 'bogous' is not an integer or 'input' in spec 'crop,128,bogous,png'
 		"""
 
 	@error_handling
@@ -133,7 +133,7 @@ Feature: Generating single thumbnail with PUT request
 		And response content type should be text/plain
 		And response body should be CRLF endend lines
 		"""
-		missing argument in: crop,128,png
+		missing format argument in spec 'crop,128,png'
 		"""
 
 	@error_handling
@@ -144,7 +144,7 @@ Feature: Generating single thumbnail with PUT request
 		And response content type should be text/plain
 		And response body should be CRLF endend lines
 		"""
-		missing option key or value in: fas-xyz
+		missing option value for key 'fas-xyz' in spec 'crop,128,128,png,fas-xyz'
 		"""
 
 	@error_handling

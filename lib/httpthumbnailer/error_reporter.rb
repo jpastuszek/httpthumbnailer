@@ -12,7 +12,7 @@ class ErrorReporter < Controller
 		end
 
 		on error(
-			ThumbnailSpec::BadThubnailSpecError,
+			ThumbnailingSpec::InvalidFormatError,
 			Plugin::Thumbnailer::ZeroSizedImageError,
 			Plugin::Thumbnailer::UnsupportedMethodError,
 			Plugin::Thumbnailer::InvalidColorNameError,

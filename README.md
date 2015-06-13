@@ -341,7 +341,7 @@ Block should return (last value or with `next` keyword) new image or the image p
 To define new edit provide block like this:
 
 ```ruby
-edit('edit_name') do |image, arg1, arg2, argN, options, thumbnail_spec|
+edit('edit_name') do |image, arg1, arg2, argN, options, thumbnailing_spec|
 	# do something with image
 end
 ```
@@ -352,7 +352,7 @@ Server will pass following objects:
 * `image` - [RMagick::Image](https://rmagick.github.io/index.html) object; input image or output of previous edit
 * all arguments as passed to the API; you can capture as many as you need
 * `options` - key-value map, where keys and values are strings, passed to request with edit specification
-* `thumbnail_spec` - object representing thumbnail specification; you can call following methods:
+* `thumbnailing_spec` - object representing thumbnail specification; you can call following methods:
 	* `method` - name of the thumbnailing method
 	* `width` and `height` - integers representing required width and height of the thumbnail
 	* `format` - requested output format (e.g. `png` or `jpeg`)

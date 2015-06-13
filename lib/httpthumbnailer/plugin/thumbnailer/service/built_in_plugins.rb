@@ -21,36 +21,36 @@ module Plugin
 						image.resize_to_fit(width, height) if image.width > width or image.height > height
 					end
 
-					edit('resize_crop') do |image, width, height, options, thumbnail_spec|
+					edit('resize_crop') do |image, width, height, options, thumbnailing_spec|
 						width = float!('width', width)
 						height = float!('height', height)
 
 						image.resize_to_fill(width, height, ufloat!('float-x', options['float-x'], 0.5), ufloat!('float-y', options['float-y'], 0.5)) if image.width != width or image.height != height
 					end
 
-					edit('resize_fit') do |image, width, height, options, thumbnail_spec|
+					edit('resize_fit') do |image, width, height, options, thumbnailing_spec|
 						width = float!('width', width)
 						height = float!('height', height)
 
 						image.resize_to_fit(width, height) if image.width != width or image.height != height
 					end
 
-					edit('resize_limit') do |image, width, height, options, thumbnail_spec|
+					edit('resize_limit') do |image, width, height, options, thumbnailing_spec|
 						width = float!('width', width)
 						height = float!('height', height)
 
 						image.resize_to_fit(width, height) if image.width > width or image.height > height
 					end
 
-					edit('rotate') do |image, angle, options, thumbnail_spec|
+					edit('rotate') do |image, angle, options, thumbnailing_spec|
 						angle = float!('angle', angle)
 						next image if angle % 360 == 0
-						image.with_background_color(options['background-color'] || thumbnail_spec.options['background-color']) do
+						image.with_background_color(options['background-color'] || thumbnailing_spec.options['background-color']) do
 							image.rotate(angle)
 						end
 					end
 
-					edit('crop') do |image, x, y, width, height, options, thumbnail_spec|
+					edit('crop') do |image, x, y, width, height, options, thumbnailing_spec|
 						x, y, width, height = normalize_region(
 							float!('x', x),
 							float!('y', y),
@@ -66,7 +66,7 @@ module Plugin
 						)
 					end
 
-					edit('pixelate') do |image, box_x, box_y, box_width, box_height, options, thumbnail_spec|
+					edit('pixelate') do |image, box_x, box_y, box_width, box_height, options, thumbnailing_spec|
 						x, y, width, height = normalize_region(
 							float!('box_x', box_x),
 							float!('box_y', box_y),
@@ -81,7 +81,7 @@ module Plugin
 						)
 					end
 
-					edit('blur') do |image, box_x, box_y, box_width, box_height, options, thumbnail_spec|
+					edit('blur') do |image, box_x, box_y, box_width, box_height, options, thumbnailing_spec|
 						x, y, width, height = normalize_region(
 							float!('box_x', box_x),
 							float!('box_y', box_y),
@@ -111,7 +111,7 @@ module Plugin
 						)
 					end
 
-					edit('rectangle') do |image, box_x, box_y, box_width, box_height, options, thumbnail_spec|
+					edit('rectangle') do |image, box_x, box_y, box_width, box_height, options, thumbnailing_spec|
 						x, y, width, height = normalize_region(
 							float!('box_x', box_x),
 							float!('box_y', box_y),
