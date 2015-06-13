@@ -139,7 +139,7 @@ Width and height values are in pixels and are interpreted depending on method us
 
 ### Thumbnail options
 
-Following options can be used with thumbnail specification:
+Following options can be used with thumbnailing specification:
 * `quality` - set output image quality; this is format specific: for JPEG 0 is maximum compression and 100 is maximum quality, for PNG first digit is zlib compression level and second one is filter level
 * `background-color` - color in HTML notation or textual description ('red', 'green' etc.) used for background when processing transparent images or padding; by default white background is used
 * `float-x` and `float-y` - value between 0.0 and 1.0; can be used with `crop` and `pad` methods to move cropping view or image over background left to right or top to bottom (0.0 to 1.0); both default to 0.5 centering the view or image
@@ -242,9 +242,9 @@ If all goes well 200 OK will be returned otherwise:
 #### 400
 
 * requested thumbnail method is not supported
-* at least one image dimension is zero in thumbnail spec
-* missing option key or value in thumbnail spec
-* missing argument in in thumbnail spec
+* at least one image dimension is zero in thumbnailing spec
+* missing option key or value in thumbnailing spec
+* missing argument in in thumbnailing spec
 * bad argument value
 
 #### 413
@@ -352,7 +352,7 @@ Server will pass following objects:
 * `image` - [RMagick::Image](https://rmagick.github.io/index.html) object; input image or output of previous edit
 * all arguments as passed to the API; you can capture as many as you need
 * `options` - key-value map, where keys and values are strings, passed to request with edit specification
-* `thumbnailing_spec` - object representing thumbnail specification; you can call following methods:
+* `thumbnailing_spec` - object representing thumbnailing specification; you can call following methods:
 	* `method` - name of the thumbnailing method
 	* `width` and `height` - integers representing required width and height of the thumbnail
 	* `format` - requested output format (e.g. `png` or `jpeg`)
