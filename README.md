@@ -1,18 +1,20 @@
 # HTTP Thumbnailer
 
-HTTP API server for image thumbnailing and format conversion.
+HTTP API server for image thumbnailing, editing and format conversion.
 
 It is using [ImageMagick](http://www.imagemagick.org) or [GraphicsMagick](http://www.graphicsmagick.org) via [RMagick](http://rmagick.rubyforge.org) gem as the image processing library.
 
 ## Features
 
 * thumbnailing images with different aspect ratio keeping methods
-* identification of image foramt and size
+* applying image edits like rotate, crop, blur, pixelate, etc.
+* identification of image format and size
 * support of many input and output formats
 * efficient API for generating multiple thumbnails from single input image with just one request
 * many image scaling and loading performance optimizations
 * efficient memory usage
 * memory limits and disk memory offloading support
+* custom plugin support
 * based on [Unicorn HTTP server](http://unicorn.bogomips.org) with UNIX socket communication support
 
 ## Changelog
