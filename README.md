@@ -313,7 +313,7 @@ To change this defaults use `--limit-memory` option for RAM limit and `--limit-d
 
 Custom thumbnailing methods and edits can be programed using plugin API.
 By default HTTP Thumbnailer will look for plugins in `/usr/share/httpthumbnailer/plugins`. Options `--plugins` can be used to point to different directory; it can also be specified multiple times to point to more than one directory.
-Plugin file needs to end with `.rb` extension to be found anywhere within directory structure pointed by `--plugins` options (or in default directory).
+Plugin file needs to end with `.rb` extension to be found anywhere within directory structure pointed by `--plugins` option (or in default directory).
 
 ### Defining new thumbnailing methods
 
@@ -378,15 +378,14 @@ For examples see built-in thumbnailing methods and edits defined in [built_in_pl
 
 ### Helper functions
 
-Following helper methods are available in plugin context:
+Following helper functions are available in plugin context:
 * `int!(name, arg, default = nil)` - returns integer from given `arg` string; `name` is used for reporting errors; if `arg` is an empty string returns `default` if not `nil` or fail with **400 Bad Request**
 * `uint!(name, arg, default = nil)` - returns positive integer from given `arg` string; `name` is used for reporting errors; if `arg` is an empty string returns `default` if not `nil` or fail with **400 Bad Request**
 * `float!(name, arg, default = nil)` - returns float from given `arg` string; `name` is used for reporting errors; if `arg` is an empty string returns `default` if not `nil` or fail with **400 Bad Request**
 * `ufloat!(name, arg, default = nil)` - returns positive float from given `arg` string; `name` is used for reporting errors; if `arg` is an empty string returns `default` if not `nil` or fail with **400 Bad Request**
-* `int!(name, arg, default = nil)` - returns integer from given `arg` string; `name` is used for reporting errors; if `arg` is an empty string returns `default` if not `nil` or fail with **400 Bad Request**
 * `offset_to_center(x, y, w, h)` - returns center (`[x, y]`) of the given region
 * `center_to_offset(center_x, center_y, w, h)` - returns offset (`[x, y]`) of given region center (`center_x`, `center_y`) and `width` and `height`
-* `normalize_region(x, y, width, height)` - returns normalized relative (values between 0.0 and 1.0) region offset and dimensions (`[x, y, width, height]`) that fits within normal values so that width and height will never be 0.0 (`Float::EPSILON` instead), x + width and y + height will never be grater than 1.0 and all values will not be negative
+* `normalize_region(x, y, width, height)` - returns normalized relative (values between 0.0 and 1.0) region offset and dimensions (`[x, y, width, height]`) that fits within normal values so that width and height will never be 0.0 (`Float::EPSILON` instead), `x + width` and `y + height` will never be grater than 1.0 and all values will not be negative
 
 Additional [RMagick::Image](https://rmagick.github.io/index.html) object methods are provided:
 * `RMagick::Image.new_8bit(width, height, background_color = 'none')` - create new image of given dimensions and background color (which can be described by pallet color name like **black** of by hex value)
@@ -401,7 +400,7 @@ Additional [RMagick::Image](https://rmagick.github.io/index.html) object methods
 * `rel_to_diagonal(v)` - convert relative diagonal to diagonal in pixels (using `Float#ceil` value)
 * `width` - alias for `#columns`
 * `height` - alias for `#height`
-* `diagonal` - calculate diagonal in pixels
+* `diagonal` - calculate diagonal in pixels (using `Float#ceil` value)
 
 ### Memory usage and leaks
 
