@@ -1,8 +1,8 @@
-class ThumbnailingSpecs < Array
+class ThumbnailSpecs < Array
 	def self.from_string(specs)
-		ts = ThumbnailingSpecs.new
+		ts = ThumbnailSpecs.new
 		specs.split('/').each do |spec|
-			ts << ThumbnailingSpec.from_string(spec)
+			ts << ThumbnailSpec.from_string(spec)
 		end
 		ts
 	end
@@ -22,7 +22,7 @@ class ThumbnailingSpecs < Array
 	end
 end
 
-class ThumbnailingSpec
+class ThumbnailSpec
 	class InvalidFormatError < ArgumentError
 		def for_edit(name)
 			exception "#{message} for edit '#{name}'"
@@ -67,12 +67,12 @@ class ThumbnailingSpec
 		attr_reader :name, :args, :options
 
 		def self.from_string(string)
-			args = ThumbnailingSpec.split_args(string)
-			args, options = ThumbnailingSpec.partition_args_options(args)
+			args = ThumbnailSpec.split_args(string)
+			args, options = ThumbnailSpec.partition_args_options(args)
 			name = args.shift
 
 			begin
-				options = ThumbnailingSpec.parse_options(options)
+				options = ThumbnailSpec.parse_options(options)
 			rescue InvalidFormatError => error
 				raise error.for_edit(name)
 			end
@@ -89,7 +89,7 @@ class ThumbnailingSpec
 
 		def to_s
 			begin
-				[@name, *@args, *ThumbnailingSpec.options_to_s(@options)].join(',')
+				[@name, *@args, *ThumbnailSpec.options_to_s(@options)].join(',')
 			rescue InvalidFormatError => error
 				raise error.for_edit(name)
 			end

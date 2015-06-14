@@ -139,7 +139,7 @@ Width and height values are in pixels and are interpreted depending on method us
 
 ### Thumbnail options
 
-Following options can be used with thumbnailing specification:
+Following options can be used with thumbnail specification:
 * `quality` - set output image quality; this is format specific: for JPEG 0 is maximum compression and 100 is maximum quality, for PNG first digit is zlib compression level and second one is filter level
 * `background-color` - color in HTML notation or textual description ('red', 'green' etc.) used for background when processing transparent images or padding; by default white background is used
 * `float-x` and `float-y` - value between 0.0 and 1.0; can be used with `crop` and `pad` methods to move cropping view or image over background left to right or top to bottom (0.0 to 1.0); both default to 0.5 centering the view or image
@@ -150,7 +150,7 @@ Following options can be used with thumbnailing specification:
 Edits are applied on input image (after possibly being downsampled) and before the final thumbnail is generated.
 Relative vector values are relative to input image dimensions (width and hight), scalar values are relative to input image diagonal. This way edits will look more or less the same no matter what the input or output image resolution is. Also client does not need to know the resolution of input image.
 
-One or more edits can be used with thumbnailing specification:
+One or more edits can be used with thumbnail specification:
 * `resize_crop` - cut image to fit within given dimensions keeping aspect ratio
 	* arguments: width, height - dimensions to resize and crop image to in pixels
 	* options:
@@ -242,9 +242,9 @@ If all goes well 200 OK will be returned otherwise:
 #### 400
 
 * requested thumbnail method is not supported
-* at least one image dimension is zero in thumbnailing spec
-* missing option key or value in thumbnailing spec
-* missing argument in in thumbnailing spec
+* at least one image dimension is zero in thumbnail specification
+* missing option key or value in thumbnail specification
+* missing argument in in thumbnail specification
 * bad argument value
 
 #### 413
@@ -341,7 +341,7 @@ Block should return (last value or with `next` keyword) new image or the image p
 To define new edit provide block like this:
 
 ```ruby
-edit('edit_name') do |image, arg1, arg2, argN, options, thumbnailing_spec|
+edit('edit_name') do |image, arg1, arg2, argN, options, thumbnail_spec|
 	# do something with image
 end
 ```
@@ -352,7 +352,7 @@ Server will pass following objects:
 * `image` - [RMagick::Image](https://rmagick.github.io/index.html) object; input image or output of previous edit
 * all arguments as passed to the API; you can capture as many as you need
 * `options` - key-value map, where keys and values are strings, passed to request with edit specification
-* `thumbnailing_spec` - object representing thumbnailing specification; you can call following methods:
+* `thumbnail_spec` - object representing thumbnailing specification; you can call following methods:
 	* `method` - name of the thumbnailing method
 	* `width` and `height` - integers representing required width and height of the thumbnail
 	* `format` - requested output format (e.g. `png` or `jpeg`)
