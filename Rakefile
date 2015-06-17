@@ -17,12 +17,12 @@ Jeweler::Tasks.new do |gem|
   gem.name = "httpthumbnailer"
   gem.homepage = "http://github.com/jpastuszek/httpthumbnailer"
   gem.license = "MIT"
-  gem.summary = %Q{HTTP thumbnailing server}
-  gem.description = %Q{Provides HTTP API for thumbnailing images}
+  gem.summary = %Q{HTTP API server for image thumbnailing, editing and format conversion}
+  gem.description = %Q{Statless HTTP server that provides API for thumbnailing images with different aspect ratio keeping methods, applying image edits (like rotate, crop, blur, pixelate, etc.), identification of image format and size and more. It is using ImageMagick or GraphicsMagick via RMagick gem as the image processing library.}
   gem.email = "jpastuszek@gmail.com"
   gem.authors = ["Jakub Pastuszek"]
   gem.files.exclude "features/**/*"
-  gem.files.exclude "load_test/**/*"
+  gem.files.exclude "gatling/**/*"
   gem.files.exclude "spec/**/*"
   gem.files.exclude "test_plugins/**/*"
   gem.files.exclude "*.gemspec"
