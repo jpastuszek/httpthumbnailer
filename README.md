@@ -1,6 +1,6 @@
 # HTTP Thumbnailer
 
-HTTP API server for image thumbnailing, editing and format conversion.
+Stateless HTTP API server for image thumbnailing, editing and format conversion.
 
 It is using [ImageMagick](http://www.imagemagick.org) or [GraphicsMagick](http://www.graphicsmagick.org) via [RMagick](http://rmagick.rubyforge.org) gem as the image processing library.
 
@@ -11,6 +11,7 @@ It is using [ImageMagick](http://www.imagemagick.org) or [GraphicsMagick](http:/
 * identification of image format and size
 * support of many input and output formats
 * efficient API for generating multiple thumbnails from single input image with just one request
+* completely stateless
 * many image scaling and loading performance optimizations
 * efficient memory usage
 * memory limits and disk memory offloading support
