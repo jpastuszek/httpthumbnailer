@@ -57,6 +57,7 @@ features/support/test-transparent-default.png
 
 .idea/
 gatling/index.csv
+gatling/results/*
 gatling/101_ObjectCategories/
 gatling/101_ObjectCategories.tar.gz
 gatling/gatling-charts-highcharts-bundle-*/
