@@ -133,7 +133,7 @@ module Plugin
 			end
 
 			def edit(name, &impl)
-				log.info "adding edit: #{name}(#{impl.parameters.drop(1).map{|p| p.last.to_s}.join(', ')})"
+				log.info "adding edit: #{name}(#{impl.parameters.drop(1).reverse.drop(2).reverse.map{|p| p.last.to_s}.join(', ')})"
 				@edits[name] = impl
 			end
 
